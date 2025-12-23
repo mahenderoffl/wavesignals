@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================
+         WaveSignals - Blog Post Template
+         Reusable template for all blog posts
+    ============================================= -->
+    
+    <!-- Character encoding and viewport -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO: Primary meta tags (customize per post) -->
+    <title>[Post Title] - WaveSignals</title>
+    <meta name="description" content="[Post meta description - 150-160 characters summarizing the post content]">
+    
+    <!-- SEO: Additional meta tags -->
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="[Author Name]">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="/public/favicon.png" type="image/png">
+    
+    <!-- Canonical URL (important for SEO - prevents duplicate content) -->
+    <link rel="canonical" href="https://wavesignals.com/posts/[post-slug]">
+    
+    <!-- Open Graph / Social sharing -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="[Post Title]">
+    <meta property="og:description" content="[Post meta description]">
+    <meta property="og:url" content="https://wavesignals.com/posts/[post-slug]">
+    <meta property="og:image" content="https://wavesignals.com/images/[post-image].jpg">
+    <meta property="og:site_name" content="WaveSignals">
+    
+    <!-- Article-specific Open Graph -->
+    <meta property="article:published_time" content="[YYYY-MM-DDTHH:MM:SSZ]">
+    <meta property="article:modified_time" content="[YYYY-MM-DDTHH:MM:SSZ]">
+    <meta property="article:author" content="[Author Name]">
+    <meta property="article:section" content="[Category]">
+    <meta property="article:tag" content="[Tag1]">
+    <meta property="article:tag" content="[Tag2]">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="[Post Title]">
+    <meta name="twitter:description" content="[Post meta description]">
+    <meta name="twitter:image" content="https://wavesignals.com/images/[post-image].jpg">
+    
+    <!-- Global Stylesheet -->
+    <link rel="stylesheet" href="/styles/global.css">
+    
+    <!-- Post-specific styles -->
+    <style>
+        /* ===== Post Layout ===== */
+        .post-header {
+            padding: 40px 0 30px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .post-category {
+            display: inline-block;
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: var(--space-3);
+        }
+
+        .post-category a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .post-category a:hover {
+            color: var(--color-link);
+        }
+
+        .post-title {
+            font-size: var(--font-size-3xl);
+            line-height: var(--line-height-tight);
+            margin-bottom: var(--space-5);
+        }
+
+        .post-excerpt {
+            font-size: var(--font-size-lg);
+            color: var(--color-text-secondary);
+            line-height: var(--line-height-relaxed);
+            margin-bottom: var(--space-6);
+        }
+
+        .post-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-4);
+            font-size: var(--font-size-sm);
+            color: var(--color-text-muted);
+        }
+
+        .post-meta-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        /* ===== Post Content ===== */
+        .post-content {
+            padding: var(--space-10) 0;
+        }
+
+        .post-content h2 {
+            margin-top: var(--space-10);
+        }
+
+        .post-content h3 {
+            margin-top: var(--space-8);
+        }
+
+        /* ===== Post Sections ===== */
+        .post-section {
+            margin-bottom: var(--space-10);
+        }
+
+        .post-section:last-child {
+            margin-bottom: 0;
+        }
+
+        /* ===== Verdict/Conclusion Box ===== */
+        .verdict-section {
+            background-color: var(--color-gray-50);
+            border-left: 4px solid var(--color-gray-400);
+            padding: var(--space-6);
+            margin: var(--space-10) 0;
+        }
+
+        .verdict-section h2 {
+            margin-top: 0;
+            margin-bottom: var(--space-4);
+        }
+
+        /* ===== Post Footer ===== */
+        .post-footer {
+            padding: var(--space-8) 0;
+            border-top: 1px solid var(--color-border);
+        }
+
+        .post-tags {
+            margin-bottom: var(--space-6);
+        }
+
+        .post-tags-label {
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text-muted);
+            margin-right: var(--space-2);
+        }
+
+        .tag-list {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: var(--space-2);
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .tag-link {
+            display: inline-block;
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+            background-color: var(--color-gray-100);
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--border-radius);
+            text-decoration: none;
+        }
+
+        .tag-link:hover {
+            background-color: var(--color-gray-200);
+            color: var(--color-text-primary);
+        }
+
+        /* ===== Author Bio ===== */
+        .author-bio {
+            display: flex;
+            gap: var(--space-5);
+            padding: var(--space-6);
+            background-color: var(--color-gray-50);
+            border-radius: var(--border-radius);
+        }
+
+        .author-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .author-info h3 {
+            font-size: var(--font-size-md);
+            margin: 0 0 var(--space-2) 0;
+        }
+
+        .author-info p {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+            margin: 0;
+        }
+
+        /* ===== Related Posts ===== */
+        .related-posts {
+            padding: var(--space-10) 0;
+            border-top: 1px solid var(--color-border);
+        }
+
+        .related-posts h2 {
+            font-size: var(--font-size-xl);
+            margin-bottom: var(--space-6);
+        }
+
+        .related-posts-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .related-post-item {
+            padding: var(--space-4) 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .related-post-item:last-child {
+            border-bottom: none;
+        }
+
+        .related-post-link {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .related-post-title {
+            font-size: var(--font-size-md);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .related-post-link:hover .related-post-title {
+            color: var(--color-link);
+        }
+
+        .related-post-date {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-muted);
+        }
+
+        /* ===== Site Header (Post Page) ===== */
+        .site-header {
+            padding: var(--space-6) 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .site-logo {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+        }
+
+        .site-name {
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text-primary);
+            text-decoration: none;
+        }
+
+        .site-name:hover {
+            color: var(--color-text-secondary);
+        }
+
+        /* ===== Site Footer ===== */
+        .site-footer {
+            padding: var(--space-8) 0;
+            border-top: 1px solid var(--color-border);
+            text-align: center;
+        }
+
+        .copyright {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-muted);
+        }
+
+        /* ===== Accessibility ===== */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: var(--color-gray-900);
+            color: var(--color-white);
+            padding: var(--space-2) var(--space-4);
+            z-index: 100;
+            text-decoration: none;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 600px) {
+            .post-title {
+                font-size: var(--font-size-2xl);
+            }
+
+            .author-bio {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .author-avatar {
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Accessibility: Skip to main content link -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- AD_SLOT: header -->
+
+    <!-- ===== Site Header ===== -->
+    <header class="site-header" role="banner">
+        <div class="container">
+            <div class="header-content">
+                <a href="/" class="brand">
+                    <img src="/public/logo-header.svg" alt="WaveSignals logo" class="logo" />
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- AD_SLOT: below-header -->
+
+    <!-- ===== Main Content ===== -->
+    <main id="main-content" role="main">
+        
+        <!-- ===== Article ===== -->
+        <article class="post" itemscope itemtype="https://schema.org/BlogPosting">
+            
+            <!-- Hidden structured data for SEO -->
+            <meta itemprop="mainEntityOfPage" content="https://wavesignals.com/posts/[post-slug]">
+            
+            <!-- Post Header -->
+            <header class="post-header">
+                <div class="container">
+                    <!-- Category -->
+                    <p class="post-category">
+                        <a href="/category/[category-slug]" rel="tag">[Category Name]</a>
+                    </p>
+                    
+                    <!-- Post Title (h1 - only one per page) -->
+                    <h1 class="post-title" itemprop="headline">
+                        [Post Title Goes Here]
+                    </h1>
+                    
+                    <!-- Post Excerpt/Subtitle -->
+                    <p class="post-excerpt" itemprop="description">
+                        [A compelling excerpt that summarizes the post and entices 
+                        readers to continue. Keep it to 2-3 sentences maximum.]
+                    </p>
+                    
+                    <!-- Post Meta Information -->
+                    <div class="post-meta">
+                        <span class="post-meta-item" itemprop="author" itemscope itemtype="https://schema.org/Person">
+                            By <span itemprop="name">[Author Name]</span>
+                        </span>
+                        <span class="post-meta-item">
+                            <time datetime="[YYYY-MM-DD]" itemprop="datePublished">[Month DD, YYYY]</time>
+                        </span>
+                        <span class="post-meta-item">
+                            [X] min read
+                        </span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- AD_SLOT: below-post-header -->
+
+            <!-- Post Content -->
+            <div class="post-content container" itemprop="articleBody">
+                
+                <!-- ===== INTRODUCTION SECTION ===== -->
+                <section class="post-section" aria-labelledby="introduction">
+                    <h2 id="introduction" class="sr-only">Introduction</h2>
+                    
+                    <p>
+                        [Opening paragraph that hooks the reader and introduces the 
+                        main topic. This should be engaging and set expectations for 
+                        what the reader will learn or gain from this post.]
+                    </p>
+                    
+                    <p>
+                        [Additional introductory context. Explain why this topic 
+                        matters and what problem you're addressing. Establish 
+                        credibility and relevance.]
+                    </p>
+                </section>
+
+                <!-- AD_SLOT: after-introduction -->
+
+                <!-- ===== BODY SECTION ===== -->
+                <section class="post-section" aria-labelledby="main-content-heading">
+                    <h2 id="main-content-heading">[Main Section Heading]</h2>
+                    
+                    <p>
+                        [Main body content. Develop your ideas, provide examples, 
+                        share insights. Break up long sections with subheadings 
+                        for better readability.]
+                    </p>
+                    
+                    <h3>[Subsection Heading]</h3>
+                    
+                    <p>
+                        [Subsection content. Go deeper into specific aspects of 
+                        your topic. Use lists, quotes, or code blocks as needed.]
+                    </p>
+                    
+                    <ul>
+                        <li>[Key point one with explanation]</li>
+                        <li>[Key point two with explanation]</li>
+                        <li>[Key point three with explanation]</li>
+                    </ul>
+                    
+                    <p>
+                        [Continue developing your content. Each paragraph should 
+                        focus on a single idea and flow naturally to the next.]
+                    </p>
+                    
+                    <h3>[Another Subsection Heading]</h3>
+                    
+                    <p>
+                        [More detailed content. Include examples, case studies, 
+                        or personal experiences to illustrate your points.]
+                    </p>
+                    
+                    <blockquote>
+                        <p>
+                            [A relevant quote that supports your content or 
+                            provides an expert perspective on the topic.]
+                        </p>
+                        <cite>[Quote Source]</cite>
+                    </blockquote>
+                    
+                    <p>
+                        [Analysis or commentary on the quote. Connect it back 
+                        to your main argument.]
+                    </p>
+                </section>
+
+                <!-- AD_SLOT: mid-content -->
+
+                <!-- ===== ADDITIONAL BODY SECTION ===== -->
+                <section class="post-section" aria-labelledby="secondary-heading">
+                    <h2 id="secondary-heading">[Secondary Section Heading]</h2>
+                    
+                    <p>
+                        [Continue with additional main points. Structure your 
+                        content logically, building toward your conclusion.]
+                    </p>
+                    
+                    <p>
+                        [Provide practical advice, actionable tips, or deeper 
+                        analysis depending on the nature of your post.]
+                    </p>
+                </section>
+
+                <!-- AD_SLOT: before-verdict -->
+
+                <!-- ===== VERDICT/CONCLUSION SECTION ===== -->
+                <aside class="verdict-section" aria-labelledby="verdict-heading">
+                    <h2 id="verdict-heading">Final Thoughts</h2>
+                    
+                    <p>
+                        [Summarize the key takeaways from your post. What should 
+                        readers remember? What action should they take?]
+                    </p>
+                    
+                    <p>
+                        [End with a strong closing statement or call-to-action. 
+                        Invite readers to comment, share, or explore related content.]
+                    </p>
+                </aside>
+
+            </div>
+            <!-- End Post Content -->
+
+            <!-- AD_SLOT: after-content -->
+
+            <!-- Post Footer -->
+            <footer class="post-footer">
+                <div class="container">
+                    
+                    <!-- Tags -->
+                    <div class="post-tags">
+                        <span class="post-tags-label">Tags:</span>
+                        <ul class="tag-list">
+                            <li><a href="/tag/[tag-slug]" class="tag-link" rel="tag">[Tag 1]</a></li>
+                            <li><a href="/tag/[tag-slug]" class="tag-link" rel="tag">[Tag 2]</a></li>
+                            <li><a href="/tag/[tag-slug]" class="tag-link" rel="tag">[Tag 3]</a></li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Author Bio -->
+                    <div class="author-bio" itemprop="author" itemscope itemtype="https://schema.org/Person">
+                        <img 
+                            src="/images/authors/[author-slug].jpg" 
+                            alt="[Author Name]" 
+                            class="author-avatar"
+                            width="64"
+                            height="64"
+                            itemprop="image"
+                        >
+                        <div class="author-info">
+                            <h3 itemprop="name">[Author Name]</h3>
+                            <p itemprop="description">
+                                [Brief author bio - 1-2 sentences about the author's 
+                                expertise, role, or background relevant to the content.]
+                            </p>
+                        </div>
+                    </div>
+                    
+                </div>
+            </footer>
+
+        </article>
+        <!-- End Article -->
+
+        <!-- AD_SLOT: below-article -->
+
+        <!-- ===== Related Posts ===== -->
+        <aside class="related-posts" aria-labelledby="related-posts-heading">
+            <div class="container">
+                <h2 id="related-posts-heading">Related Posts</h2>
+                
+                <ul class="related-posts-list">
+                    <!-- Related Post 1 -->
+                    <li class="related-post-item">
+                        <a href="/posts/[related-post-slug]" class="related-post-link">
+                            <p class="related-post-title">[Related Post Title]</p>
+                            <time class="related-post-date" datetime="[YYYY-MM-DD]">[Month DD, YYYY]</time>
+                        </a>
+                    </li>
+                    
+                    <!-- Related Post 2 -->
+                    <li class="related-post-item">
+                        <a href="/posts/[related-post-slug]" class="related-post-link">
+                            <p class="related-post-title">[Related Post Title]</p>
+                            <time class="related-post-date" datetime="[YYYY-MM-DD]">[Month DD, YYYY]</time>
+                        </a>
+                    </li>
+                    
+                    <!-- Related Post 3 -->
+                    <li class="related-post-item">
+                        <a href="/posts/[related-post-slug]" class="related-post-link">
+                            <p class="related-post-title">[Related Post Title]</p>
+                            <time class="related-post-date" datetime="[YYYY-MM-DD]">[Month DD, YYYY]</time>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- AD_SLOT: after-related -->
+
+    </main>
+    <!-- End Main Content -->
+
+    <!-- AD_SLOT: above-footer -->
+
+    <!-- ===== Site Footer ===== -->
+    <footer class="site-footer" role="contentinfo">
+        <div class="container">
+            <p class="copyright">
+                &copy; 2025 WaveSignals. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- AD_SLOT: footer -->
+
+</body>
+</html>

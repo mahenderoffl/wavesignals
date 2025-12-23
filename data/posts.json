@@ -1,0 +1,19 @@
+{
+  "posts": [
+    {
+      "id": 1766436309311,
+      "title": "Test Blog 2",
+      "slug": "test-blog-2",
+      "excerpt": "Hello world",
+      "content": "hello",
+      "resources": [
+        {
+          "label": "Remote job discovery tools",
+          "url": "https://example.com/remote-jobs"
+        }
+      ],
+      "published": true,
+      "date": "2025-12-22T20:45:09.311Z"
+    }
+  ]
+}

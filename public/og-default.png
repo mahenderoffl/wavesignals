@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0b1220" />
+  <g transform="translate(60,90)" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10 280 C70 220, 140 220, 200 280" stroke="#1da1f2" />
+    <path d="M10 320 C70 260, 140 260, 200 320" stroke="#1da1f2" />
+    <path d="M10 360 C70 300, 140 300, 200 360" stroke="#1da1f2" />
+  </g>
+  <text x="360" y="360" fill="#ffffff" font-family="Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="64" font-weight="700">WaveSignals</text>
+</svg>

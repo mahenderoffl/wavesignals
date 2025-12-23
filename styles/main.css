@@ -1,0 +1,204 @@
+/* WaveSignals — Main CSS
+   Clean, readable, system-font blog with responsive SVG logo
+*/
+
+/* =========================
+   Base variables
+========================= */
+:root {
+  --max-width: 720px;
+  --gutter: 20px;
+  --line-height: 1.7;
+  --text-color: #111;
+  --muted-color: #555;
+  --accent-color: #1a5a96;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: var(--line-height);
+  color: var(--text-color);
+  background: #fff;
+}
+
+/* =========================
+   Layout container
+========================= */
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+/* =========================
+   Header
+========================= */
+.site-header {
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* =========================
+   Logo (FIXED)
+========================= */
+.brand {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
+
+.logo {
+  display: block;
+  height: 44px;        /* legacy: keep for any .logo usage */
+  width: auto;
+  max-width: 220px;
+}
+
+/* Enforced site logo rule (locked) */
+/* Locked, explicit site logo sizing — DO NOT change unless bumping version */
+.site-logo {
+  display: block;
+  width: auto;
+  height: 40px;        /* 🔒 FORCE height */
+  max-height: 40px;
+  min-height: 40px;
+}
+
+/* Ensure container gives the logo room */
+.brand-container {
+  display: flex;
+  align-items: center;
+  height: 56px;
+}
+
+/* =========================
+   Navigation
+========================= */
+.site-nav {
+  flex: 1;
+}
+
+.nav-list {
+  list-style: none;
+  display: flex;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: var(--muted-color);
+  font-weight: 500;
+}
+
+.nav-link:hover,
+.nav-link:focus {
+  color: var(--text-color);
+  text-decoration: underline;
+}
+
+/* =========================
+   Main content
+========================= */
+h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+h2 { font-size: 1.5rem; margin: 1.5rem 0 0.75rem; }
+h3 { font-size: 1.125rem; margin-bottom: 0.5rem; }
+
+p { margin-bottom: 1.25rem; }
+
+section { margin: 2rem 0; }
+
+/* =========================
+   Footer
+========================= */
+.site-footer {
+  padding: 24px 0;
+  border-top: 1px solid #eee;
+  text-align: center;
+}
+
+/* =========================
+   Accessibility
+========================= */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+}
+
+.skip-link:focus {
+  left: 16px;
+  top: 16px;
+  background: #000;
+  color: #fff;
+  padding: 8px 12px;
+  z-index: 1000;
+}
+
+/* =========================
+   Responsive
+========================= */
+@media (max-width: 900px) {
+  .logo { height: 40px; }
+}
+
+@media (max-width: 640px) {
+  .logo { height: 32px; }
+  .container { padding: 0 12px; }
+}
+
+/* Search box styles */
+.search-box {
+  margin: 1.5rem 0 2rem;
+}
+
+.search-box input {
+  width: 100%;
+  max-width: 480px;
+  padding: 12px 14px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+/* Hidden utility */
+.hidden { display: none; }
+
+/* Post resources (soft monetization) */
+.post-resources {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eee;
+}
+
+.post-resources h3 {
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.post-resources a {
+  color: var(--accent-color);
+  text-decoration: none;
+}
+
+.post-resources a:hover {
+  text-decoration: underline;
+}

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Dynamic SEO -->
+  <title id="seo-title">WaveSignals</title>
+  <meta
+    name="description"
+    id="seo-description"
+    content="WaveSignals publishes insights, signals, and ideas worth noticing."
+  />
+
+  <!-- Canonical (filled dynamically) -->
+  <link rel="canonical" id="canonical-url" href="" />
+
+  <meta name="robots" content="index,follow" />
+  <meta name="author" content="WaveSignals" />
+  <meta name="google-site-verification" content="YOUR_CODE_HERE" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="WaveSignals" />
+  <meta property="og:title" content="WaveSignals" />
+  <meta property="og:description" content="WaveSignals article" />
+  <meta property="og:url" content="" />
+  <meta property="og:image" content="/public/og-default.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="" />
+  <meta name="twitter:description" content="" />
+  <meta name="twitter:image" content="/public/og-default.png" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/public/favicon.svg" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/styles/main.css" />
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="container header-inner">
+
+      <div class="brand-container">
+        <a href="/app/index.html" class="brand">
+          <img
+            src="/public/logo-header.svg?v=1"
+            alt="WaveSignals logo"
+            class="site-logo"
+          />
+        </a>
+      </div>
+
+      <nav class="site-nav">
+        <ul class="nav-list">
+          <li><a href="/app/index.html" class="nav-link">Home</a></li>
+          <li><a href="/about.html" class="nav-link">About</a></li>
+          <li><a href="/contact.html" class="nav-link">Contact</a></li>
+        </ul>
+      </nav>
+
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="site-main">
+    <div class="container">
+
+      <article id="post">
+        <h1 id="post-title">Loading…</h1>
+        <p class="post-meta">
+          <time id="post-date"></time>
+        </p>
+        <div id="post-content"></div>
+
+        <div id="post-resources" class="post-resources hidden">
+          <h3>Related resources</h3>
+          <ul id="resource-list"></ul>
+        </div>
+      </article>
+
+      <p style="margin-top:2rem;">
+        ← <a href="/app/index.html">Back to all posts</a>
+      </p>
+
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container">
+      <p>© 2025 WaveSignals. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- POST LOADER -->
+  <script>
+    const DATA_URL = "/data/posts.json";
+
+    const params = new URLSearchParams(window.location.search);
+    const slug = params.get("slug");
+
+    // ✅ Redirect if no slug
+    if (!slug) {
+      window.location.replace("/app/index.html");
+    }
+
+    async function loadPost() {
+      try {
+        const res = await fetch(DATA_URL, { cache: "no-store" });
+        if (!res.ok) throw new Error("Failed to load posts");
+
+        const data = await res.json();
+        const posts = Array.isArray(data.posts) ? data.posts : [];
+
+        const post = posts.find(p => p.slug === slug && p.published);
+
+        if (!post) {
+          document.getElementById("post-title").textContent = "Post not found";
+          return;
+        }
+
+        // ===== Populate content =====
+        document.title = `${post.title} — WaveSignals`;
+        document.getElementById("seo-description").content =
+          post.excerpt || post.title;
+
+        // Canonical URL
+        const canonical = document.getElementById("canonical-url");
+        if (canonical) canonical.href = window.location.href;
+
+        // Open Graph
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        if (ogTitle) ogTitle.setAttribute("content", post.title);
+
+        const ogDesc = document.querySelector('meta[property="og:description"]');
+        if (ogDesc) ogDesc.setAttribute("content", post.excerpt || post.title);
+
+        const ogUrl = document.querySelector('meta[property="og:url"]');
+        if (ogUrl) ogUrl.setAttribute("content", window.location.href);
+
+        // Twitter
+        const twTitle = document.querySelector('meta[name="twitter:title"]');
+        if (twTitle) twTitle.setAttribute("content", post.title);
+
+        const twDesc = document.querySelector('meta[name="twitter:description"]');
+        if (twDesc) twDesc.setAttribute("content", post.excerpt || post.title);
+
+        document.getElementById("post-title").textContent = post.title;
+        document.getElementById("post-date").textContent =
+          new Date(post.date).toDateString();
+        document.getElementById("post-content").innerHTML = post.content;
+
+        // Render resources (soft monetization)
+        if (Array.isArray(post.resources) && post.resources.length > 0) {
+          const box = document.getElementById("post-resources");
+          const list = document.getElementById("resource-list");
+
+          post.resources.forEach(r => {
+            const li = document.createElement("li");
+            li.innerHTML = `<a href="${r.url}" target="_blank" rel="noopener noreferrer">${r.label}</a>`;
+            list.appendChild(li);
+          });
+
+          box.classList.remove("hidden");
+        }
+
+      } catch (err) {
+        console.error(err);
+        document.getElementById("post-title").textContent = "Error loading post";
+      }
+    }
+
+    loadPost();
+  </script>
+
+  <!-- Analytics: page views (local-only) -->
+  <script>
+    (function () {
+      const slug = new URLSearchParams(window.location.search).get("slug");
+      if (!slug) return;
+
+      try {
+        fetch("/data/analytics.json")
+          .then(res => res.json())
+          .then(data => {
+            data.views = data.views || {};
+            data.views[slug] = (data.views[slug] || 0) + 1;
+
+            // Store locally (no server write yet)
+            localStorage.setItem(
+              "ws_last_view",
+              JSON.stringify({ slug, time: Date.now() })
+            );
+          })
+          .catch(() => {});
+      } catch (e) {
+        // ignore
+      }
+    })();
+  </script>
+
+  <!-- Engagement: scroll depth proxy -->
+  <script>
+    (function () {
+      let fired = false;
+
+      window.addEventListener("scroll", () => {
+        const scrolled =
+          (window.scrollY + window.innerHeight) /
+          document.body.scrollHeight;
+
+        if (scrolled > 0.6 && !fired) {
+          fired = true;
+          try {
+            localStorage.setItem(
+              "ws_engaged",
+              JSON.stringify({ time: Date.now() })
+            );
+          } catch (e) {}
+        }
+      });
+    })();
+  </script>
+
+</body>
+</html>

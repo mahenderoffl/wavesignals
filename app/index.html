@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>WaveSignals — Insights & Signals</title>
+  <meta name="description" content="WaveSignals publishes concise insights, signals, and ideas worth noticing." />
+  <meta name="robots" content="index,follow" />
+  <meta name="google-site-verification" content="YOUR_CODE_HERE" />
+
+  <link rel="icon" type="image/svg+xml" href="/public/favicon.svg">
+  <link rel="stylesheet" href="/styles/main.css">
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="container header-inner">
+
+      <div class="brand-container">
+        <a href="/app/index.html" class="brand">
+          <img
+            src="/public/logo-header.svg?v=1"
+            alt="WaveSignals logo"
+            class="site-logo"
+          />
+        </a>
+      </div>
+
+      <nav class="site-nav">
+        <ul class="nav-list">
+          <li><a href="/app/index.html" class="nav-link">Home</a></li>
+          <li><a href="/about.html" class="nav-link">About</a></li>
+          <li><a href="/contact.html" class="nav-link">Contact</a></li>
+        </ul>
+      </nav>
+
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="site-main">
+    <div class="container">
+      <h1>Latest Signals</h1>
+      <p class="page-subtitle">Fresh insights and ideas, thoughtfully published.</p>
+
+      <div class="search-box">
+        <input
+          type="search"
+          id="search-input"
+          placeholder="Search signals…"
+          aria-label="Search posts"
+        />
+      </div>
+
+      <ul id="posts-list" class="posts-list">
+        <li>Loading posts…</li>
+      </ul>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container">
+      <p>© 2025 WaveSignals. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- POSTS SCRIPT -->
+  <script>
+    const DATA_URL = "/data/posts.json";
+
+    async function loadPosts() {
+      const list = document.getElementById("posts-list");
+
+      try {
+        const res = await fetch(DATA_URL, { cache: "no-store" });
+        if (!res.ok) throw new Error("Failed to load posts.json");
+
+        const data = await res.json();
+        const posts = Array.isArray(data.posts) ? data.posts : [];
+
+        const published = posts.filter(p => p.published === true);
+
+        if (!published.length) {
+          list.innerHTML = "<li>No posts published yet.</li>";
+          return;
+        }
+
+        list.innerHTML = "";
+
+        published.forEach(post => {
+          const li = document.createElement("li");
+          li.className = "post-item";
+
+          li.innerHTML = `
+  <article>
+    <h2 class="post-title">
+      <a href="/app/post.html?slug=${encodeURIComponent(post.slug)}">
+        ${post.title}
+      </a>
+    </h2>
+    <p class="post-excerpt">${post.excerpt || ""}</p>
+    <p class="post-meta">
+      <time datetime="${post.date}">
+        ${new Date(post.date).toDateString()}
+      </time>
+    </p>
+  </article>
+`;
+
+          list.appendChild(li);
+        });
+
+      } catch (err) {
+        console.error(err);
+        list.innerHTML = "<li>Unable to load posts.</li>";
+      }
+    }
+
+    loadPosts();
+  </script>
+
+  <script>
+    // Public site search (client-side)
+    const searchInput = document.getElementById("search-input");
+
+    function logSearch(query) {
+      if (!query || query.length < 3) return;
+      // Persist search intent locally (no identifiers)
+      try {
+        const key = `ws_search_${query}`;
+        localStorage.setItem(key, Date.now());
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    if (searchInput) {
+      searchInput.addEventListener("input", () => {
+        const query = searchInput.value.toLowerCase();
+        const items = document.querySelectorAll(".post-item");
+
+        items.forEach(item => {
+          const text = item.innerText.toLowerCase();
+          item.style.display = text.includes(query) ? "" : "none";
+        });
+
+        logSearch(query);
+      });
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+
+  <title>WaveSignals Admin</title>
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      margin: 0;
+      background: #f7f7f7;
+      color: #111;
+    }
+
+    .hidden { display: none !important; }
+
+    .center-screen {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+    }
+
+    input, textarea, button {
+      width: 100%;
+      max-width: 420px;
+      padding: 10px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    textarea { min-height: 120px; }
+
+    button {
+      cursor: pointer;
+      background: #111;
+      color: #fff;
+      border: none;
+    }
+
+    .error { color: red; }
+
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      background: #fff;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .admin-main {
+      max-width: 900px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    .card {
+      background: #fff;
+      padding: 16px;
+      margin-bottom: 24px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- LOGIN -->
+  <div id="login-screen" class="center-screen">
+    <h1>WaveSignals Admin</h1>
+    <input type="password" id="admin-key" placeholder="Enter admin key" />
+    <button id="login-btn">Enter</button>
+    <p id="login-error" class="error hidden">Invalid key</p>
+  </div>
+
+  <!-- ADMIN PANEL -->
+  <div id="admin-panel" class="hidden">
+
+    <header class="admin-header">
+      <div class="container header-inner" style="display:flex;align-items:center;gap:12px;">
+        <div class="brand-container">
+          <a href="/app/index.html" class="brand">
+            <img
+              src="/public/logo-header.svg?v=1"
+              alt="WaveSignals logo"
+              class="site-logo"
+            />
+          </a>
+        </div>
+        <h2 style="margin-left:12px;">Admin Panel</h2>
+        <div style="margin-left:auto;"><button id="logout-btn">Logout</button></div>
+      </div>
+    </header>
+
+    <main class="admin-main">
+
+      <section class="card">
+        <h3>Create New Post</h3>
+
+        <input id="title" placeholder="Post title" />
+        <input id="slug" placeholder="URL slug (optional)" />
+        <textarea id="excerpt" placeholder="Short excerpt"></textarea>
+        <textarea id="content" placeholder="HTML content"></textarea>
+
+        <label>
+          <input type="checkbox" id="publish" />
+          Publish immediately
+        </label>
+
+        <br><br>
+        <button id="save-post">Save Post</button>
+      </section>
+
+      <section class="card">
+        <h3>Existing Posts</h3>
+        <ul id="posts-list">
+          <li>No posts yet</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h3>Site Insights</h3>
+
+        <p><strong>Total Posts:</strong> <span id="stat-total">–</span></p>
+        <p><strong>Published Posts:</strong> <span id="stat-published">–</span></p>
+
+        <h4 style="margin-top:1rem;">Recent Posts</h4>
+        <ul id="recent-posts"></ul>
+
+        <h4 style="margin-top:1rem;">Search Signals (local)</h4>
+        <ul id="search-signals"></ul>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ✅ SINGLE, CLEAN SCRIPT -->
+  <script>
+    console.log("✅ Admin script loaded");
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const ADMIN_KEY = "wavesignals@2025";
+
+      const loginScreen = document.getElementById("login-screen");
+      const adminPanel  = document.getElementById("admin-panel");
+      const loginBtn    = document.getElementById("login-btn");
+      const logoutBtn   = document.getElementById("logout-btn");
+      const error       = document.getElementById("login-error");
+      const saveBtn     = document.getElementById("save-post");
+
+      // LOGIN
+      loginBtn.addEventListener("click", () => {
+        const key = document.getElementById("admin-key").value.trim();
+        if (key === ADMIN_KEY) {
+          loginScreen.classList.add("hidden");
+          adminPanel.classList.remove("hidden");
+        } else {
+          error.classList.remove("hidden");
+        }
+      });
+
+      logoutBtn.addEventListener("click", () => location.reload());
+
+      // SAVE POST → DOWNLOAD posts.json
+      saveBtn.addEventListener("click", () => {
+        const title   = document.getElementById("title").value.trim();
+        const slugIn  = document.getElementById("slug").value.trim();
+        const excerpt = document.getElementById("excerpt").value.trim();
+        const content = document.getElementById("content").value.trim();
+        const publish = document.getElementById("publish").checked;
+
+        if (!title || !content) {
+          alert("Title and content are required");
+          return;
+        }
+
+        const slug = slugIn || title.toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)/g, "");
+
+        const post = {
+          id: Date.now(),
+          title,
+          slug,
+          excerpt,
+          content,
+          published: publish,
+          date: new Date().toISOString()
+        };
+
+        const data = { posts: [post] };
+
+        const blob = new Blob(
+          [JSON.stringify(data, null, 2)],
+          { type: "application/json" }
+        );
+
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "posts.json";
+        a.click();
+
+        URL.revokeObjectURL(a.href);
+
+        alert("posts.json downloaded. Replace /data/posts.json");
+      });
+
+      // ===============================
+      // ADMIN INSIGHTS (LOCAL-FIRST)
+      // ===============================
+      fetch("/data/posts.json")
+        .then(res => res.json())
+        .then(data => {
+          const posts = data.posts || [];
+
+          document.getElementById("stat-total").textContent = posts.length;
+          document.getElementById("stat-published").textContent =
+            posts.filter(p => p.published).length;
+
+          const recent = document.getElementById("recent-posts");
+          posts.slice(0, 5).forEach(p => {
+            const li = document.createElement("li");
+            li.textContent = p.title;
+            recent.appendChild(li);
+          });
+        })
+        .catch(() => {});
+
+      // Load search intent from localStorage (editor-side)
+      const searchList = document.getElementById("search-signals");
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith("ws_search_")) {
+          const term = key.replace("ws_search_", "");
+          const li = document.createElement("li");
+          li.textContent = term;
+          searchList.appendChild(li);
+        }
+      }
+    });
+  </script>
+
+</body>
+</html>

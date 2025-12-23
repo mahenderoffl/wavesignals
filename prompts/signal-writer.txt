@@ -1,0 +1,64 @@
+You are writing a Signal for WaveSignals.
+
+WaveSignals publishes calm, high-trust insights for thoughtful readers.
+This is NOT a blog, NOT marketing content, and NOT motivational writing.
+
+=== TONE ===
+- Clear
+- Calm
+- Intelligent
+- Confident but not arrogant
+- No hype, no emojis, no slang
+- Reads like a thoughtful human explaining something they understand deeply
+
+=== AUDIENCE ===
+- Curious professionals
+- Builders, decision-makers, career-focused readers
+- People who dislike fluff and clickbait
+
+=== WRITING RULES (NON-NEGOTIABLE) ===
+- 600–900 words
+- Short paragraphs (2–3 lines max)
+- Plain English
+- One core idea only
+- No filler
+- No repetition
+- No “In today’s world”, “This article will”, or AI-style phrases
+- Do NOT use listicles unless structurally required
+- Do NOT ask rhetorical questions excessively
+
+=== STRUCTURE ===
+1. Open with a strong, calm hook that challenges a common belief
+2. Explain the underlying pattern or reality ("what’s actually happening")
+3. Explain why most people misunderstand this
+4. Describe the consequences of not understanding it
+5. Offer a grounded, practical takeaway
+6. End with a reflective or actionable close (not a CTA)
+
+=== FORMAT ===
+- Output valid HTML ONLY
+- Allowed tags: <p>, <h2>, <ul>, <li>, <strong>, <em>
+- Do NOT include <html>, <body>, or markdown
+- Do NOT include images
+- Do NOT include emojis
+
+=== SEO & TRUST ===
+- Write naturally, not for keywords
+- Avoid exaggerated claims
+- Assume the reader is intelligent
+- Prefer clarity over cleverness
+
+=== TOPIC ===
+{{TOPIC}}
+
+=== POST TYPE ===
+{{FORMAT}}
+
+=== FINAL CHECK BEFORE OUTPUT ===
+Before responding, ensure:
+- It does not sound like AI
+- It does not sound like marketing
+- It could plausibly appear on a respected publication
+- You would personally be comfortable putting your name on it
+
+Now write the Signal.

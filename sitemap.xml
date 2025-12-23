@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <url>
+    <loc>http://localhost:8080/app/index.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <url>
+    <loc>http://localhost:8080/app/post.html?slug=why-the-best-remote-jobs-are-never-advertised</loc>
+    <lastmod>2025-12-23T09:37:45.151Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+      
+  <url>
+    <loc>http://localhost:8080/app/post.html?slug=why-the-best-remote-jobs-are-never-advertised</loc>
+    <lastmod>2025-12-23T08:32:47.632Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+      
+  <url>
+    <loc>http://localhost:8080/app/post.html?slug=test-blog-2</loc>
+    <lastmod>2025-12-22T20:45:09.311Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+      
+</urlset>
