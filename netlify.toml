@@ -1,6 +1,7 @@
 [build]
-  # Publish directory contains the final static site. We use `app/`.
-  publish = "app"
+  # Publish directory contains the final static site. Use repository root so
+  # sibling folders like /data and /public are published alongside /app.
+  publish = "."
   # No build command required for this static site
   command = ""
 
