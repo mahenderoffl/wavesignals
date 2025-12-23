@@ -1,0 +1,41 @@
+name: WaveSignals Publisher
+
+on:
+  workflow_dispatch:        # manual trigger
+  schedule:
+    - cron: "30 6 * * *"    # runs daily at 06:30 UTC
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install || true
+
+      - name: Run content pipeline
+        run: |
+          node scripts/generate-post.js
+        continue-on-error: false
+
+      - name: Generate sitemap
+        run: |
+          node scripts/generate-sitemap.js
+        continue-on-error: false
+
+      - name: Commit & push if changed
+        run: |
+          git config user.name "wavesignals-bot"
+          git config user.email "bot@wavesignals.app"
+
+          git add data/posts.json sitemap.xml
+          git diff --cached --quiet || git commit -m "Auto-publish new signal"
+          git push
