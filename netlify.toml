@@ -1,0 +1,8 @@
+[build]
+  # Publish directory contains the final static site. We use `app/`.
+  publish = "app"
+  # No build command required for this static site
+  command = ""
+
+[context.production.environment]
+# Add production ENV overrides here if needed
