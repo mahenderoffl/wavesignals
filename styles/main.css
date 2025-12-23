@@ -202,3 +202,57 @@ section { margin: 2rem 0; }
 .post-resources a:hover {
   text-decoration: underline;
 }
+
+/* Recommended / affiliate mention (quiet, contextual) */
+.recommended {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px dashed #eee;
+}
+
+.recommended h4 {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.recommended a {
+  color: var(--accent-color);
+  text-decoration: none;
+}
+
+.recommended a:hover { text-decoration: underline; }
+
+.affiliate-disclaimer {
+  font-size: 0.9rem;
+  color: var(--muted-color);
+  margin-bottom: 0.25rem;
+}
+
+/* =========================
+   Email signup (quiet opt-in)
+   Minimal, unobtrusive styles for post footer capture
+========================= */
+.email-signup {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eee;
+}
+
+.email-signup input {
+  max-width: 260px;
+  margin-right: 8px;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.email-signup button {
+  background: var(--accent-color);
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.email-signup button:hover { opacity: 0.95; }

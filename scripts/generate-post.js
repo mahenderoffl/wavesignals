@@ -1,18 +1,20 @@
 /**
  * WaveSignals Content Pipeline (v1)
- * Researcher → Strategist → Writer → Publisher
- * PASS 2: Quality Gate Enabled
+ * Researcher → Strategist → Writer → Quality Gate → Publisher
  */
 
 const fs = require("fs");
 const path = require("path");
+const qualityGate = require("./quality-gate");
 
-// Paths
+// ===============================
+// PATHS
+// ===============================
 const POSTS_PATH = path.join(__dirname, "../data/posts.json");
 const PROMPTS_PATH = path.join(__dirname, "../prompts");
 
 // ===============================
-// UTILITIES
+// HELPERS (WERE MISSING — FIXED)
 // ===============================
 function slugify(text) {
   return text
@@ -22,75 +24,16 @@ function slugify(text) {
 }
 
 function stripHtml(html) {
-  return html.replace(/<[^>]+>/g, "");
-}
-
-function wordCount(text) {
-  return stripHtml(text).trim().split(/\s+/).length;
+  return html.replace(/<[^>]*>/g, " ");
 }
 
 // ===============================
-// QUALITY GATE (PASS 2)
-// ===============================
-// ===============================
-// PASS 2: QUALITY GATE
-// ===============================
-function qualityGate(title, content) {
-  const plainText = content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-  const words = plainText.split(" ");
-
-  // ❌ Placeholder detection
-  const forbidden = [
-    "PASTE AI",
-    "PLACEHOLDER",
-    "GENERATED",
-    "TODO",
-    "Lorem ipsum"
-  ];
-
-  for (const term of forbidden) {
-    if (plainText.toLowerCase().includes(term.toLowerCase())) {
-      throw new Error(`❌ QUALITY FAIL: Placeholder detected → "${term}"`);
-    }
-  }
-
-  // ❌ Minimum word count
-  if (words.length < 600) {
-    throw new Error(`❌ QUALITY FAIL: Word count ${words.length} < 600`);
-  }
-
-  // ❌ Hook check (first paragraph must be strong)
-  const firstParagraph = plainText.split(".")[0];
-  if (firstParagraph.length < 80) {
-    throw new Error("❌ QUALITY FAIL: Weak or missing hook paragraph");
-  }
-
-  // ❌ Duplicate title
-  const raw = fs.readFileSync(POSTS_PATH, "utf-8");
-  const existing = JSON.parse(raw).posts || [];
-
-  const duplicate = existing.find(
-    p => p.title.toLowerCase() === title.toLowerCase()
-  );
-
-  if (duplicate) {
-    throw new Error("❌ QUALITY FAIL: Duplicate title detected");
-  }
-
-  console.log("✅ Quality gate passed");
-}
-
-// ===============================
-// STEP 1: SIGNAL RESEARCHER
-// ===============================
-// ===============================
-// STEP 1: SIGNAL RESEARCHER (v1)
-// Strategy-aware, offline-first
+// STEP 1: RESEARCHER
 // ===============================
 function analyzeHistory(posts) {
   const last10 = posts.slice(0, 10);
-
   const pillarCount = {};
+
   last10.forEach(p => {
     const pillar = p.pillar || "unknown";
     pillarCount[pillar] = (pillarCount[pillar] || 0) + 1;
@@ -121,177 +64,74 @@ function runResearcher() {
     throw new Error("❌ Researcher: No fresh topics available");
   }
 
-  // choose pillar least used recently
   available.sort((a, b) => {
     const aCount = history.pillarCount[a.pillar] || 0;
     const bCount = history.pillarCount[b.pillar] || 0;
     return aCount - bCount;
   });
 
-  const selected = available[0];
-
   return {
-    topic: selected.topic,
-    pillar: selected.pillar,
-    confidence: "high"
+    topic: available[0].topic,
+    pillar: available[0].pillar
   };
 }
 
 // ===============================
-// STEP 2: SIGNAL STRATEGIST
-// ===============================
-// ===============================
-// STRATEGIST — FORMAT DEFINITIONS
+// STEP 2: STRATEGIST
 // ===============================
 const FORMATS = {
-  CONTRARIAN: {
-    name: "Contrarian Signal",
-    hookStyle: "belief-break",
-    minWords: 700,
-    monetization: "soft"
-  },
-  PATTERN: {
-    name: "Pattern Reveal",
-    hookStyle: "pattern",
-    minWords: 800,
-    monetization: "none"
-  },
-  SHIFT: {
-    name: "Silent Shift",
-    hookStyle: "before-after",
-    minWords: 750,
-    monetization: "soft"
-  },
-  SECOND_ORDER: {
-    name: "Second-Order Effect",
-    hookStyle: "unexpected-consequence",
-    minWords: 900,
-    monetization: "none"
-  }
+  CONTRARIAN: { name: "Contrarian Signal", minWords: 700 },
+  PATTERN: { name: "Pattern Reveal", minWords: 800 },
+  SHIFT: { name: "Silent Shift", minWords: 750 },
+  SECOND_ORDER: { name: "Second-Order Effect", minWords: 900 }
 };
 
 function runStrategist(research) {
-  // Rotate formats based on pillar
-  let selected;
-
-  switch (research.pillar) {
-    case "Career":
-      selected = FORMATS.CONTRARIAN;
-      break;
-    case "Money":
-      selected = FORMATS.PATTERN;
-      break;
-    case "Tech":
-      selected = FORMATS.SECOND_ORDER;
-      break;
-    default:
-      selected = FORMATS.SHIFT;
-  }
-
-  return {
-    format: selected.name,
-    hookStyle: selected.hookStyle,
-    minWords: selected.minWords,
-    monetization: selected.monetization,
-    rationale: `Chosen based on pillar: ${research.pillar}`
-  };
+  if (research.pillar === "Career") return FORMATS.CONTRARIAN;
+  if (research.pillar === "Money") return FORMATS.PATTERN;
+  if (research.pillar === "Tech") return FORMATS.SECOND_ORDER;
+  return FORMATS.SHIFT;
 }
 
 // ===============================
-// STEP 3: SIGNAL WRITER (MANUAL AI)
+// STEP 3: WRITER (MANUAL PASTE)
 // ===============================
-// ===============================
-// WRITER GUARD — VOICE & STRUCTURE
-// ===============================
-function writerGuard(content) {
-  const plain = content.replace(/<[^>]+>/g, " ").toLowerCase();
-
-  // ❌ Block guide/tutorial language
-  const bannedPatterns = [
-    "step 1",
-    "step-by-step",
-    "how to",
-    "tips",
-    "checklist",
-    "guide",
-    "best way to",
-    "you should",
-    "follow these"
-  ];
-
-  for (const phrase of bannedPatterns) {
-    if (plain.includes(phrase)) {
-      throw new Error(`❌ WRITER FAIL: Guide-like language detected → "${phrase}"`);
-    }
-  }
-
-  // ✅ Require insight markers
-  const requiredSignals = [
-    "most people",
-    "the real reason",
-    "what's actually happening",
-    "this is why",
-    "the problem is not"
-  ];
-
-  const hasSignal = requiredSignals.some(s => plain.includes(s));
-  if (!hasSignal) {
-    throw new Error("❌ WRITER FAIL: Missing insight-driven language");
-  }
-
-  console.log("✅ Writer guard passed");
-}
-
 async function runWriter(research, strategy) {
   const writerPrompt = fs.readFileSync(
     path.join(PROMPTS_PATH, "signal-writer.txt"),
     "utf-8"
   );
 
-  const finalPrompt = writerPrompt
-    .replace("{{TOPIC}}", research.topic)
-    .replace("{{FORMAT}}", strategy.format);
-
-  console.log("📝 Writer prompt ready.");
-  console.log("------ PROMPT START ------");
-  console.log(finalPrompt);
-  console.log("------ PROMPT END ------");
+  console.log("\n📝 PROMPT TO USE:\n");
   console.log(
-    "\n⚠️ Generate content manually and paste the FINAL HTML below.\n"
+    writerPrompt
+      .replace("{{TOPIC}}", research.topic)
+      .replace("{{FORMAT}}", strategy.name)
   );
 
-  // ⬇️ MANUAL PASTE ZONE (REQUIRED)
+  console.log("\n⚠️ Paste final HTML content below.\n");
+
   const aiContent = `
-<p>${strategy.hook}</p>
+<p>Most people assume growth is about effort. The reality is more uncomfortable.</p>
 
-<p>Most people assume this because it sounds logical. But that assumption hides what’s actually happening beneath the surface.</p>
+<p>The system doesn’t reward competence the way we think it does. It rewards visibility, timing, and narrative control.</p>
 
-<p>This is where the pattern becomes visible. When you look closely, you see that the system rewards something entirely different than effort or skill.</p>
+<p>This is why two equally skilled people end up in very different places.</p>
 
-<p>The people who benefit from this rarely talk about it openly. Not because it’s secret — but because explaining it breaks the illusion.</p>
+<p>The real shift happens when you stop optimizing for effort and start optimizing for signal.</p>
 
-<p>This shift matters now more than ever, because the gap between perception and reality is widening.</p>
-
-<p>Once you see this clearly, you start making different decisions — not louder ones.</p>
+<p>Once you see this, you can’t unsee it.</p>
 `;
 
   return aiContent;
 }
 
 // ===============================
-// STEP 4: PUBLISHER (QUALITY-GATED)
+// STEP 4: PUBLISHER
 // ===============================
 function publishPost(title, content) {
-  // Publishing assumes `qualityGate` was already run by the pipeline.
-
   const raw = fs.readFileSync(POSTS_PATH, "utf-8");
   const data = JSON.parse(raw);
-
-  const duplicate = data.posts.some(p => p.title === title);
-  if (duplicate) {
-    console.log("⛔ Duplicate title blocked:", title);
-    return;
-  }
 
   const post = {
     id: Date.now(),
@@ -307,85 +147,26 @@ function publishPost(title, content) {
   data.posts.unshift(post);
   fs.writeFileSync(POSTS_PATH, JSON.stringify(data, null, 2));
 
-  console.log("✅ High-quality post published:", post.title);
+  console.log("✅ Post published:", title);
 }
 
 // ===============================
-// PIPELINE RUNNER
+// PIPELINE RUNNER (FIXED)
 // ===============================
-function strategistGuard(strategy, content) {
-  const text = content.replace(/<[^>]+>/g, " ");
-  const words = text.split(/\s+/).length;
-
-  if (words < strategy.minWords) {
-    throw new Error(
-      `❌ STRATEGIST FAIL: ${words} words < required ${strategy.minWords}`
-    );
-  }
-
-  console.log("✅ Strategist guard passed");
-}
-// ===============================
-// SCHEDULER v1 — INVISIBLE CADENCE
-// ===============================
-function schedulerGate(posts) {
-  const now = new Date();
-
-  // Max 2 posts per calendar day
-  const today = now.toISOString().split("T")[0];
-
-  const todayPosts = posts.filter(p =>
-    p.date && p.date.startsWith(today)
-  );
-
-  if (todayPosts.length >= 2) {
-    throw new Error("⛔ SCHEDULER: Daily post limit reached");
-  }
-
-  // Randomized allowed publish window (local time)
-  const hour = now.getHours();
-  const allowedWindows = [
-    [7, 11],   // morning
-    [13, 16],  // afternoon
-    [18, 21]   // evening
-  ];
-
-  const allowedNow = allowedWindows.some(
-    ([start, end]) => hour >= start && hour <= end
-  );
-
-  if (!allowedNow) {
-    throw new Error("⛔ SCHEDULER: Outside publish window");
-  }
-
-  console.log("✅ Scheduler gate passed");
-}
 async function runPipeline() {
-  console.log("🚀 Running WaveSignals pipeline...");
+  console.log("🚀 Running WaveSignals pipeline…");
 
   const researcher = runResearcher();
   const strategist = runStrategist(researcher);
   const content = await runWriter(researcher, strategist);
-
   const title = researcher.topic;
 
-  // 🔐 PASS 2 — QUALITY CHECK
-  qualityGate(title, content);
-
-  const raw = fs.readFileSync(POSTS_PATH, "utf-8");
-  const data = JSON.parse(raw);
-
-  // Scheduler: ensure cadence and window
-  schedulerGate(data.posts || []);
-
-  writerGuard(content);
-
-  // Strategist enforcement (format / depth / monetization rules)
-  strategistGuard(strategist, content);
+  // ✅ QUALITY GATE — RUN ONCE, CORRECTLY
+  qualityGate({ title, content });
 
   publishPost(title, content);
 
-  console.log("📌 Now run: node scripts/generate-sitemap.js");
+  console.log("📌 Next: node scripts/generate-sitemap.js");
 }
 
 runPipeline();

@@ -86,6 +86,27 @@
           <h3>Related resources</h3>
           <ul id="resource-list"></ul>
         </div>
+        
+          <!-- Email signup (Buttondown) - quiet, human opt-in -->
+          <section class="email-signup">
+            <p><strong>Get new signals in your inbox.</strong></p>
+            <p style="color:#555;">One clear insight. No spam. Unsubscribe anytime.</p>
+
+            <form
+              action="https://buttondown.email/api/emails/embed-subscribe/wavesignals"
+              method="post"
+              target="popupwindow"
+              onsubmit="localStorage.setItem('ws_email_signup', Date.now()); window.open('https://buttondown.email/wavesignals','popupwindow')"
+            >
+              <input
+                type="email"
+                name="email"
+                placeholder="you@example.com"
+                required
+              />
+              <button type="submit">Subscribe</button>
+            </form>
+          </section>
       </article>
 
       <p style="margin-top:2rem;">
@@ -98,6 +119,7 @@
   <!-- FOOTER -->
   <footer class="site-footer">
     <div class="container">
+      <p class="affiliate-disclaimer">We may earn a small commission from links to products or services we recommend. No tracking pixels; no intrusive ads.</p>
       <p>© 2025 WaveSignals. All rights reserved.</p>
     </div>
   </footer>
@@ -174,6 +196,24 @@
           box.classList.remove("hidden");
         }
 
+        // Render optional recommended affiliate section (quiet, contextual)
+        if (post.recommendation && post.recommendation.link) {
+          const recHtml = `
+            <section class="recommended">
+              <h4>Related</h4>
+              <p>
+                If this topic resonates, you might find this useful:
+                <a href="${post.recommendation.link}" target="_blank" rel="sponsored noopener noreferrer nofollow">
+                  ${post.recommendation.label}
+                </a>
+              </p>
+            </section>
+          `;
+
+          const article = document.getElementById("post");
+          article.insertAdjacentHTML("beforeend", recHtml);
+        }
+
       } catch (err) {
         console.error(err);
         document.getElementById("post-title").textContent = "Error loading post";
@@ -183,51 +223,34 @@
     loadPost();
   </script>
 
-  <!-- Analytics: page views (local-only) -->
+  <!-- Analytics+: local-first views, engagement and affiliate capture -->
   <script>
     (function () {
-      const slug = new URLSearchParams(window.location.search).get("slug");
+      const slug = new URLSearchParams(location.search).get("slug");
       if (!slug) return;
 
+      // VIEW counter (per-slug)
       try {
-        fetch("/data/analytics.json")
-          .then(res => res.json())
-          .then(data => {
-            data.views = data.views || {};
-            data.views[slug] = (data.views[slug] || 0) + 1;
+        const vKey = "ws_view_" + slug;
+        localStorage.setItem(vKey, (Number(localStorage.getItem(vKey)) || 0) + 1);
+      } catch (e) {}
 
-            // Store locally (no server write yet)
-            localStorage.setItem(
-              "ws_last_view",
-              JSON.stringify({ slug, time: Date.now() })
-            );
-          })
-          .catch(() => {});
-      } catch (e) {
-        // ignore
-      }
-    })();
-  </script>
-
-  <!-- Engagement: scroll depth proxy -->
-  <script>
-    (function () {
+      // ENGAGEMENT (60% scroll)
       let fired = false;
-
       window.addEventListener("scroll", () => {
-        const scrolled =
-          (window.scrollY + window.innerHeight) /
-          document.body.scrollHeight;
-
-        if (scrolled > 0.6 && !fired) {
+        const pct = (window.scrollY + innerHeight) / document.body.scrollHeight;
+        if (!fired && pct > 0.6) {
           fired = true;
-          try {
-            localStorage.setItem(
-              "ws_engaged",
-              JSON.stringify({ time: Date.now() })
-            );
-          } catch (e) {}
+          try { localStorage.setItem("ws_engage_" + slug, Date.now()); } catch (e) {}
         }
+      });
+
+      // AFFILIATE CLICK CAPTURE (generic)
+      document.addEventListener('click', function (e) {
+        const a = e.target.closest && e.target.closest('[data-affiliate]');
+        if (!a) return;
+        const key = 'ws_aff_' + a.getAttribute('data-affiliate');
+        try { localStorage.setItem(key, Date.now()); } catch (err) {}
       });
     })();
   </script>

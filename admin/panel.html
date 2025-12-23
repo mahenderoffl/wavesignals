@@ -247,6 +247,23 @@
           searchList.appendChild(li);
         }
       }
+
+      // ===== ANALYTICS READ (LOCAL) =====
+      function read(prefix) {
+        return Object.keys(localStorage)
+          .filter(k => k.startsWith(prefix))
+          .map(k => k.replace(prefix, ""));
+      }
+
+      const views = read("ws_view_");
+      const engages = read("ws_engage_");
+      const emails = read("ws_email_");
+      const affs = read("ws_aff_");
+
+      console.log("📊 Views:", views);
+      console.log("📈 Engaged:", engages);
+      console.log("📧 Emails:", emails.length);
+      console.log("💰 Affiliate clicks:", affs.length);
     });
   </script>
 
