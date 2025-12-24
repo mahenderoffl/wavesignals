@@ -63,6 +63,13 @@ ul {
   padding: 0 1.5rem;
 }
 
+@media (max-width: 480px) {
+  .container {
+    padding: 0 1rem;
+    /* Less padding on small screens for more content width */
+  }
+}
+
 .hidden {
   display: none !important;
 }
@@ -161,7 +168,7 @@ ul {
 /* --- POST GRID --- */
 .posts-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 2rem;
   padding-bottom: 4rem;
 }

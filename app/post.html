@@ -145,6 +145,21 @@
     </div>
   </footer>
 
+  <!-- JSON-LD SCHEMA (Dynamic) -->
+  <script type="application/ld+json" id="json-ld-data">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "Loading...",
+      "image": [],
+      "datePublished": "",
+      "author": {
+        "@type": "Organization",
+        "name": "WaveSignals"
+      }
+    }
+  </script>
+
   <!-- DATA LOADER -->
   <script>
     const DATA_URL = "/data/posts.json";
@@ -170,10 +185,38 @@
         // SEO & Meta
         document.title = `${post.title} — WaveSignals`;
         document.getElementById("seo-description").content = post.excerpt || post.title;
+        document.getElementById("canonical-url").href = window.location.href;
         document.getElementById("post-title").textContent = post.title;
         document.getElementById("post-author").textContent = post.author || "WaveSignals";
         document.getElementById("post-date").textContent = new Date(post.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
         document.getElementById("post-content").innerHTML = post.content;
+
+        // NEW: Render Featured Image (if exists)
+        if (post.image) {
+          const img = document.createElement('img');
+          img.src = post.image;
+          img.alt = post.title; // Fallback SEO Alt
+          img.className = 'post-featured-image'; // Usage: width:100%; border-radius:12px; margin-bottom:2rem;
+
+          // Insert after header, before content
+          document.querySelector('.article-header').after(img);
+        }
+
+        // NEW: Update JSON-LD Schema
+        const schema = {
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          "headline": post.title,
+          "image": post.image ? [post.image] : ["https://wavesignals.waveseed.app/public/og-default.png"],
+          "datePublished": post.date,
+          "dateModified": post.date,
+          "author": {
+            "@type": "Organization",
+            "name": post.author || "WaveSignals"
+          },
+          "description": post.excerpt || ""
+        };
+        document.getElementById('json-ld-data').textContent = JSON.stringify(schema);
 
         // Resources
         if (post.resources && post.resources.length) {
