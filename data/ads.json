@@ -2,6 +2,8 @@
   "slots": {
     "header": "",
     "post-bottom": "",
-    "footer": ""
+    "footer": "",
+    "sidebar-left": "",
+    "sidebar-right": ""
   }
 }

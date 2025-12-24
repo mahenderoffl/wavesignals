@@ -3,8 +3,8 @@ name: Auto Publish WaveSignals
 on:
   workflow_dispatch: {}
   schedule:
-    # Daily run at 10:00 UTC (adjustable)
-    - cron: '0 10 * * *'
+    # Runs at 00:00 UTC daily
+    - cron: '0 0 * * *'
 
 permissions:
   contents: write
@@ -25,6 +25,8 @@ jobs:
 
       - name: Run pipeline (generate-post.js)
         id: run_pipeline
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           set -e
           echo "Running WaveSignals pipeline..."

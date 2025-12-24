@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -13,6 +14,16 @@
   <link rel="icon" href="/favicon.ico">
   <link rel="apple-touch-icon" href="/favicon.svg">
   <link rel="stylesheet" href="/styles/main.css">
+
+  <!-- ANALYTICS (Paste GA4 ID here in future) -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXX');
+  </script> -->
+
 </head>
 
 <body>
@@ -20,14 +31,9 @@
   <!-- HEADER -->
   <header class="site-header">
     <div class="container header-inner">
-
       <div class="brand-container">
         <a href="/app/index.html" class="brand">
-          <img
-            src="/public/logo-header.svg?v=1"
-            alt="WaveSignals logo"
-            class="site-logo"
-          />
+          <img src="/public/logo-header.svg?v=1" alt="WaveSignals logo" class="site-logo" />
         </a>
       </div>
 
@@ -38,47 +44,34 @@
           <li><a href="/contact.html" class="nav-link">Contact</a></li>
         </ul>
       </nav>
-
       <!-- AD_SLOT: header -->
     </div>
   </header>
 
-  <!-- MAIN -->
-  <main class="site-main">
+  <!-- HERO SECTION -->
+  <section class="hero">
     <div class="container">
       <h1>Latest Signals</h1>
       <p class="page-subtitle">Fresh insights and ideas, thoughtfully published.</p>
 
-      <section class="pillars">
+      <div class="search-box">
+        <input type="search" id="search-input" placeholder="Search signals (e.g. 'Future of Work')…"
+          aria-label="Search posts" />
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN CONTENT -->
+  <main class="site-main">
+    <div class="container">
+
+      <!-- PILLARS (Cleaned up for new layout) -->
+      <section class="pillars" style="display:none"> <!-- Hidden for now to focus on posts -->
         <div class="pillar">
           <h3>Career</h3>
-          <p>Visibility now often determines career momentum more than technical skill alone. We explore how narratives, timing, and network signals translate into opportunity — and what practical shifts create real professional advantage.</p>
-        </div>
-
-        <div class="pillar">
-          <h3>Money</h3>
-          <p>Financial decisions are shaped by hidden incentives and small recurring choices. We surface the quiet costs and trade-offs that compound over time, and when modest shifts produce outsized results.</p>
-        </div>
-
-        <div class="pillar">
-          <h3>Tech</h3>
-          <p>Technical speed, operational costs, and product framing determine which innovations survive. We favor pattern-driven analysis that explains why some tools win and others erode under maintenance.</p>
-        </div>
-
-        <div class="pillar">
-          <h3>Behavior</h3>
-          <p>Small behavioral biases shape big outcomes. We examine the psychology of decision inertia, comfort, and commitment, and how clearer mental models unlock better choices.</p>
+          <p>Visibility now often determines career momentum more than technical skill alone.</p>
         </div>
       </section>
-
-      <div class="search-box">
-        <input
-          type="search"
-          id="search-input"
-          placeholder="Search signals…"
-          aria-label="Search posts"
-        />
-      </div>
 
       <ul id="posts-list" class="posts-list">
         <li>Loading posts…</li>
@@ -111,7 +104,7 @@
         const published = posts.filter(p => p.published === true);
 
         if (!published.length) {
-          list.innerHTML = "<li>No posts published yet.</li>";
+          list.innerHTML = "<li style='grid-column: 1/-1; text-align:center;'>No posts published yet.</li>";
           return;
         }
 
@@ -122,20 +115,20 @@
           li.className = "post-item";
 
           li.innerHTML = `
-  <article>
-    <h2 class="post-title">
-      <a href="/app/post.html?slug=${encodeURIComponent(post.slug)}">
-        ${post.title}
-      </a>
-    </h2>
-    <p class="post-excerpt">${post.excerpt || ""}</p>
-    <p class="post-meta">
-      <time datetime="${post.date}">
-        ${new Date(post.date).toDateString()}
-      </time>
-    </p>
-  </article>
-`;
+            <a href="/app/post.html?slug=${encodeURIComponent(post.slug)}" class="post-link">
+              <article>
+                <h2 class="post-title">${post.title}</h2>
+                <p class="post-excerpt">${post.excerpt || ""}</p>
+                <div class="post-meta">
+                  <time datetime="${post.date}">
+                    ${new Date(post.date).toDateString()}
+                  </time>
+                  <span>•</span>
+                  <span>${post.author || "WaveSignals"}</span>
+                </div>
+              </article>
+            </a>
+          `;
 
           list.appendChild(li);
         });
@@ -146,8 +139,8 @@
       }
     }
 
-    loadPosts().then(() => injectAds()).catch(()=>{});
-    
+    loadPosts().then(() => injectAds()).catch(() => { });
+
     async function injectAds() {
       try {
         const res = await fetch('/data/ads.json', { cache: 'no-store' });
@@ -155,46 +148,28 @@
         const data = await res.json();
         const slots = (data && data.slots) || {};
 
-        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_COMMENT, null, false);
-        const toReplace = [];
-        let node;
-        while (node = walker.nextNode()) {
-          const m = /AD_SLOT:\s*([a-zA-Z0-9_-]+)/.exec(node.nodeValue);
-          if (m) toReplace.push({ node, name: m[1] });
-        }
-
-        toReplace.forEach(({ node, name }) => {
+        // Helper
+        const inject = (name, className, appendTo) => {
           const html = slots[name];
           if (html && html.trim()) {
-            const wrapper = document.createElement('div');
-            wrapper.className = `ad-slot ad-slot-${name.replace(/[^a-z0-9_-]/gi,'')}`;
-            try { wrapper.innerHTML = html; } catch (e) { wrapper.textContent = html; }
-            node.parentNode.replaceChild(wrapper, node);
-          } else {
-            node.parentNode.removeChild(node);
+            const div = document.createElement('div');
+            div.className = className;
+            try { div.innerHTML = html; } catch (e) { div.textContent = html; }
+            if (appendTo) appendTo.appendChild(div);
+            else document.body.appendChild(div);
           }
-        });
-      } catch (e) {
-        // silent
-      }
-    }
-  </script>
+        };
 
-  <script>
+        // Standard Slots (handled by placeholders if they exist, or simple injection)
+        // Header/Footer usually static, but here we inject sidebars
+        inject('sidebar-left', 'ad-skyscraper ad-left');
+        inject('sidebar-right', 'ad-skyscraper ad-right');
+
+      } catch (e) { }
+    }
+
     // Public site search (client-side)
     const searchInput = document.getElementById("search-input");
-
-    function logSearch(query) {
-      if (!query || query.length < 3) return;
-      // Persist search intent locally (no identifiers)
-      try {
-        const key = `ws_search_${query}`;
-        localStorage.setItem(key, Date.now());
-      } catch (e) {
-        // ignore
-      }
-    }
-
     if (searchInput) {
       searchInput.addEventListener("input", () => {
         const query = searchInput.value.toLowerCase();
@@ -204,11 +179,10 @@
           const text = item.innerText.toLowerCase();
           item.style.display = text.includes(query) ? "" : "none";
         });
-
-        logSearch(query);
       });
     }
   </script>
 
 </body>
+
 </html>

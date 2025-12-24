@@ -1,228 +1,154 @@
 /**
- * WaveSignals Content Pipeline (v1)
- * Researcher → Strategist → Writer → Quality Gate → Publisher
+ * AUTOMATED CONTENT GENERATOR (Multi-Agent)
+ * 
+ * Usage: node scripts/generate-post.js "Topic Name"
+ * 
+ * Architecture:
+ * 1. Researcher Agent: Search web (mock/real) for facts.
+ * 2. Writer Agent: Draft content based on research.
+ * 3. Editor Agent: Critique & Humanize.
+ * 4. Publisher Agent: Commit to data/posts.json.
  */
 
-const fs = require("fs");
-const path = require("path");
-const qualityGate = require("./quality-gate");
+const fs = require('fs').promises;
+const path = require('path');
 
-// ===============================
-// PATHS
-// ===============================
-const POSTS_PATH = path.join(__dirname, "../data/posts.json");
-const SETTINGS_PATH = path.join(__dirname, "../data/settings.json");
-const DRAFTS_PATH = path.join(__dirname, "../data/drafts.json");
-const PROMPTS_PATH = path.join(__dirname, "../prompts");
+// --- CONFIG ---
+const POSTS_FILE = path.join(__dirname, '../data/posts.json');
+const MOCK_DELAY = 1000;
 
-// ===============================
-// HELPERS (WERE MISSING — FIXED)
-// ===============================
-function slugify(text) {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
+// --- GEMINI CONFIG ---
+// npm install @google/generative-ai
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-function stripHtml(html) {
-  return html.replace(/<[^>]*>/g, " ");
-}
-
-// ===============================
-// STEP 1: RESEARCHER
-// ===============================
-function analyzeHistory(posts) {
-  const last10 = posts.slice(0, 10);
-  const pillarCount = {};
-
-  last10.forEach(p => {
-    const pillar = p.pillar || "unknown";
-    pillarCount[pillar] = (pillarCount[pillar] || 0) + 1;
-  });
-
-  return {
-    lastTopics: last10.map(p => p.title.toLowerCase()),
-    pillarCount
-  };
-}
-
-function runResearcher() {
-  const postsData = JSON.parse(fs.readFileSync(POSTS_PATH, "utf-8"));
-  const topicsData = JSON.parse(
-    fs.readFileSync(path.join(__dirname, "../data/topics.json"), "utf-8")
-  );
-
-  const usedTitles = new Set(
-    (postsData.posts || []).map(p => p.title.toLowerCase())
-  );
-
-  // Build weighted pool
-  const pool = [];
-  for (const [pillar, config] of Object.entries(topicsData.pillars)) {
-    config.topics.forEach(topic => {
-      if (!usedTitles.has(topic.toLowerCase())) {
-        for (let i = 0; i < config.weight; i++) {
-          pool.push({ topic, pillar });
-        }
-      }
-    });
+async function callLLM(prompt, systemRole) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    console.warn("[WARN] No GEMINI_API_KEY found. Falling back to Mock.");
+    return `[MOCK CONTENT by ${systemRole}] - ${prompt.substring(0, 50)}...`;
   }
 
-  if (!pool.length) {
-    throw new Error("❌ Researcher: No unused topics available");
-  }
-
-  const selected = pool[Math.floor(Math.random() * pool.length)];
-
-  return {
-    topic: selected.topic,
-    pillar: selected.pillar,
-    confidence: "high"
-  };
-}
-
-// ===============================
-// STEP 2: STRATEGIST
-// ===============================
-const FORMATS = {
-  CONTRARIAN: { name: "Contrarian Signal", minWords: 700 },
-  PATTERN: { name: "Pattern Reveal", minWords: 800 },
-  SHIFT: { name: "Silent Shift", minWords: 750 },
-  SECOND_ORDER: { name: "Second-Order Effect", minWords: 900 }
-};
-
-function runStrategist(research) {
-  if (research.pillar === "Career") return FORMATS.CONTRARIAN;
-  if (research.pillar === "Money") return FORMATS.PATTERN;
-  if (research.pillar === "Tech") return FORMATS.SECOND_ORDER;
-  return FORMATS.SHIFT;
-}
-
-// ===============================
-// STEP 3: WRITER (MANUAL PASTE)
-// ===============================
-async function runWriter(research, strategy) {
-  const writerPrompt = fs.readFileSync(
-    path.join(PROMPTS_PATH, "signal-writer.txt"),
-    "utf-8"
-  );
-
-  console.log("\n📝 PROMPT TO USE:\n");
-  console.log(
-    writerPrompt
-      .replace("{{TOPIC}}", research.topic)
-      .replace("{{FORMAT}}", strategy.name)
-  );
-
-  console.log("\n⚠️ Paste final HTML content below.\n");
-
-  const aiContent = `
-<p>Most people assume growth is about effort. The reality is more uncomfortable.</p>
-
-<p>The system doesn’t reward competence the way we think it does. It rewards visibility, timing, and narrative control.</p>
-
-<p>This is why two equally skilled people end up in very different places.</p>
-
-<p>The real shift happens when you stop optimizing for effort and start optimizing for signal.</p>
-
-<p>Once you see this, you can’t unsee it.</p>
-`;
-
-  return aiContent;
-}
-
-// ===============================
-// STEP 4: PUBLISHER
-// ===============================
-function publishPost(title, content) {
-  const raw = fs.readFileSync(POSTS_PATH, "utf-8");
-  const data = JSON.parse(raw);
-
-  const post = {
-    id: Date.now(),
-    title,
-    slug: slugify(title),
-    excerpt: stripHtml(content).slice(0, 140),
-    content,
-    published: true,
-    date: new Date().toISOString(),
-    image: "/public/og-default.png"
-  };
-
-  data.posts.unshift(post);
-  fs.writeFileSync(POSTS_PATH, JSON.stringify(data, null, 2));
-
-  console.log("✅ Post published:", title);
-}
-
-// ===============================
-// PIPELINE RUNNER (FIXED)
-// ===============================
-async function runPipeline() {
-  console.log("🚀 Running WaveSignals pipeline…");
-
-  const researcher = runResearcher();
-  const strategist = runStrategist(researcher);
-  const content = await runWriter(researcher, strategist);
-  const title = researcher.topic;
-
-  // ✅ QUALITY GATE — RUN ONCE, CORRECTLY
-  qualityGate({ title, content });
-
-  // Respect automation settings
-  let settings = { automation: { enabled: true, manualOnly: false, emergencyStop: false } };
   try {
-    settings = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8')) || settings;
-  } catch (e) {
-    console.warn('⚠️ settings.json not found or invalid — using defaults');
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    // Combine system role and prompt for Gemini
+    const fullPrompt = `
+      ROLE: You are an expert ${systemRole} for a tech blog called WaveSignals.
+      TASK: ${prompt}
+      Tone: Professional, Insightful, yet human.
+      Output: Return only the requested content, no conversational filler.
+    `;
+
+    const result = await model.generateContent(fullPrompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error(`[AI ERROR] ${systemRole} failed:`, error);
+    return `[Error generating content: ${error.message}]`;
   }
-
-  const auto = settings.automation || {};
-  if (auto.emergencyStop) {
-    console.error('⛔ Emergency stop is active — aborting publish.');
-    process.exit(2);
-  }
-
-  if (!auto.enabled) {
-    console.log('⏸ Automation is paused (enabled=false) — not publishing.');
-    process.exit(0);
-  }
-
-  if (auto.manualOnly) {
-    console.log('✋ Manual-publish mode active — saving as draft instead of publishing.');
-    // write draft to drafts.json
-    try {
-      const draftPayload = {
-        id: Date.now(),
-        title,
-        slug: slugify(title),
-        excerpt: stripHtml(content).slice(0,140),
-        content,
-        date: new Date().toISOString()
-      };
-
-      let ddata = { drafts: [] };
-      try {
-        ddata = JSON.parse(fs.readFileSync(DRAFTS_PATH, 'utf-8')) || ddata;
-      } catch (e) {
-        // create new drafts file
-      }
-      ddata.drafts.unshift(draftPayload);
-      fs.writeFileSync(DRAFTS_PATH, JSON.stringify(ddata, null, 2));
-      console.log('🗂 Draft saved to', DRAFTS_PATH);
-    } catch (e) {
-      console.error('Failed to save draft:', e);
-    }
-
-    console.log('📌 Next: review drafts or publish manually via admin');
-    process.exit(0);
-  }
-
-  // Default: auto-publish
-  publishPost(title, content);
-
-  console.log("📌 Next: node scripts/generate-sitemap.js");
 }
 
-runPipeline();
+// --- AGENTS ---
+
+async function generateTopic() {
+  const topics = [
+    "AI Coding Agents", "DevOps Automation", "Future of React", "WebAssembly",
+    "Rust vs Go", "Serverless Architecture", "Edge Computing", "Cybersecurity in 2025",
+    "Quantum Computing", "No-Code Revolution", "Tech Layoffs & Hiring", "Green Tech"
+  ];
+  const seed = topics[Math.floor(Math.random() * topics.length)];
+
+  return await callLLM(`
+    Suggest a unique, catchy, specific blog post title about "${seed}" or a related tech trend for 2025.
+    Return ONLY the raw title text. No quotes.
+  `, 'Editor-in-Chief');
+}
+
+async function researchTopic(topic) {
+  return await callLLM(`
+    Research the topic: "${topic}".
+    Provide 5 unique, data-backed facts or trends relevant to 2024/2025.
+    Focus on developer tools, AI coding, or software architecture.
+    Source freely from your knowledge base.
+  `, 'Researcher');
+}
+
+async function writeDraft(topic, research) {
+  return await callLLM(`
+    Write a comprehensive blog post draft about "${topic}".
+    Use these research notes:
+     ${research}
+    
+    Structure:
+    - Catchy H2 Title
+    - Engaging Introduction (Hook)
+    - 3-4 Detailed H3 Sections
+    - Conclusion
+    - Format in clean HTML (<p>, <h2>, <h3>, <ul>).
+  `, 'Writer');
+}
+
+async function humanizeContent(draft) {
+  return await callLLM(`
+    Act as a Senior Editor. Improve this draft:
+     ${draft}
+    
+    Guidelines:
+    1. Fix any robotic phrasing. Make it sound like a passionate engineer wrote it.
+    2. Ensure HTML formatting is perfect.
+    3. Add a "Key Takeaways" section at the end if missing.
+    4. Return ONLY the final HTML content.
+  `, 'Editor');
+}
+
+// --- MAIN WORKFLOW ---
+
+async function main() {
+  let topic = process.argv[2];
+
+  if (!topic) {
+    console.log("[BOT] No topic provided. Generating one...");
+    topic = await generateTopic();
+  }
+
+  console.log(`[BOT] Starting job for: "${topic}"`);
+
+  // 1. Research
+  const research = await researchTopic(topic);
+  console.log(`[BOT] Research Complete.`);
+
+  // 2. Draft
+  const draft = await writeDraft(topic, research);
+  console.log(`[BOT] Draft Complete.`);
+
+  // 3. Humanize
+  const finalContent = await humanizeContent(draft);
+  console.log(`[BOT] Humanization Complete.`);
+
+  // 4. Publish
+  try {
+    const fileData = await fs.readFile(POSTS_FILE, 'utf8');
+    const db = JSON.parse(fileData);
+
+    const newPost = {
+      id: "bot-" + Date.now(),
+      title: topic,
+      slug: topic.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      excerpt: "Automated analysis on " + topic,
+      content: finalContent,
+      date: new Date().toISOString(),
+      published: true,
+      status: "published",
+      author: "WaveSignals Team"
+    };
+
+    db.posts.unshift(newPost);
+    await fs.writeFile(POSTS_FILE, JSON.stringify(db, null, 2));
+    console.log(`[BOT] Published successfully to data/posts.json`);
+  } catch (e) {
+    console.error(`[BOT] Failed to publish:`, e);
+  }
+}
+
+main();

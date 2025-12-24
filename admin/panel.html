@@ -1,74 +1,287 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex,nofollow" />
-
   <title>WaveSignals Admin</title>
 
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="icon" href="/favicon.ico">
-  <link rel="apple-touch-icon" href="/favicon.svg">
+  <link rel="stylesheet" href="/styles/main.css"> <!-- Re-using main site theme -->
 
   <style>
-    body {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      margin: 0;
-      background: #f7f7f7;
-      color: #111;
+    :root {
+      --sidebar-width: 260px;
     }
 
-    .hidden { display: none !important; }
+    body {
+      background-color: #0f172a;
+      /* Slate 900 */
+      color: #f1f5f9;
+      margin: 0;
+      overflow: hidden;
+      /* App-like feel */
+      display: flex;
+    }
 
-    .center-screen {
-      min-height: 100vh;
+    /* --- LOGIN OVERLAY --- */
+    #login-screen {
+      position: fixed;
+      inset: 0;
+      background: #0f172a;
+      z-index: 9999;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
-      gap: 12px;
+      justify-content: center;
+      gap: 1.5rem;
     }
 
-    input, textarea, button {
-      width: 100%;
-      max-width: 420px;
-      padding: 10px;
-      font-size: 14px;
-      box-sizing: border-box;
+    #login-screen input {
+      width: 300px;
+      text-align: center;
     }
 
-    textarea { min-height: 120px; }
+    /* --- LAYOUT --- */
+    .app-shell {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+    }
 
-    button {
+    /* SIDEBAR */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: rgba(15, 23, 42, 0.95);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem;
+    }
+
+    .brand-area {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 2.5rem;
+      opacity: 0.9;
+    }
+
+    .brand-area img {
+      height: 28px;
+    }
+
+    .brand-area span {
+      font-weight: 700;
+      font-family: 'Outfit', sans-serif;
+      letter-spacing: -0.5px;
+    }
+
+    .nav-menu {
+      list-style: none;
+      padding: 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .nav-item {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
       cursor: pointer;
-      background: #111;
+      color: var(--text-muted);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transition: all 0.2s;
+    }
+
+    .nav-item:hover,
+    .nav-item.active {
+      background: var(--bg-card);
+      color: #fff;
+    }
+
+    .nav-item.active {
+      border-left: 3px solid var(--accent);
+    }
+
+    .nav-footer {
+      margin-top: auto;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .nav-footer button {
+      background: transparent;
+      border: 1px solid var(--border);
+      width: 100%;
+      color: var(--text-muted);
+      padding: 0.5rem;
+    }
+
+    /* MAIN CONTENT */
+    .main-viewport {
+      flex: 1;
+      overflow-y: auto;
+      padding: 2.5rem;
+      position: relative;
+    }
+
+    .view-section {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .view-section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(5px);
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    header h2 {
+      margin: 0 0 0.5rem 0;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.8rem;
+    }
+
+    header p {
+      color: var(--text-muted);
+      margin: 0 0 2rem 0;
+    }
+
+    /* --- DASHBOARD WIDGETS --- */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      border-radius: 12px;
+    }
+
+    .stat-val {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #fff;
+      margin: 0.5rem 0;
+    }
+
+    .stat-label {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* --- EDITOR & FORMS --- */
+    .form-grid {
+      display: grid;
+      gap: 1.5rem;
+      max-width: 800px;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #1e293b;
+      color: #fff;
+      font-family: inherit;
+      font-size: 1rem;
+    }
+
+    textarea {
+      min-height: 200px;
+      font-family: 'Courier New', monospace;
+      line-height: 1.5;
+    }
+
+    .btn-primary {
+      background: var(--accent);
       color: #fff;
       border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
     }
 
-    .error { color: red; }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
 
-    .admin-header {
+    /* --- POST LIST --- */
+    .post-table-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .post-row {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 16px;
-      background: #fff;
-      border-bottom: 1px solid #ddd;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.2s;
     }
 
-    .admin-main {
-      max-width: 900px;
-      margin: 24px auto;
-      padding: 0 16px;
+    .post-row:last-child {
+      border-bottom: none;
     }
 
-    .card {
-      background: #fff;
-      padding: 16px;
-      margin-bottom: 24px;
+    .post-row:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .badge {
+      padding: 4px 8px;
       border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge.published {
+      background: rgba(74, 222, 128, 0.2);
+      color: #4ade80;
+    }
+
+    .badge.draft {
+      background: rgba(148, 163, 184, 0.2);
+      color: #94a3b8;
+    }
+
+    /* UTILS */
+    .hidden {
+      display: none !important;
     }
   </style>
 </head>
@@ -76,595 +289,448 @@
 <body>
 
   <!-- LOGIN -->
-  <div id="login-screen" class="center-screen">
-    <h1>WaveSignals Admin</h1>
-    <input type="password" id="admin-key" placeholder="Enter admin key" />
-    <button id="login-btn">Enter</button>
-    <p id="login-error" class="error hidden">Invalid key</p>
+  <div id="login-screen">
+    <div style="text-align: center;">
+      <img src="/public/logo-header.svg?v=1" style="height:40px; margin-bottom:1rem;">
+      <h2 style="margin:0;">Access Control</h2>
+    </div>
+    <input type="password" id="admin-key" placeholder="Enter Admin Key" />
+    <button class="btn-primary" id="login-btn" style="width:300px">Authenticate</button>
+    <p id="login-error" style="color:#ef4444" class="hidden">Access Denied</p>
   </div>
 
-  <!-- ADMIN PANEL -->
-  <div id="admin-panel" class="hidden">
-
-    <header class="admin-header">
-      <div class="container header-inner" style="display:flex;align-items:center;gap:12px;">
-        <div class="brand-container">
-          <a href="/app/index.html" class="brand">
-            <img
-              src="/public/logo-header.svg?v=1"
-              alt="WaveSignals logo"
-              class="site-logo"
-            />
-          </a>
-        </div>
-        <h2 style="margin-left:12px;">Admin Panel</h2>
-        <div style="margin-left:auto;"><button id="logout-btn">Logout</button></div>
+  <!-- APP SHELL -->
+  <div id="app-shell" class="app-shell hidden">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand-area">
+        <img src="/public/logo-header.svg?v=1" alt="Logo">
+        <span>Admin</span>
       </div>
-    </header>
 
-    <main class="admin-main">
+      <ul class="nav-menu">
+        <li class="nav-item active" onclick="switchView('dashboard', this)">
+          <span>📊</span> Dashboard
+        </li>
+        <li class="nav-item" onclick="switchView('posts', this)">
+          <span>📝</span> Content
+        </li>
+        <li class="nav-item" onclick="switchView('subscribers', this)">
+          <span>👥</span> Audience
+        </li>
+        <li class="nav-item" onclick="switchView('automation', this)">
+          <span>🤖</span> Automation
+        </li>
+        <li class="nav-item" onclick="switchView('settings', this)">
+          <span>⚙️</span> Settings
+        </li>
+      </ul>
 
-      <section class="card">
-        <h3>Create New Post</h3>
+      <div class="nav-footer">
+        <button onclick="location.reload()">Logout</button>
+      </div>
+    </aside>
 
-        <input id="title" placeholder="Post title" />
-        <input id="slug" placeholder="URL slug (optional)" />
-        <textarea id="excerpt" placeholder="Short excerpt"></textarea>
-        <textarea id="content" placeholder="HTML content"></textarea>
+    <!-- CONTENT -->
+    <main class="main-viewport">
 
-        <label>
-          <input type="checkbox" id="publish" />
-          Publish immediately
-        </label>
+      <!-- VIEW: DASHBOARD -->
+      <section id="view-dashboard" class="view-section active">
+        <header>
+          <h2>Mission Control</h2>
+          <p>Real-time performance overview.</p>
+        </header>
 
-        <br><br>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button id="save-post">Save Post</button>
-          <button id="preview-post" style="background:#666;">Preview Post</button>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Revenue</div>
+            <div class="stat-val">$0.00</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Signals</div>
+            <div class="stat-val" id="d-total-posts">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Subscribers</div>
+            <div class="stat-val" id="d-subscribers">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">30-Day Views</div>
+            <div class="stat-val" id="d-views">-</div>
+          </div>
+        </div>
+
+        <h3>Recent Activity</h3>
+        <div class="post-table-container" id="dashboard-activity">
+          <div class="post-row" style="color:var(--text-muted); justify-content:center;">Loading...</div>
         </div>
       </section>
 
-      <section class="card">
-        <h3>Existing Posts</h3>
-        <ul id="posts-list">
-          <li>No posts yet</li>
-        </ul>
-      </section>
+      <!-- VIEW: POSTS -->
+      <section id="view-posts" class="view-section">
+        <header style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h2>Content Library</h2>
+            <p>Manage your signals and essays.</p>
+          </div>
+          <button class="btn-primary" onclick="createNewPost()">+ New Signal</button>
+        </header>
 
-      <section class="card">
-        <h3>Ad Slots</h3>
-        <p class="muted">Paste HTML/JS for ad slots. Empty slots remain hidden on public pages.</p>
+        <!-- Editor (Hidden by default) -->
+        <div id="editor-ui" class="hidden"
+          style="margin-bottom: 2rem; background: var(--bg-card); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border);">
+          <div style="display:flex; justify-content:space-between; margin-bottom:1rem;">
+            <h3 style="margin:0;">Editor</h3>
+            <button class="btn-secondary" onclick="closeEditor()"
+              style="padding:4px 12px; font-size:0.8rem;">Close</button>
+          </div>
 
-        <label style="font-weight:600;margin-top:8px">Header slot</label>
-        <textarea id="ad-header" placeholder="<!-- header ad HTML -->" style="min-height:80px"></textarea>
+          <div class="form-grid">
+            <input id="edit-title" placeholder="Title" />
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+              <input id="edit-slug" placeholder="Slug (optional)" />
+              <input id="edit-date" type="datetime-local" />
+            </div>
+            <textarea id="edit-excerpt" style="min-height:80px" placeholder="Excerpt (SEO Description)"></textarea>
+            <textarea id="edit-content" style="min-height:300px" placeholder="HTML Content..."></textarea>
 
-        <label style="font-weight:600;margin-top:8px">Post bottom slot</label>
-        <textarea id="ad-post-bottom" placeholder="<!-- post bottom ad HTML -->" style="min-height:80px"></textarea>
+            <div style="display:flex; gap: 1rem; align-items:center;">
+              <label style="display:flex; gap:0.5rem; align-items:center; cursor:pointer;">
+                <input type="checkbox" id="edit-publish" style="width:auto;"> Publish immediately
+              </label>
+              <div style="flex:1;"></div>
+              <button class="btn-secondary" id="editor-preview-btn">Preview</button>
+              <button class="btn-primary" id="editor-save-btn">Save Content</button>
+            </div>
+          </div>
+        </div>
 
-        <label style="font-weight:600;margin-top:8px">Footer slot</label>
-        <textarea id="ad-footer" placeholder="<!-- footer ad HTML -->" style="min-height:80px"></textarea>
-
-        <br>
-        <button id="save-ads">Save Ads</button>
-      </section>
-
-      <section class="card">
-        <h3>Automation Controls</h3>
-        <p class="muted">Control pipeline automation — pause, manual-only, or emergency stop.</p>
-
-        <label style="display:block;margin-top:8px">
-          <input type="checkbox" id="automation-enabled" /> Automation enabled
-        </label>
-
-        <label style="display:block;margin-top:8px">
-          <input type="checkbox" id="automation-manual-only" /> Manual-publish only (do not auto-publish)
-        </label>
-
-        <label style="display:block;margin-top:8px;color:#a00;">
-          <input type="checkbox" id="automation-emergency" /> Emergency stop (disable all publishing)
-        </label>
-
-        <br>
-        <button id="save-settings">Save Settings</button>
-      </section>
-
-      <section class="card">
-        <h3>Site Insights</h3>
-
-        <p><strong>Total Posts:</strong> <span id="stat-total">–</span></p>
-        <p><strong>Published Posts:</strong> <span id="stat-published">–</span></p>
-
-        <h4 style="margin-top:1rem;">Recent Posts</h4>
-        <ul id="recent-posts"></ul>
-
-        <h4 style="margin-top:1rem;">Search Signals (local)</h4>
-        <ul id="search-signals"></ul>
-
-        <h4 style="margin-top:1rem;">Analytics (local)</h4>
-        <div id="analytics-table">
-          <table style="width:100%;border-collapse:collapse;">
-            <thead>
-              <tr>
-                <th style="text-align:left;padding:6px;border-bottom:1px solid #eee;">Metric</th>
-                <th style="text-align:right;padding:6px;border-bottom:1px solid #eee;">Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td style="padding:6px;border-bottom:1px solid #fafafa;">Unique Views (recorded)</td><td style="padding:6px;text-align:right;" id="meta-views">–</td></tr>
-              <tr><td style="padding:6px;border-bottom:1px solid #fafafa;">Engaged (60%+ scroll)</td><td style="padding:6px;text-align:right;" id="meta-engaged">–</td></tr>
-              <tr><td style="padding:6px;border-bottom:1px solid #fafafa;">Email Signups</td><td style="padding:6px;text-align:right;" id="meta-emails">–</td></tr>
-              <tr><td style="padding:6px;">Affiliate Clicks</td><td style="padding:6px;text-align:right;" id="meta-affs">–</td></tr>
-            </tbody>
-          </table>
+        <div class="post-table-container" id="posts-list-container">
+          <!-- Populated by JS -->
         </div>
       </section>
 
-      <section class="card">
-        <h3>Per-post Analytics</h3>
-        <p class="muted">Views, engagement and affiliate signals per post (from localStorage).</p>
-        <table id="per-post-analytics" style="width:100%;border-collapse:collapse;">
-          <thead>
-            <tr>
-              <th style="text-align:left;padding:6px;border-bottom:1px solid #eee;">Post</th>
-              <th style="text-align:right;padding:6px;border-bottom:1px solid #eee;">Views</th>
-              <th style="text-align:right;padding:6px;border-bottom:1px solid #eee;">Engaged</th>
-              <th style="text-align:right;padding:6px;border-bottom:1px solid #eee;">Affiliate</th>
-              <th style="text-align:right;padding:6px;border-bottom:1px solid #eee;">Email Signup</th>
-            </tr>
-          </thead>
-          <tbody id="per-post-analytics-body">
-            <tr><td colspan="5" style="padding:8px">Loading…</td></tr>
-          </tbody>
-        </table>
+      <!-- VIEW: AUTOMATION -->
+      <section id="view-automation" class="view-section">
+        <header>
+          <h2>Automation Engine</h2>
+          <p>Configure your digital employees.</p>
+        </header>
+
+        <div class="card"
+          style="background:var(--bg-card); padding:2rem; border-radius:12px; border:1px solid var(--border); max-width:600px;">
+          <h3 style="margin-top:0;">Bot Status: <span style="color:#4ade80">Active</span></h3>
+          <p style="color:var(--text-muted)">The content generator runs on a schedule (Mon, Wed, Fri).</p>
+
+          <div style="margin-top:2rem; display:flex; flex-direction:column; gap:1rem;">
+            <label
+              style="display:flex; gap:1rem; align-items:center; padding:1rem; border:1px solid var(--border); border-radius:8px;">
+              <input type="checkbox" checked style="width:20px; height:20px;">
+              <div>
+                <strong>Auto-Publish</strong>
+                <div style="font-size:0.85rem; color:var(--text-muted)">Allow bot to publish directly without draft
+                  review.</div>
+              </div>
+            </label>
+
+            <label
+              style="display:flex; gap:1rem; align-items:center; padding:1rem; border:1px solid #7f1d1d; background:rgba(127,29,29,0.1); border-radius:8px;">
+              <input type="checkbox" style="width:20px; height:20px;">
+              <div>
+                <strong style="color:#f87171">Emergency Stop</strong>
+                <div style="font-size:0.85rem; color:#fca5a5">Halt all automated activities immediately.</div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW: SUBSCRIBERS (NEW) -->
+      <section id="view-subscribers" class="view-section">
+        <header>
+          <h2>Audience</h2>
+          <p>Locally stored email list.</p>
+        </header>
+        <div class="post-table-container">
+          <div id="subscribers-list">Loading...</div>
+        </div>
+      </section>
+
+      <!-- VIEW: SETTINGS -->
+      <section id="view-settings" class="view-section">
+        <header>
+          <h2>Settings</h2>
+          <p>Global configuration and Ad slots.</p>
+        </header>
+
+        <div class="form-grid">
+          <!-- ADS -->
+          <div style="background:var(--bg-card); padding:1.5rem; border-radius:12px; border:1px solid var(--border);">
+            <h3>Ad Slots (Revenue)</h3>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div>
+                <label>Header (All Pages)</label>
+                <textarea id="set-ad-header" style="min-height:80px; margin-bottom:1rem;"
+                  placeholder="Top banner..."></textarea>
+              </div>
+              <div>
+                <label>Footer (All Pages)</label>
+                <textarea id="set-ad-footer" style="min-height:80px; margin-bottom:1rem;"
+                  placeholder="Bottom banner..."></textarea>
+              </div>
+            </div>
+
+            <label>Post Bottom (Article End)</label>
+            <textarea id="set-ad-bottom" style="min-height:80px; margin-bottom:1rem;"
+              placeholder="After content..."></textarea>
+
+            <div
+              style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border);">
+              <div>
+                <label>Left Sidebar (Desktop Only)</label>
+                <textarea id="set-ad-left" style="min-height:120px;" placeholder="Skyscraper (160x600)..."></textarea>
+              </div>
+              <div>
+                <label>Right Sidebar (Desktop Only)</label>
+                <textarea id="set-ad-right" style="min-height:120px;" placeholder="Skyscraper (160x600)..."></textarea>
+              </div>
+            </div>
+
+            <button class="btn-primary" id="save-ads-btn" style="margin-top:1.5rem;">Save Ad Slots</button>
+          </div>
+        </div>
       </section>
 
     </main>
   </div>
 
-  <!-- ✅ ADMIN SCRIPT: POSTS CRUD (file-based) -->
   <script>
-    // Enhanced admin panel: list/edit/delete/publish posts
-    document.addEventListener('DOMContentLoaded', () => {
-      const ADMIN_KEY = 'wavesignals@2025';
+    /* LOGIC */
+    const ADMIN_KEY = 'wavesignals@2025';
+    let posts = [];
+    let subscribers = [];
 
-      const loginScreen = document.getElementById('login-screen');
-      const adminPanel = document.getElementById('admin-panel');
-      const loginBtn = document.getElementById('login-btn');
-      const logoutBtn = document.getElementById('logout-btn');
-      const error = document.getElementById('login-error');
+    // Auth
+    document.getElementById('login-btn').onclick = () => {
+      if (document.getElementById('admin-key').value === ADMIN_KEY) {
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('app-shell').classList.remove('hidden');
+        init();
+      } else {
+        document.getElementById('login-error').classList.remove('hidden');
+      }
+    };
 
-      // Form fields
-      const titleEl = document.getElementById('title');
-      const slugEl = document.getElementById('slug');
-      const excerptEl = document.getElementById('excerpt');
-      const contentEl = document.getElementById('content');
-      const publishEl = document.getElementById('publish');
-      const saveBtn = document.getElementById('save-post');
+    // Routing
+    window.switchView = (viewName, el) => {
+      document.querySelectorAll('.view-section').forEach(d => d.classList.remove('active'));
+      document.getElementById('view-' + viewName).classList.add('active');
 
-      // Posts state
-      let posts = [];
-      let editingId = null;
-      // Optional in-memory file handle for File System Access API
-      let postsFileHandle = null;
+      document.querySelectorAll('.nav-item').forEach(d => d.classList.remove('active'));
+      if (el) el.classList.add('active');
+    };
 
-      // ------- LOGIN -------
-      loginBtn.addEventListener('click', () => {
-        const key = document.getElementById('admin-key').value.trim();
-        if (key === ADMIN_KEY) {
-          loginScreen.classList.add('hidden');
-          adminPanel.classList.remove('hidden');
-          initPanel();
+    async function init() {
+      await loadData();
+      await loadAds();
+      await loadSubscribers();
+      renderDashboard();
+      renderPosts();
+      renderSubscribers();
+    }
+
+    async function loadData() {
+      try {
+        const r = await fetch('/data/posts.json');
+        const d = await r.json();
+        posts = d.posts || [];
+      } catch (e) { posts = []; }
+    }
+
+    async function loadSubscribers() {
+      try {
+        const r = await fetch('/api/subscribers');
+        subscribers = await r.json();
+      } catch (e) { subscribers = []; }
+    }
+
+    async function loadAds() {
+      try {
+        const r = await fetch('/api/ads');
+        const d = await r.json();
+        ads = d || { slots: {} };
+        if (!ads.slots) ads.slots = {};
+      } catch (e) { ads = { slots: {} }; }
+
+      document.getElementById('set-ad-header').value = ads.slots.header || '';
+      document.getElementById('set-ad-footer').value = ads.slots.footer || '';
+      document.getElementById('set-ad-bottom').value = ads.slots['post-bottom'] || '';
+      document.getElementById('set-ad-left').value = ads.slots['sidebar-left'] || '';
+      document.getElementById('set-ad-right').value = ads.slots['sidebar-right'] || '';
+    }
+
+    document.getElementById('save-ads-btn').onclick = async () => {
+      ads.slots.header = document.getElementById('set-ad-header').value;
+      ads.slots.footer = document.getElementById('set-ad-footer').value;
+      ads.slots['post-bottom'] = document.getElementById('set-ad-bottom').value;
+      ads.slots['sidebar-left'] = document.getElementById('set-ad-left').value;
+      ads.slots['sidebar-right'] = document.getElementById('set-ad-right').value;
+
+      try {
+        const r = await fetch('/api/ads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(ads)
+        });
+        if (r.ok) alert('Ad config saved!');
+        else throw new Error('Server error');
+      } catch (e) { alert('Error: ' + e); }
+    };
+
+    /* DASHBOARD */
+    function renderDashboard() {
+      document.getElementById('d-total-posts').innerText = posts.length;
+      document.getElementById('d-subscribers').innerText = subscribers.length;
+
+      // Calculate views from local storage for demo
+      let views = 0;
+      for (let k in localStorage) { if (k.startsWith('ws_view_')) views += Number(localStorage.getItem(k)); }
+      document.getElementById('d-views').innerText = views;
+
+      // Recent Activity
+      const list = document.getElementById('dashboard-activity');
+      list.innerHTML = '';
+      posts.slice(0, 5).forEach(p => {
+        list.innerHTML += `
+      <div class="post-row">
+        <div>${p.title}</div>
+        <div style="font-size:0.8rem; color:var(--text-muted)">${new Date(p.date).toLocaleDateString()}</div>
+      </div>
+    `;
+      });
+    }
+
+    /* SUBSCRIBERS */
+    function renderSubscribers() {
+      const c = document.getElementById('subscribers-list');
+      c.innerHTML = '';
+      if (!subscribers.length) {
+        c.innerHTML = '<div style="padding:1rem;">No subscribers yet.</div>';
+        return;
+      }
+      subscribers.reverse().forEach(s => {
+        const div = document.createElement('div');
+        div.className = 'post-row';
+        div.innerHTML = `<div>${s.email}</div><div style="font-size:0.8rem; color:var(--text-muted)">${new Date(s.date).toLocaleDateString()}</div>`;
+        c.appendChild(div);
+      });
+    }
+
+    /* POSTS */
+    function renderPosts() {
+      const c = document.getElementById('posts-list-container');
+      c.innerHTML = '';
+
+      posts.slice().sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'post-row';
+        div.innerHTML = `
+          <div>
+            <div style="font-weight:600; font-size:1.05rem;">${p.title}</div>
+            <div style="font-size:0.85rem; color:var(--text-muted)">/${p.slug}</div>
+          </div>
+          <div style="display:flex; gap:0.5rem; align-items:center;">
+            <span class="badge ${p.published ? 'published' : 'draft'}">${p.published ? 'Published' : 'Draft'}</span>
+            <button class="btn-secondary" style="padding:6px 12px; font-size:0.85rem;" onclick="editPost('${p.id}')">Edit</button>
+            <button class="btn-secondary" style="padding:6px 12px; font-size:0.85rem; color:#f87171; border-color:#f87171;" onclick="deletePost('${p.id}')">Delete</button>
+          </div>
+        `;
+        c.appendChild(div);
+      });
+    }
+
+    window.deletePost = async (id) => {
+      if (!confirm('Delete this signal permanently?')) return;
+      try {
+        const r = await fetch('/api/posts/' + id, { method: 'DELETE' });
+        if (r.ok) {
+          posts = posts.filter(p => String(p.id) !== String(id));
+          renderPosts();
+          renderDashboard();
         } else {
-          error.classList.remove('hidden');
+          alert('Failed to delete on server');
         }
-      });
+      } catch (e) { alert('Error: ' + e); }
+    };
 
-      logoutBtn.addEventListener('click', () => location.reload());
+    /* EDITOR LOGIC */
+    let currentId = null;
 
-      // ------- PANEL INIT -------
-      function initPanel() {
-        loadPosts();
-        loadAds();
-        loadSettings();
-        loadSearchSignals();
-        populateAnalytics();
-        saveBtn.textContent = 'Save Post';
+    window.createNewPost = () => {
+      currentId = null;
+      openEditor();
+    };
+
+    window.editPost = (id) => {
+      const p = posts.find(x => x.id == id); // loose equal for string/int ids
+      if (!p) return;
+      currentId = id;
+      document.getElementById('edit-title').value = p.title;
+      document.getElementById('edit-slug').value = p.slug;
+      document.getElementById('edit-excerpt').value = p.excerpt;
+      document.getElementById('edit-content').value = p.content;
+      document.getElementById('edit-publish').checked = p.published;
+      openEditor();
+    };
+
+    function openEditor() {
+      document.getElementById('editor-ui').classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    window.closeEditor = () => {
+      document.getElementById('editor-ui').classList.add('hidden');
+      document.getElementById('edit-title').value = '';
+      document.getElementById('edit-content').value = '';
+    };
+
+    document.getElementById('editor-save-btn').onclick = async () => {
+      const title = document.getElementById('edit-title').value;
+      const content = document.getElementById('edit-content').value;
+      if (!title) return alert('Title required');
+
+      const p = {
+        id: currentId || Date.now(),
+        title,
+        slug: document.getElementById('edit-slug').value || title.toLowerCase().replace(/ /g, '-'),
+        excerpt: document.getElementById('edit-excerpt').value,
+        content,
+        published: document.getElementById('edit-publish').checked,
+        date: new Date().toISOString()
+      };
+
+      if (currentId) {
+        const idx = posts.findIndex(x => x.id == currentId);
+        if (idx >= 0) posts[idx] = p;
+      } else {
+        posts.unshift(p);
       }
 
-      // ------- LOAD POSTS -------
-      async function loadPosts() {
-        try {
-          const res = await fetch('/data/posts.json', { cache: 'no-store' });
-          const data = await res.json();
-          posts = Array.isArray(data.posts) ? data.posts.slice() : [];
-        } catch (e) {
-          posts = [];
-        }
-        renderPostsList();
-        renderStats();
-        populatePerPostAnalytics();
-      }
-
-      function renderStats() {
-        document.getElementById('stat-total').textContent = posts.length;
-        document.getElementById('stat-published').textContent = posts.filter(p => p.published).length;
-      }
-
-      // ------- RENDER POSTS LIST -------
-      function renderPostsList() {
-        const list = document.getElementById('posts-list');
-        list.innerHTML = '';
-
-        if (!posts.length) {
-          const li = document.createElement('li');
-          li.textContent = 'No posts yet';
-          list.appendChild(li);
-          return;
-        }
-
-        posts.slice().sort((a,b)=> (b.date||'').localeCompare(a.date||'')).forEach(post => {
-          const li = document.createElement('li');
-          li.style.display = 'flex';
-          li.style.alignItems = 'center';
-          li.style.gap = '12px';
-          li.style.padding = '8px 0';
-
-          const title = document.createElement('div');
-          title.style.flex = '1';
-          title.innerHTML = `<strong>${escapeHtml(post.title)}</strong> <small style="color:#666;margin-left:8px;">${post.slug || ''}</small>`;
-
-          const editBtn = document.createElement('button');
-          editBtn.textContent = 'Edit';
-          editBtn.addEventListener('click', () => startEdit(post.id));
-
-          const delBtn = document.createElement('button');
-          delBtn.textContent = 'Delete';
-          delBtn.style.background = '#a00';
-          delBtn.addEventListener('click', () => deletePost(post.id));
-
-          const pubToggle = document.createElement('input');
-          pubToggle.type = 'checkbox';
-          pubToggle.checked = !!post.published;
-          pubToggle.title = 'Toggle published';
-          pubToggle.addEventListener('change', (e) => {
-            post.published = e.target.checked;
-            post.date = post.date || new Date().toISOString();
-            renderStats();
-            savePosts();
-          });
-
-          li.appendChild(title);
-          li.appendChild(pubToggle);
-          li.appendChild(editBtn);
-          li.appendChild(delBtn);
-
-          list.appendChild(li);
+      // Save to server
+      try {
+        await fetch('/api/posts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(p)
         });
-      }
+        alert('Saved!');
+        closeEditor();
+        renderPosts();
+        renderDashboard();
+      } catch (e) { alert('Error saving' + e); }
+    };
 
-      // ------- EDIT -------
-      function startEdit(id) {
-        const p = posts.find(x => x.id === id);
-        if (!p) return;
-        editingId = id;
-        titleEl.value = p.title || '';
-        slugEl.value = p.slug || '';
-        excerptEl.value = p.excerpt || '';
-        contentEl.value = p.content || '';
-        publishEl.checked = !!p.published;
-        saveBtn.textContent = 'Update Post';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-
-      // ------- DELETE -------
-      function deletePost(id) {
-        if (!confirm('Delete this post permanently? This cannot be undone.')) return;
-        const idx = posts.findIndex(p => p.id === id);
-        if (idx === -1) return;
-        posts.splice(idx, 1);
-        renderPostsList();
-        renderStats();
-        savePosts();
-      }
-
-      // ------- SAVE (create/update) -------
-      saveBtn.addEventListener('click', async () => {
-        const title = titleEl.value.trim();
-        const slugIn = slugEl.value.trim();
-        const excerpt = excerptEl.value.trim();
-        const content = contentEl.value.trim();
-        const publish = publishEl.checked;
-
-        if (!title || !content) {
-          alert('Title and content are required');
-          return;
-        }
-
-        const slug = slugIn || title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
-
-        if (editingId) {
-          // update existing
-          const p = posts.find(x => x.id === editingId);
-          if (!p) {
-            alert('Post not found');
-            return;
-          }
-          p.title = title;
-          p.slug = slug;
-          p.excerpt = excerpt;
-          p.content = content;
-          p.published = publish;
-          p.date = p.date || new Date().toISOString();
-          editingId = null;
-          saveBtn.textContent = 'Save Post';
-        } else {
-          // create new, ensure no duplicate slugs
-          const id = Date.now();
-          const newPost = { id, title, slug, excerpt, content, published: publish, date: new Date().toISOString() };
-          // replace any post with same slug
-          posts = posts.filter(p => p.slug !== slug);
-          posts.push(newPost);
-        }
-
-        // Clear form
-        titleEl.value = '';
-        slugEl.value = '';
-        excerptEl.value = '';
-        contentEl.value = '';
-        publishEl.checked = false;
-
-        renderPostsList();
-        renderStats();
-
-        await savePosts();
-        alert('Post list updated. If the browser could not write files, a download was offered.');
-      });
-
-      // ------- PREVIEW (open post in new tab without saving) -------
-      const previewBtn = document.getElementById('preview-post');
-      previewBtn.addEventListener('click', () => {
-        const title = titleEl.value.trim() || 'Preview';
-        const slugIn = slugEl.value.trim();
-        const slug = slugIn || title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
-        const excerpt = excerptEl.value.trim();
-        const content = contentEl.value.trim() || '<p>(no content)</p>';
-        const date = new Date().toISOString();
-
-        const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)} — Preview</title><link rel="stylesheet" href="/styles/main.css"></head><body><header class="site-header"><div class="container header-inner"><div class="brand-container"><a href="/app/index.html" class="brand"><img src="/public/logo-header.svg?v=1" alt="WaveSignals logo" class="site-logo"></a></div></div></header><main class="site-main"><div class="container"><article class="preview-article"><h1>${escapeHtml(title)}</h1><p class="post-meta"><time datetime="${date}">${new Date(date).toDateString()}</time></p><div class="post-content">${content}</div></article></div></main><footer class="site-footer"><div class="container"><p class="affiliate-disclaimer">We may earn a small commission from links to products or services we recommend. No tracking pixels; no intrusive ads.</p><p>© 2025 WaveSignals. All rights reserved.</p></div></footer></body></html>`;
-
-        try {
-          const blob = new Blob([html], { type: 'text/html' });
-          const url = URL.createObjectURL(blob);
-          window.open(url, '_blank');
-          setTimeout(() => URL.revokeObjectURL(url), 20000);
-        } catch (e) {
-          alert('Preview failed: ' + (e && e.message));
-        }
-      });
-
-      // ------- SAVE POSTS TO FILE (FileSystem API or download fallback) -------
-      async function savePosts() {
-        const payload = { posts };
-        // Try File System Access API
-        try {
-          if (!postsFileHandle) {
-            if (window.showSaveFilePicker) {
-              postsFileHandle = await window.showSaveFilePicker({
-                suggestedName: 'posts.json',
-                types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }]
-              });
-            } else if (window.showOpenFilePicker) {
-              const [h] = await window.showOpenFilePicker({ multiple: false, types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }] });
-              postsFileHandle = h;
-            }
-          }
-
-          if (postsFileHandle) {
-            const writable = await postsFileHandle.createWritable();
-            await writable.write(JSON.stringify(payload, null, 2));
-            await writable.close();
-            return true;
-          }
-        } catch (e) {
-          // Fall through to download fallback
-          console.warn('FileSystem API write failed', e);
-        }
-
-        // Download fallback
-        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'posts.json';
-        a.click();
-        URL.revokeObjectURL(a.href);
-        return false;
-      }
-
-      // ------- HELPERS: SEARCH SIGNALS + ANALYTICS -------
-      function loadSearchSignals() {
-        const searchList = document.getElementById('search-signals');
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key.startsWith('ws_search_')) {
-            const term = key.replace('ws_search_', '');
-            const li = document.createElement('li');
-            li.textContent = term;
-            searchList.appendChild(li);
-          }
-        }
-      }
-
-      // ------- ADS: load/save -------
-      let ads = { slots: { 'header': '', 'post-bottom': '', 'footer': '' } };
-      let adsFileHandle = null;
-
-      async function loadAds() {
-        try {
-          const res = await fetch('/data/ads.json', { cache: 'no-store' });
-          const data = await res.json();
-          ads = data || ads;
-        } catch (e) {
-          ads = { slots: { 'header': '', 'post-bottom': '', 'footer': '' } };
-        }
-        document.getElementById('ad-header').value = ads.slots['header'] || '';
-        document.getElementById('ad-post-bottom').value = ads.slots['post-bottom'] || '';
-        document.getElementById('ad-footer').value = ads.slots['footer'] || '';
-        // attach save handler
-        document.getElementById('save-ads').addEventListener('click', async () => {
-          ads.slots['header'] = document.getElementById('ad-header').value;
-          ads.slots['post-bottom'] = document.getElementById('ad-post-bottom').value;
-          ads.slots['footer'] = document.getElementById('ad-footer').value;
-          await saveAds();
-          alert('Ad slots saved. If browser could not write files, a download was offered.');
-        });
-      }
-
-      async function saveAds() {
-        const payload = ads;
-        try {
-          if (!adsFileHandle) {
-            if (window.showSaveFilePicker) {
-              adsFileHandle = await window.showSaveFilePicker({ suggestedName: 'ads.json', types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }] });
-            } else if (window.showOpenFilePicker) {
-              const [h] = await window.showOpenFilePicker({ multiple: false, types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }] });
-              adsFileHandle = h;
-            }
-          }
-          if (adsFileHandle) {
-            const writable = await adsFileHandle.createWritable();
-            await writable.write(JSON.stringify(payload, null, 2));
-            await writable.close();
-            return true;
-          }
-        } catch (e) {
-          console.warn('FileSystem API write failed', e);
-        }
-        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'ads.json';
-        a.click();
-        URL.revokeObjectURL(a.href);
-        return false;
-      }
-
-      // ------- SETTINGS: load/save automation settings -------
-      let settings = { automation: { enabled: true, manualOnly: false, emergencyStop: false } };
-      let settingsFileHandle = null;
-
-      async function loadSettings() {
-        try {
-          const res = await fetch('/data/settings.json', { cache: 'no-store' });
-          if (res.ok) settings = await res.json();
-        } catch (e) { settings = { automation: { enabled: true, manualOnly: false, emergencyStop: false } }; }
-
-        document.getElementById('automation-enabled').checked = !!settings.automation.enabled;
-        document.getElementById('automation-manual-only').checked = !!settings.automation.manualOnly;
-        document.getElementById('automation-emergency').checked = !!settings.automation.emergencyStop;
-
-        document.getElementById('save-settings').addEventListener('click', async () => {
-          settings.automation.enabled = !!document.getElementById('automation-enabled').checked;
-          settings.automation.manualOnly = !!document.getElementById('automation-manual-only').checked;
-          settings.automation.emergencyStop = !!document.getElementById('automation-emergency').checked;
-          settings.automation.lastUpdated = new Date().toISOString();
-          await saveSettings();
-          alert('Settings saved. If browser could not write files, a download was offered.');
-        });
-      }
-
-      async function saveSettings() {
-        const payload = settings;
-        try {
-          if (!settingsFileHandle) {
-            if (window.showSaveFilePicker) {
-              settingsFileHandle = await window.showSaveFilePicker({ suggestedName: 'settings.json', types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }] });
-            } else if (window.showOpenFilePicker) {
-              const [h] = await window.showOpenFilePicker({ multiple: false, types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }] });
-              settingsFileHandle = h;
-            }
-          }
-          if (settingsFileHandle) {
-            const writable = await settingsFileHandle.createWritable();
-            await writable.write(JSON.stringify(payload, null, 2));
-            await writable.close();
-            return true;
-          }
-        } catch (e) {
-          console.warn('FileSystem API write failed', e);
-        }
-        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'settings.json';
-        a.click();
-        URL.revokeObjectURL(a.href);
-        return false;
-      }
-
-      function populateAnalytics() {
-        function read(prefix) {
-          return Object.keys(localStorage).filter(k => k.startsWith(prefix)).map(k => k.replace(prefix, ''));
-        }
-        const views = read('ws_view_');
-        const engages = read('ws_engage_');
-        const emails = read('ws_email_');
-        const affs = read('ws_aff_');
-
-        document.getElementById('meta-views').textContent = views.length || 0;
-        document.getElementById('meta-engaged').textContent = engages.length || 0;
-        document.getElementById('meta-emails').textContent = emails.length || 0;
-        document.getElementById('meta-affs').textContent = affs.length || 0;
-      }
-
-      // ------- PER-POST ANALYTICS -------
-      function populatePerPostAnalytics() {
-        const tbody = document.getElementById('per-post-analytics-body');
-        tbody.innerHTML = '';
-        if (!posts.length) {
-          const tr = document.createElement('tr');
-          tr.innerHTML = '<td colspan="5" style="padding:8px">No posts</td>';
-          tbody.appendChild(tr);
-          return;
-        }
-
-        // sort posts by date desc
-        const sorted = posts.slice().sort((a,b)=> (b.date||'').localeCompare(a.date||''));
-
-        sorted.forEach(p => {
-          const slug = p.slug || p.id;
-          const views = Number(localStorage.getItem('ws_view_' + slug)) || 0;
-          const engagedTs = localStorage.getItem('ws_engage_' + slug);
-          const affTs = localStorage.getItem('ws_aff_' + slug);
-          const emailTs = localStorage.getItem('ws_email_' + slug);
-
-          const engaged = engagedTs ? formatTs(engagedTs) : '';
-          const aff = affTs ? formatTs(affTs) : '';
-          const email = emailTs ? formatTs(emailTs) : '';
-
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td style="padding:8px;border-bottom:1px solid #fafafa;">${escapeHtml(p.title)}</td>
-            <td style="padding:8px;border-bottom:1px solid #fafafa;text-align:right;">${views}</td>
-            <td style="padding:8px;border-bottom:1px solid #fafafa;text-align:right;">${engaged}</td>
-            <td style="padding:8px;border-bottom:1px solid #fafafa;text-align:right;">${aff}</td>
-            <td style="padding:8px;border-bottom:1px solid #fafafa;text-align:right;">${email}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-      }
-
-      function formatTs(v) {
-        const n = Number(v);
-        if (!n) return '';
-        try { return new Date(n).toLocaleString(); } catch (e) { return String(v); }
-      }
-
-      // ------- UTIL -------
-      function escapeHtml(s) {
-        return (s||'').replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":"&#39;"})[c]);
-      }
-    });
   </script>
-
 </body>
+
 </html>

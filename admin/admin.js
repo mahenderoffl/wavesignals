@@ -1,4 +1,4 @@
-const ADMIN_KEY = "wavesignals@2025"; // change later
+const ADMIN_KEY = "wavesignals@2025"; // Simple auth for now
 
 const loginScreen = document.getElementById("login-screen");
 const adminPanel = document.getElementById("admin-panel");
@@ -6,6 +6,7 @@ const loginBtn = document.getElementById("login-btn");
 const logoutBtn = document.getElementById("logout-btn");
 const error = document.getElementById("login-error");
 
+// Mock Auth Check
 loginBtn.onclick = () => {
   const key = document.getElementById("admin-key").value;
   if (key === ADMIN_KEY) {
@@ -19,40 +20,86 @@ loginBtn.onclick = () => {
 
 logoutBtn.onclick = () => location.reload();
 
+// Load Posts from Server API
 async function loadPosts() {
-  const res = await fetch("../content/posts.json");
-  const posts = await res.json();
   const list = document.getElementById("posts-list");
-  list.innerHTML = "";
+  list.innerHTML = "<li>Loading...</li>";
 
-  posts.forEach(p => {
-    const li = document.createElement("li");
-    li.textContent = `${p.title} — ${p.status}`;
-    list.appendChild(li);
-  });
+  try {
+    const res = await fetch("http://localhost:3000/api/posts");
+    if (!res.ok) throw new Error("Failed to load");
+    const data = await res.json();
+    const posts = data.posts || [];
+
+    list.innerHTML = "";
+    posts.forEach(p => {
+      const li = document.createElement("li");
+      li.innerHTML = `<strong>${p.title}</strong> <span class="badge ${p.status}">${p.status}</span>`;
+      li.onclick = () => loadIntoEditor(p);
+      list.appendChild(li);
+    });
+  } catch (e) {
+    list.innerHTML = "<li>Error loading posts. Is server.js running?</li>";
+    console.error(e);
+  }
 }
 
-document.getElementById("save-post").onclick = async () => {
+function loadIntoEditor(post) {
+  document.getElementById("title").value = post.title;
+  document.getElementById("slug").value = post.slug;
+  document.getElementById("excerpt").value = post.excerpt || "";
+  document.getElementById("content").value = post.content || "";
+  document.getElementById("publish").checked = (post.status === "published");
+
+  // Store ID for updating
+  document.getElementById("save-post").dataset.id = post.id;
+  document.getElementById("save-post").dataset.date = post.date; // Keep original date
+}
+
+// Save Post to Server API
+document.getElementById("save-post").onclick = async function () {
+  const btn = this;
+  const originalLabel = btn.textContent;
+  btn.textContent = "Saving...";
+
   const title = document.getElementById("title").value;
-  const slugInput = document.getElementById("slug").value;
-  const slug = slugInput || title.toLowerCase().replace(/\s+/g, "-");
+  const slug = document.getElementById("slug").value || title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
   const excerpt = document.getElementById("excerpt").value;
   const content = document.getElementById("content").value;
   const publish = document.getElementById("publish").checked;
 
+  const id = btn.dataset.id || "ws-" + Date.now();
+  const date = btn.dataset.date || new Date().toISOString();
+
   const post = {
-    id: "ws-" + Date.now(),
+    id,
     title,
     slug,
     excerpt,
     content,
-    publishedAt: new Date().toISOString(),
+    date,
+    published: publish,
     status: publish ? "published" : "draft"
   };
 
-  alert(
-    "Post object created.\n\n" +
-    "In Phase 2.2 we wire saving to posts.json automatically.\n\n" +
-    JSON.stringify(post, null, 2)
-  );
+  try {
+    const res = await fetch("http://localhost:3000/api/posts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ post })
+    });
+
+    if (res.ok) {
+      alert("Post Saved Successfully!");
+      loadPosts(); // Refresh list
+      // clear editor if new? No, keep it open.
+    } else {
+      alert("Error saving post.");
+    }
+  } catch (e) {
+    console.error(e);
+    alert("Network error. Is server.js running?");
+  }
+
+  btn.textContent = originalLabel;
 };

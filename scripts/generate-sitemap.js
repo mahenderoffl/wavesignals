@@ -1,8 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 
-// Use SITE_URL env var in CI or leave empty for relative paths
-const SITE_URL = process.env.SITE_URL || "";
+// Use SITE_URL env var in CI or default to the production domain
+const SITE_URL = process.env.SITE_URL || "https://wavesignals.waveseed.app";
 const POSTS_PATH = path.join(__dirname, "../data/posts.json");
 const OUTPUT_PATH = path.join(__dirname, "../sitemap.xml");
 

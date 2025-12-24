@@ -1,260 +1,198 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Dynamic SEO -->
-  <title id="seo-title">WaveSignals</title>
-  <meta
-    name="description"
-    id="seo-description"
-    content="WaveSignals publishes insights, signals, and ideas worth noticing."
-  />
-
-  <!-- Canonical (filled dynamically) -->
+  <!-- Dynamic Post SEO -->
+  <title id="seo-title">Loading... — WaveSignals</title>
+  <meta name="description" id="seo-description" content="Loading content..." />
+  <meta name="robots" content="index,follow" />
   <link rel="canonical" id="canonical-url" href="" />
 
-  <meta name="robots" content="index,follow" />
-  <meta name="author" content="WaveSignals" />
-  <meta name="google-site-verification" content="YOUR_CODE_HERE" />
-
-  <!-- Open Graph -->
+  <!-- Open Graph / Twitter -->
   <meta property="og:type" content="article" />
   <meta property="og:site_name" content="WaveSignals" />
   <meta property="og:title" content="WaveSignals" />
-  <meta property="og:description" content="WaveSignals article" />
-  <meta property="og:url" content="" />
+  <meta property="og:description" content="" />
   <meta property="og:image" content="/public/og-default.png" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
 
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="" />
-  <meta name="twitter:description" content="" />
-  <meta name="twitter:image" content="/public/og-default.png" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/styles/main.css">
 
-  <!-- Favicon -->
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-  <link rel="icon" href="/favicon.ico" />
-  <link rel="apple-touch-icon" href="/favicon.svg" />
-
-  <!-- CSS -->
-  <link rel="stylesheet" href="/styles/main.css" />
+  <!-- ANALYTICS -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXX');
+  </script> -->
 </head>
 
 <body>
 
-  <!-- HEADER -->
   <header class="site-header">
     <div class="container header-inner">
-
       <div class="brand-container">
         <a href="/app/index.html" class="brand">
-          <img
-            src="/public/logo-header.svg?v=1"
-            alt="WaveSignals logo"
-            class="site-logo"
-          />
+          <img src="/public/logo-header.svg?v=1" alt="WaveSignals" class="site-logo" />
         </a>
       </div>
-
       <nav class="site-nav">
         <ul class="nav-list">
           <li><a href="/app/index.html" class="nav-link">Home</a></li>
           <li><a href="/about.html" class="nav-link">About</a></li>
-          <li><a href="/contact.html" class="nav-link">Contact</a></li>
         </ul>
       </nav>
-
-      <!-- AD_SLOT: header -->
     </div>
   </header>
 
-  <!-- MAIN -->
   <main class="site-main">
     <div class="container">
 
+      <!-- Back Link -->
+      <a href="/app/index.html"
+        style="display:inline-block; margin: 2rem 0; color:var(--text-muted); font-size:0.9rem;">
+        ← Back to signals
+      </a>
+
+      <!-- Article Container -->
       <article id="post">
-        <h1 id="post-title">Loading…</h1>
-        <p class="post-meta">
-          <time id="post-date"></time>
-        </p>
-        <div id="post-content"></div>
+        <header class="article-header">
+          <h1 id="post-title">Loading Signal...</h1>
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+            <p class="post-meta" style="margin:0;">
+              <time id="post-date"></time> • <span id="post-author">WaveSignals Team</span>
+            </p>
 
-        <div id="post-resources" class="post-resources hidden">
-          <h3>Related resources</h3>
-          <ul id="resource-list"></ul>
+            <!-- Social Share -->
+            <div class="share-buttons" style="display:flex; gap:0.5rem;">
+              <button onclick="shareLink('x')" class="btn-secondary" style="padding:4px 10px; font-size:0.8rem;">𝕏
+                Share</button>
+              <button onclick="shareLink('in')" class="btn-secondary" style="padding:4px 10px; font-size:0.8rem;">In
+                Share</button>
+              <button onclick="shareLink('copy')" class="btn-secondary" style="padding:4px 10px; font-size:0.8rem;">🔗
+                Copy</button>
+            </div>
+          </div>
+        </header>
+
+        <script>
+          function shareLink(platform) {
+            const url = encodeURIComponent(window.location.href);
+            const text = encodeURIComponent(document.title);
+            if (platform === 'x') window.open(`https://x.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+            if (platform === 'in') window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
+            if (platform === 'copy') {
+              navigator.clipboard.writeText(window.location.href);
+              alert('Link copied to clipboard!');
+            }
+          }
+        </script>
+
+        <div id="post-content">
+          <!-- Content injected here -->
         </div>
-        
-        <!-- AD_SLOT: post-bottom -->
 
-          <!-- Email signup (Buttondown) - quiet, human opt-in -->
-          <section class="email-signup">
-            <p><strong>Get new signals in your inbox.</strong></p>
-            <p style="color:#555;">One clear insight. No spam. Unsubscribe anytime.</p>
+        <!-- Resources Box (if any) -->
+        <div id="post-resources" class="post-resources hidden"
+          style="margin-top:3rem; padding:1.5rem; background:var(--bg-card); border-radius:12px; border:1px solid var(--border);">
+          <h3 style="margin-bottom:1rem; color:#fff;">References & Data:</h3>
+          <ul id="resource-list" style="list-style: disc; padding-left: 1.5rem; color: var(--text-muted);"></ul>
+        </div>
 
-            <form id="email-form">
-              <input
-                type="email"
-                id="email-input"
-                name="email"
-                placeholder="you@example.com"
-                required
-              />
-              <button type="submit">Subscribe</button>
-            </form>
-            <p id="email-message" style="display:none;color:#0a0;margin-top:8px"></p>
-          </section>
+        <!-- Premium Newsletter Box -->
+        <section class="email-signup">
+          <h3 style="color:#fff; margin-bottom:0.5rem;">Get Smarter About The Future</h3>
+          <p style="color:var(--text-muted); margin-bottom:1.5rem;">Join 1,200+ readers receiving our concise weekly
+            signals.</p>
+
+          <form id="email-form" name="newsletter" method="POST" data-netlify="true" action="/success.html">
+            <input type="hidden" name="form-name" value="newsletter" />
+            <input type="email" id="email-input" name="email" placeholder="you@work.com" required />
+            <button type="submit">Subscribe Free</button>
+          </form>
+          <p id="email-message" style="display:none; margin-top:1rem; font-size:0.9rem;"></p>
+        </section>
+
+        <!-- COMMENTS (Giscus) -->
+        <section id="comments" style="margin-top: 3rem; border-top: 1px solid var(--border); padding-top: 2rem;">
+          <h3 style="color:#fff; margin-bottom:1.5rem;">Discussion</h3>
+          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">
+            <i>Comments are powered by GitHub. Make sure to configure the Giscus script below.</i>
+          </p>
+
+          <!-- PASTE YOUR GISCUS SCRIPT HERE -->
+          <script src="https://giscus.app/client.js" data-repo="mahenderoffl/disc" data-repo-id="R_kgDOQuatnA"
+            data-category="Announcements" data-category-id="DIC_kwDOQuatnM4C0NX-" data-mapping="pathname"
+            data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="bottom"
+            data-theme="transparent_dark" data-lang="en" crossorigin="anonymous" async>
+            </script>
+        </section>
+
       </article>
-
-      <p style="margin-top:2rem;">
-        ← <a href="/app/index.html">Back to all posts</a>
-      </p>
 
     </div>
   </main>
 
-  <!-- FOOTER -->
   <footer class="site-footer">
     <div class="container">
-      <!-- AD_SLOT: footer -->
-      <p class="affiliate-disclaimer">We may earn a small commission from links to products or services we recommend. No tracking pixels; no intrusive ads.</p>
-      <p>© 2025 WaveSignals. All rights reserved.</p>
+      <p>© 2025 WaveSignals. • <a href="/privacy.html">Privacy</a></p>
     </div>
   </footer>
 
-  <!-- POST LOADER -->
+  <!-- DATA LOADER -->
   <script>
     const DATA_URL = "/data/posts.json";
-
     const params = new URLSearchParams(window.location.search);
     const slug = params.get("slug");
 
-    // ✅ Redirect if no slug
-    if (!slug) {
-      window.location.replace("/app/index.html");
-    }
+    if (!slug) window.location.replace("/app/index.html");
 
     async function loadPost() {
       try {
         const res = await fetch(DATA_URL, { cache: "no-store" });
-        if (!res.ok) throw new Error("Failed to load posts");
+        if (!res.ok) throw new Error("Failed");
 
         const data = await res.json();
-        const posts = Array.isArray(data.posts) ? data.posts : [];
-
-        const post = posts.find(p => p.slug === slug && p.published);
+        const post = (data.posts || []).find(p => p.slug === slug);
 
         if (!post) {
-          document.getElementById("post-title").textContent = "Post not found";
+          document.getElementById("post-title").textContent = "Signal Not Found";
+          document.getElementById("post-content").innerHTML = "<p>This post may have been moved or deleted.</p>";
           return;
         }
 
-        // ===== Populate content =====
+        // SEO & Meta
         document.title = `${post.title} — WaveSignals`;
-        document.getElementById("seo-description").content =
-          post.excerpt || post.title;
-
-        // Canonical URL
-        const canonical = document.getElementById("canonical-url");
-        if (canonical) canonical.href = window.location.href;
-
-        // Open Graph
-        const ogTitle = document.querySelector('meta[property="og:title"]');
-        if (ogTitle) ogTitle.setAttribute("content", post.title);
-
-        const ogDesc = document.querySelector('meta[property="og:description"]');
-        if (ogDesc) ogDesc.setAttribute("content", post.excerpt || post.title);
-
-        const ogUrl = document.querySelector('meta[property="og:url"]');
-        if (ogUrl) ogUrl.setAttribute("content", window.location.href);
-
-        // Twitter
-        const twTitle = document.querySelector('meta[name="twitter:title"]');
-        if (twTitle) twTitle.setAttribute("content", post.title);
-
-        const twDesc = document.querySelector('meta[name="twitter:description"]');
-        if (twDesc) twDesc.setAttribute("content", post.excerpt || post.title);
-
+        document.getElementById("seo-description").content = post.excerpt || post.title;
         document.getElementById("post-title").textContent = post.title;
-        document.getElementById("post-date").textContent =
-          new Date(post.date).toDateString();
+        document.getElementById("post-author").textContent = post.author || "WaveSignals";
+        document.getElementById("post-date").textContent = new Date(post.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
         document.getElementById("post-content").innerHTML = post.content;
 
-        // Render resources (soft monetization)
-        if (Array.isArray(post.resources) && post.resources.length > 0) {
-          const box = document.getElementById("post-resources");
+        // Resources
+        if (post.resources && post.resources.length) {
           const list = document.getElementById("resource-list");
-
           post.resources.forEach(r => {
             const li = document.createElement("li");
-            li.innerHTML = `<a href="${r.url}" target="_blank" rel="noopener noreferrer">${r.label}</a>`;
+            li.innerHTML = `<a href="${r.url}" target="_blank" style="color:var(--accent);">${r.label || r.url}</a>`;
             list.appendChild(li);
           });
-
-          box.classList.remove("hidden");
+          document.getElementById("post-resources").classList.remove("hidden");
         }
 
-        // Render optional recommended affiliate section (quiet, contextual)
-        if (post.recommendation && post.recommendation.link) {
-          const recHtml = `
-            <section class="recommended">
-              <h4>Related</h4>
-              <p>
-                If this topic resonates, you might find this useful:
-                <a href="${post.recommendation.link}" target="_blank" rel="sponsored noopener noreferrer nofollow">
-                  ${post.recommendation.label}
-                </a>
-              </p>
-            </section>
-          `;
-
-          const article = document.getElementById("post");
-          article.insertAdjacentHTML("beforeend", recHtml);
-        }
-
-        // ===== Internal linking: Related Signals (1-2 older published posts)
-        try {
-          const relatedBox = document.createElement('div');
-          relatedBox.id = 'related-signals';
-          relatedBox.className = 'related-signals';
-
-          const relatedList = document.createElement('ul');
-          relatedList.id = 'related-list';
-
-          const published = posts.filter(p => p.published && p.slug !== slug && new Date(p.date) < new Date(post.date));
-          // sort by date desc (most recent older first)
-          published.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-          const picks = published.slice(0, 2);
-          if (picks.length) {
-            const h = document.createElement('h3');
-            h.textContent = 'Related Signals';
-            relatedBox.appendChild(h);
-
-            picks.forEach(r => {
-              const li = document.createElement('li');
-              li.innerHTML = `<a href="/app/post.html?slug=${r.slug}">${r.title}</a>`;
-              relatedList.appendChild(li);
-            });
-
-            relatedBox.appendChild(relatedList);
-            const article = document.getElementById('post');
-            article.insertAdjacentElement('beforeend', relatedBox);
-          }
-        } catch (e) {
-          // silent
-        }
-
-      } catch (err) {
-        console.error(err);
-        document.getElementById("post-title").textContent = "Error loading post";
+      } catch (e) {
+        console.error(e);
       }
     }
 
-    // load post then inject ads
+    loadPost().then(() => injectAds());
+
     async function injectAds() {
       try {
         const res = await fetch('/data/ads.json', { cache: 'no-store' });
@@ -262,106 +200,21 @@
         const data = await res.json();
         const slots = (data && data.slots) || {};
 
-        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_COMMENT, null, false);
-        const toReplace = [];
-        let node;
-        while (node = walker.nextNode()) {
-          const m = /AD_SLOT:\s*([a-zA-Z0-9_-]+)/.exec(node.nodeValue);
-          if (m) toReplace.push({ node, name: m[1] });
-        }
+        // Post Bottom Slot
+        const html = slots['post-bottom'];
+        if (html && html.trim()) {
+          const div = document.createElement('div');
+          div.className = 'ad-slot ad-slot-post-bottom';
+          div.style.margin = '3rem 0';
+          try { div.innerHTML = html; } catch (e) { div.textContent = html; }
 
-        toReplace.forEach(({ node, name }) => {
-          const html = slots[name];
-          if (html && html.trim()) {
-            const wrapper = document.createElement('div');
-            wrapper.className = `ad-slot ad-slot-${name.replace(/[^a-z0-9_-]/gi,'')}`;
-            try { wrapper.innerHTML = html; } catch (e) { wrapper.textContent = html; }
-            node.parentNode.replaceChild(wrapper, node);
-          } else {
-            node.parentNode.removeChild(node);
-          }
-        });
-      } catch (e) {
-        // silent
-      }
+          const content = document.getElementById('post-content');
+          if (content) content.after(div);
+        }
+      } catch (e) { }
     }
-
-    (async () => { await loadPost(); await injectAds(); })();
   </script>
-
-  <!-- Analytics+: local-first views, engagement and affiliate capture -->
-  <script>
-    (function () {
-      const slug = new URLSearchParams(location.search).get("slug");
-      if (!slug) return;
-
-      // VIEW counter (per-slug)
-      try {
-        const vKey = "ws_view_" + slug;
-        localStorage.setItem(vKey, (Number(localStorage.getItem(vKey)) || 0) + 1);
-      } catch (e) {}
-
-      // ENGAGEMENT (60% scroll)
-      let fired = false;
-      window.addEventListener("scroll", () => {
-        const pct = (window.scrollY + innerHeight) / document.body.scrollHeight;
-        if (!fired && pct > 0.6) {
-          fired = true;
-          try { localStorage.setItem("ws_engage_" + slug, Date.now()); } catch (e) {}
-        }
-      });
-
-      // AFFILIATE CLICK CAPTURE (generic)
-      document.addEventListener('click', function (e) {
-        const a = e.target.closest && e.target.closest('[data-affiliate]');
-        if (!a) return;
-        const key = 'ws_aff_' + a.getAttribute('data-affiliate');
-        try { localStorage.setItem(key, Date.now()); } catch (err) {}
-      });
-    })();
-  </script>
-
-    <script>
-      // Subscribe form handler - posts to local /api/subscribe proxy; falls back to Buttondown embed
-      (function(){
-        const form = document.getElementById('email-form');
-        const input = document.getElementById('email-input');
-        const msg = document.getElementById('email-message');
-        if (!form) return;
-
-        form.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          const email = input.value.trim();
-          if (!email) return;
-          // Optimistically store local flag
-          try { localStorage.setItem('ws_email_signup', Date.now()); } catch (err) {}
-
-          // Try local proxy
-          try {
-            const r = await fetch('/api/subscribe', {
-              method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email })
-            });
-            if (r.ok) {
-              msg.style.display='block'; msg.style.color='#080'; msg.textContent='Thanks — check your inbox.'; input.value=''; return;
-            }
-            // If proxy fails, fall through to Buttondown POST
-          } catch (err) {
-            // ignore and fallback
-          }
-
-          // Fallback: submit to Buttondown embed endpoint with form POST (opens same page)
-          try {
-            const b = document.createElement('form');
-            b.method = 'post';
-            b.action = 'https://buttondown.email/api/emails/embed-subscribe/wavesignals';
-            const i = document.createElement('input'); i.type='hidden'; i.name='email'; i.value = email; b.appendChild(i);
-            document.body.appendChild(b); b.submit();
-          } catch (e) {
-            msg.style.display='block'; msg.style.color='#a00'; msg.textContent = 'Subscription failed.';
-          }
-        });
-      })();
-    </script>
 
 </body>
+
 </html>

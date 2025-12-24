@@ -1,19 +1,15 @@
 {
   "posts": [
     {
-      "id": 1766436309311,
-      "title": "Test Blog 2",
-      "slug": "test-blog-2",
-      "excerpt": "Hello world",
-      "content": "hello",
-      "resources": [
-        {
-          "label": "Remote job discovery tools",
-          "url": "https://example.com/remote-jobs"
-        }
-      ],
+      "id": "bot-1766591774614",
+      "title": "Top 10 AI Tools for Coding in 2025",
+      "slug": "top-10-ai-tools-for-coding-in-2025",
+      "excerpt": "Automated analysis on Top 10 AI Tools for Coding in 2025",
+      "content": "\n    <h2>The Remote Work Reality Check</h2>\n    <p>We've all heard the hype: \"Remote work is the future.\" But let's look at the data.</p>\n    <p>It's not just about zooming from your couch; it's about asynchronous efficiency.</p>\n  ",
+      "date": "2025-12-24T15:56:14.615Z",
       "published": true,
-      "date": "2025-12-22T20:45:09.311Z"
+      "status": "published",
+      "author": "AI (Edited)"
     }
   ]
 }
