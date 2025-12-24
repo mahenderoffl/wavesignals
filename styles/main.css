@@ -203,6 +203,18 @@ section { margin: 2rem 0; }
   text-decoration: underline;
 }
 
+/* Related signals list */
+.related-signals {
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #f0f0f0;
+}
+
+.related-signals ul { list-style: none; padding: 0; margin: 0.5rem 0 0; }
+.related-signals li { margin-bottom: 0.5rem; }
+.related-signals a { color: var(--accent-color); text-decoration: none; }
+.related-signals a:hover { text-decoration: underline; }
+
 /* Recommended / affiliate mention (quiet, contextual) */
 .recommended {
   margin-top: 2rem;

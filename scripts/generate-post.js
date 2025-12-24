@@ -11,6 +11,8 @@ const qualityGate = require("./quality-gate");
 // PATHS
 // ===============================
 const POSTS_PATH = path.join(__dirname, "../data/posts.json");
+const SETTINGS_PATH = path.join(__dirname, "../data/settings.json");
+const DRAFTS_PATH = path.join(__dirname, "../data/drafts.json");
 const PROMPTS_PATH = path.join(__dirname, "../prompts");
 
 // ===============================
@@ -46,33 +48,37 @@ function analyzeHistory(posts) {
 }
 
 function runResearcher() {
-  const data = JSON.parse(fs.readFileSync(POSTS_PATH, "utf-8"));
-  const history = analyzeHistory(data.posts || []);
-
-  const topicPool = [
-    { topic: "Why career growth now depends on visibility, not skill", pillar: "Career" },
-    { topic: "The hidden incentive behind hustle culture", pillar: "Money" },
-    { topic: "Why most AI products won’t survive 18 months", pillar: "Tech" },
-    { topic: "Why people confuse comfort with stability", pillar: "Behavior" }
-  ];
-
-  const available = topicPool.filter(
-    t => !history.lastTopics.includes(t.topic.toLowerCase())
+  const postsData = JSON.parse(fs.readFileSync(POSTS_PATH, "utf-8"));
+  const topicsData = JSON.parse(
+    fs.readFileSync(path.join(__dirname, "../data/topics.json"), "utf-8")
   );
 
-  if (!available.length) {
-    throw new Error("❌ Researcher: No fresh topics available");
+  const usedTitles = new Set(
+    (postsData.posts || []).map(p => p.title.toLowerCase())
+  );
+
+  // Build weighted pool
+  const pool = [];
+  for (const [pillar, config] of Object.entries(topicsData.pillars)) {
+    config.topics.forEach(topic => {
+      if (!usedTitles.has(topic.toLowerCase())) {
+        for (let i = 0; i < config.weight; i++) {
+          pool.push({ topic, pillar });
+        }
+      }
+    });
   }
 
-  available.sort((a, b) => {
-    const aCount = history.pillarCount[a.pillar] || 0;
-    const bCount = history.pillarCount[b.pillar] || 0;
-    return aCount - bCount;
-  });
+  if (!pool.length) {
+    throw new Error("❌ Researcher: No unused topics available");
+  }
+
+  const selected = pool[Math.floor(Math.random() * pool.length)];
 
   return {
-    topic: available[0].topic,
-    pillar: available[0].pillar
+    topic: selected.topic,
+    pillar: selected.pillar,
+    confidence: "high"
   };
 }
 
@@ -164,6 +170,56 @@ async function runPipeline() {
   // ✅ QUALITY GATE — RUN ONCE, CORRECTLY
   qualityGate({ title, content });
 
+  // Respect automation settings
+  let settings = { automation: { enabled: true, manualOnly: false, emergencyStop: false } };
+  try {
+    settings = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8')) || settings;
+  } catch (e) {
+    console.warn('⚠️ settings.json not found or invalid — using defaults');
+  }
+
+  const auto = settings.automation || {};
+  if (auto.emergencyStop) {
+    console.error('⛔ Emergency stop is active — aborting publish.');
+    process.exit(2);
+  }
+
+  if (!auto.enabled) {
+    console.log('⏸ Automation is paused (enabled=false) — not publishing.');
+    process.exit(0);
+  }
+
+  if (auto.manualOnly) {
+    console.log('✋ Manual-publish mode active — saving as draft instead of publishing.');
+    // write draft to drafts.json
+    try {
+      const draftPayload = {
+        id: Date.now(),
+        title,
+        slug: slugify(title),
+        excerpt: stripHtml(content).slice(0,140),
+        content,
+        date: new Date().toISOString()
+      };
+
+      let ddata = { drafts: [] };
+      try {
+        ddata = JSON.parse(fs.readFileSync(DRAFTS_PATH, 'utf-8')) || ddata;
+      } catch (e) {
+        // create new drafts file
+      }
+      ddata.drafts.unshift(draftPayload);
+      fs.writeFileSync(DRAFTS_PATH, JSON.stringify(ddata, null, 2));
+      console.log('🗂 Draft saved to', DRAFTS_PATH);
+    } catch (e) {
+      console.error('Failed to save draft:', e);
+    }
+
+    console.log('📌 Next: review drafts or publish manually via admin');
+    process.exit(0);
+  }
+
+  // Default: auto-publish
   publishPost(title, content);
 
   console.log("📌 Next: node scripts/generate-sitemap.js");

@@ -1,7 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 
-const SITE_URL = "http://localhost:8080"; // change to real domain later
+// Use SITE_URL env var in CI or leave empty for relative paths
+const SITE_URL = process.env.SITE_URL || "";
 const POSTS_PATH = path.join(__dirname, "../data/posts.json");
 const OUTPUT_PATH = path.join(__dirname, "../sitemap.xml");
 
@@ -18,9 +19,10 @@ function generateSitemap() {
   const urls = [];
 
   // Homepage
+  const homeLoc = SITE_URL ? `${SITE_URL.replace(/\/$/, '')}/app/index.html` : `/app/index.html`;
   urls.push(`
   <url>
-    <loc>${SITE_URL}/app/index.html</loc>
+    <loc>${homeLoc}</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -30,9 +32,10 @@ function generateSitemap() {
   posts
     .filter(p => p.published)
     .forEach(post => {
+      const loc = SITE_URL ? `${SITE_URL.replace(/\/$/, '')}/app/post.html?slug=${post.slug}` : `/app/post.html?slug=${post.slug}`;
       urls.push(`
   <url>
-    <loc>${SITE_URL}/app/post.html?slug=${post.slug}</loc>
+    <loc>${loc}</loc>
     <lastmod>${formatDate(post.date)}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

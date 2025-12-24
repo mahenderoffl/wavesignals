@@ -2,3 +2,13 @@
 .netlify
 
 .vercel
+
+# Local env files (do NOT commit API keys or secrets)
+.env
+.env.*
+
+# Editor / OS
+.vscode/
+Thumbs.db
+*.log
+node_modules/

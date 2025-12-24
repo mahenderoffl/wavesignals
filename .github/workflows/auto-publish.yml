@@ -42,10 +42,8 @@ jobs:
           if [ -n "$(git status --porcelain)" ]; then CHANGED=true; fi
           echo "changed=$CHANGED" >> $GITHUB_OUTPUT
 
-      - name: Commit and push changes (conditional)
-        if: ${{ steps.detect.outputs.changed == 'true' && secrets.WS_AUTO_PUBLISH == 'true' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Commit and push changes (if changed)
+        if: ${{ steps.detect.outputs.changed == 'true' }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -53,12 +51,3 @@ jobs:
           git add -A
           git commit -m "chore(ci): auto-publish post via generate-post.js [skip ci]" || echo "No changes to commit"
           git push origin "HEAD:$BRANCH"
-
-      - name: Upload posts.json as artifact when not auto-publishing
-        if: ${{ steps.detect.outputs.changed == 'true' && secrets.WS_AUTO_PUBLISH != 'true' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: wave-signals-posts
-          path: |
-            data/posts.json
-            sitemap.xml

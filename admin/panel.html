@@ -118,7 +118,10 @@
         </label>
 
         <br><br>
-        <button id="save-post">Save Post</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button id="save-post">Save Post</button>
+          <button id="preview-post" style="background:#666;">Preview Post</button>
+        </div>
       </section>
 
       <section class="card">
@@ -126,6 +129,43 @@
         <ul id="posts-list">
           <li>No posts yet</li>
         </ul>
+      </section>
+
+      <section class="card">
+        <h3>Ad Slots</h3>
+        <p class="muted">Paste HTML/JS for ad slots. Empty slots remain hidden on public pages.</p>
+
+        <label style="font-weight:600;margin-top:8px">Header slot</label>
+        <textarea id="ad-header" placeholder="<!-- header ad HTML -->" style="min-height:80px"></textarea>
+
+        <label style="font-weight:600;margin-top:8px">Post bottom slot</label>
+        <textarea id="ad-post-bottom" placeholder="<!-- post bottom ad HTML -->" style="min-height:80px"></textarea>
+
+        <label style="font-weight:600;margin-top:8px">Footer slot</label>
+        <textarea id="ad-footer" placeholder="<!-- footer ad HTML -->" style="min-height:80px"></textarea>
+
+        <br>
+        <button id="save-ads">Save Ads</button>
+      </section>
+
+      <section class="card">
+        <h3>Automation Controls</h3>
+        <p class="muted">Control pipeline automation — pause, manual-only, or emergency stop.</p>
+
+        <label style="display:block;margin-top:8px">
+          <input type="checkbox" id="automation-enabled" /> Automation enabled
+        </label>
+
+        <label style="display:block;margin-top:8px">
+          <input type="checkbox" id="automation-manual-only" /> Manual-publish only (do not auto-publish)
+        </label>
+
+        <label style="display:block;margin-top:8px;color:#a00;">
+          <input type="checkbox" id="automation-emergency" /> Emergency stop (disable all publishing)
+        </label>
+
+        <br>
+        <button id="save-settings">Save Settings</button>
       </section>
 
       <section class="card">
@@ -139,131 +179,490 @@
 
         <h4 style="margin-top:1rem;">Search Signals (local)</h4>
         <ul id="search-signals"></ul>
+
+        <h4 style="margin-top:1rem;">Analytics (local)</h4>
+        <div id="analytics-table">
+          <table style="width:100%;border-collapse:collapse;">
+            <thead>
+              <tr>
+                <th style="text-align:left;padding:6px;border-bottom:1px solid #eee;">Metric</th>
+                <th style="text-align:right;padding:6px;border-bottom:1px solid #eee;">Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style="padding:6px;border-bottom:1px solid #fafafa;">Unique Views (recorded)</td><td style="padding:6px;text-align:right;" id="meta-views">–</td></tr>
+              <tr><td style="padding:6px;border-bottom:1px solid #fafafa;">Engaged (60%+ scroll)</td><td style="padding:6px;text-align:right;" id="meta-engaged">–</td></tr>
+              <tr><td style="padding:6px;border-bottom:1px solid #fafafa;">Email Signups</td><td style="padding:6px;text-align:right;" id="meta-emails">–</td></tr>
+              <tr><td style="padding:6px;">Affiliate Clicks</td><td style="padding:6px;text-align:right;" id="meta-affs">–</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <h3>Per-post Analytics</h3>
+        <p class="muted">Views, engagement and affiliate signals per post (from localStorage).</p>
+        <table id="per-post-analytics" style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th style="text-align:left;padding:6px;border-bottom:1px solid #eee;">Post</th>
+              <th style="text-align:right;padding:6px;border-bottom:1px solid #eee;">Views</th>
+              <th style="text-align:right;padding:6px;border-bottom:1px solid #eee;">Engaged</th>
+              <th style="text-align:right;padding:6px;border-bottom:1px solid #eee;">Affiliate</th>
+              <th style="text-align:right;padding:6px;border-bottom:1px solid #eee;">Email Signup</th>
+            </tr>
+          </thead>
+          <tbody id="per-post-analytics-body">
+            <tr><td colspan="5" style="padding:8px">Loading…</td></tr>
+          </tbody>
+        </table>
       </section>
 
     </main>
   </div>
 
-  <!-- ✅ SINGLE, CLEAN SCRIPT -->
+  <!-- ✅ ADMIN SCRIPT: POSTS CRUD (file-based) -->
   <script>
-    console.log("✅ Admin script loaded");
+    // Enhanced admin panel: list/edit/delete/publish posts
+    document.addEventListener('DOMContentLoaded', () => {
+      const ADMIN_KEY = 'wavesignals@2025';
 
-    document.addEventListener("DOMContentLoaded", () => {
-      const ADMIN_KEY = "wavesignals@2025";
+      const loginScreen = document.getElementById('login-screen');
+      const adminPanel = document.getElementById('admin-panel');
+      const loginBtn = document.getElementById('login-btn');
+      const logoutBtn = document.getElementById('logout-btn');
+      const error = document.getElementById('login-error');
 
-      const loginScreen = document.getElementById("login-screen");
-      const adminPanel  = document.getElementById("admin-panel");
-      const loginBtn    = document.getElementById("login-btn");
-      const logoutBtn   = document.getElementById("logout-btn");
-      const error       = document.getElementById("login-error");
-      const saveBtn     = document.getElementById("save-post");
+      // Form fields
+      const titleEl = document.getElementById('title');
+      const slugEl = document.getElementById('slug');
+      const excerptEl = document.getElementById('excerpt');
+      const contentEl = document.getElementById('content');
+      const publishEl = document.getElementById('publish');
+      const saveBtn = document.getElementById('save-post');
 
-      // LOGIN
-      loginBtn.addEventListener("click", () => {
-        const key = document.getElementById("admin-key").value.trim();
+      // Posts state
+      let posts = [];
+      let editingId = null;
+      // Optional in-memory file handle for File System Access API
+      let postsFileHandle = null;
+
+      // ------- LOGIN -------
+      loginBtn.addEventListener('click', () => {
+        const key = document.getElementById('admin-key').value.trim();
         if (key === ADMIN_KEY) {
-          loginScreen.classList.add("hidden");
-          adminPanel.classList.remove("hidden");
+          loginScreen.classList.add('hidden');
+          adminPanel.classList.remove('hidden');
+          initPanel();
         } else {
-          error.classList.remove("hidden");
+          error.classList.remove('hidden');
         }
       });
 
-      logoutBtn.addEventListener("click", () => location.reload());
+      logoutBtn.addEventListener('click', () => location.reload());
 
-      // SAVE POST → DOWNLOAD posts.json
-      saveBtn.addEventListener("click", () => {
-        const title   = document.getElementById("title").value.trim();
-        const slugIn  = document.getElementById("slug").value.trim();
-        const excerpt = document.getElementById("excerpt").value.trim();
-        const content = document.getElementById("content").value.trim();
-        const publish = document.getElementById("publish").checked;
+      // ------- PANEL INIT -------
+      function initPanel() {
+        loadPosts();
+        loadAds();
+        loadSettings();
+        loadSearchSignals();
+        populateAnalytics();
+        saveBtn.textContent = 'Save Post';
+      }
 
-        if (!title || !content) {
-          alert("Title and content are required");
+      // ------- LOAD POSTS -------
+      async function loadPosts() {
+        try {
+          const res = await fetch('/data/posts.json', { cache: 'no-store' });
+          const data = await res.json();
+          posts = Array.isArray(data.posts) ? data.posts.slice() : [];
+        } catch (e) {
+          posts = [];
+        }
+        renderPostsList();
+        renderStats();
+        populatePerPostAnalytics();
+      }
+
+      function renderStats() {
+        document.getElementById('stat-total').textContent = posts.length;
+        document.getElementById('stat-published').textContent = posts.filter(p => p.published).length;
+      }
+
+      // ------- RENDER POSTS LIST -------
+      function renderPostsList() {
+        const list = document.getElementById('posts-list');
+        list.innerHTML = '';
+
+        if (!posts.length) {
+          const li = document.createElement('li');
+          li.textContent = 'No posts yet';
+          list.appendChild(li);
           return;
         }
 
-        const slug = slugIn || title.toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/(^-|-$)/g, "");
+        posts.slice().sort((a,b)=> (b.date||'').localeCompare(a.date||'')).forEach(post => {
+          const li = document.createElement('li');
+          li.style.display = 'flex';
+          li.style.alignItems = 'center';
+          li.style.gap = '12px';
+          li.style.padding = '8px 0';
 
-        const post = {
-          id: Date.now(),
-          title,
-          slug,
-          excerpt,
-          content,
-          published: publish,
-          date: new Date().toISOString()
-        };
+          const title = document.createElement('div');
+          title.style.flex = '1';
+          title.innerHTML = `<strong>${escapeHtml(post.title)}</strong> <small style="color:#666;margin-left:8px;">${post.slug || ''}</small>`;
 
-        const data = { posts: [post] };
+          const editBtn = document.createElement('button');
+          editBtn.textContent = 'Edit';
+          editBtn.addEventListener('click', () => startEdit(post.id));
 
-        const blob = new Blob(
-          [JSON.stringify(data, null, 2)],
-          { type: "application/json" }
-        );
+          const delBtn = document.createElement('button');
+          delBtn.textContent = 'Delete';
+          delBtn.style.background = '#a00';
+          delBtn.addEventListener('click', () => deletePost(post.id));
 
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = "posts.json";
-        a.click();
+          const pubToggle = document.createElement('input');
+          pubToggle.type = 'checkbox';
+          pubToggle.checked = !!post.published;
+          pubToggle.title = 'Toggle published';
+          pubToggle.addEventListener('change', (e) => {
+            post.published = e.target.checked;
+            post.date = post.date || new Date().toISOString();
+            renderStats();
+            savePosts();
+          });
 
-        URL.revokeObjectURL(a.href);
+          li.appendChild(title);
+          li.appendChild(pubToggle);
+          li.appendChild(editBtn);
+          li.appendChild(delBtn);
 
-        alert("posts.json downloaded. Replace /data/posts.json");
+          list.appendChild(li);
+        });
+      }
+
+      // ------- EDIT -------
+      function startEdit(id) {
+        const p = posts.find(x => x.id === id);
+        if (!p) return;
+        editingId = id;
+        titleEl.value = p.title || '';
+        slugEl.value = p.slug || '';
+        excerptEl.value = p.excerpt || '';
+        contentEl.value = p.content || '';
+        publishEl.checked = !!p.published;
+        saveBtn.textContent = 'Update Post';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      // ------- DELETE -------
+      function deletePost(id) {
+        if (!confirm('Delete this post permanently? This cannot be undone.')) return;
+        const idx = posts.findIndex(p => p.id === id);
+        if (idx === -1) return;
+        posts.splice(idx, 1);
+        renderPostsList();
+        renderStats();
+        savePosts();
+      }
+
+      // ------- SAVE (create/update) -------
+      saveBtn.addEventListener('click', async () => {
+        const title = titleEl.value.trim();
+        const slugIn = slugEl.value.trim();
+        const excerpt = excerptEl.value.trim();
+        const content = contentEl.value.trim();
+        const publish = publishEl.checked;
+
+        if (!title || !content) {
+          alert('Title and content are required');
+          return;
+        }
+
+        const slug = slugIn || title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+
+        if (editingId) {
+          // update existing
+          const p = posts.find(x => x.id === editingId);
+          if (!p) {
+            alert('Post not found');
+            return;
+          }
+          p.title = title;
+          p.slug = slug;
+          p.excerpt = excerpt;
+          p.content = content;
+          p.published = publish;
+          p.date = p.date || new Date().toISOString();
+          editingId = null;
+          saveBtn.textContent = 'Save Post';
+        } else {
+          // create new, ensure no duplicate slugs
+          const id = Date.now();
+          const newPost = { id, title, slug, excerpt, content, published: publish, date: new Date().toISOString() };
+          // replace any post with same slug
+          posts = posts.filter(p => p.slug !== slug);
+          posts.push(newPost);
+        }
+
+        // Clear form
+        titleEl.value = '';
+        slugEl.value = '';
+        excerptEl.value = '';
+        contentEl.value = '';
+        publishEl.checked = false;
+
+        renderPostsList();
+        renderStats();
+
+        await savePosts();
+        alert('Post list updated. If the browser could not write files, a download was offered.');
       });
 
-      // ===============================
-      // ADMIN INSIGHTS (LOCAL-FIRST)
-      // ===============================
-      fetch("/data/posts.json")
-        .then(res => res.json())
-        .then(data => {
-          const posts = data.posts || [];
+      // ------- PREVIEW (open post in new tab without saving) -------
+      const previewBtn = document.getElementById('preview-post');
+      previewBtn.addEventListener('click', () => {
+        const title = titleEl.value.trim() || 'Preview';
+        const slugIn = slugEl.value.trim();
+        const slug = slugIn || title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+        const excerpt = excerptEl.value.trim();
+        const content = contentEl.value.trim() || '<p>(no content)</p>';
+        const date = new Date().toISOString();
 
-          document.getElementById("stat-total").textContent = posts.length;
-          document.getElementById("stat-published").textContent =
-            posts.filter(p => p.published).length;
+        const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)} — Preview</title><link rel="stylesheet" href="/styles/main.css"></head><body><header class="site-header"><div class="container header-inner"><div class="brand-container"><a href="/app/index.html" class="brand"><img src="/public/logo-header.svg?v=1" alt="WaveSignals logo" class="site-logo"></a></div></div></header><main class="site-main"><div class="container"><article class="preview-article"><h1>${escapeHtml(title)}</h1><p class="post-meta"><time datetime="${date}">${new Date(date).toDateString()}</time></p><div class="post-content">${content}</div></article></div></main><footer class="site-footer"><div class="container"><p class="affiliate-disclaimer">We may earn a small commission from links to products or services we recommend. No tracking pixels; no intrusive ads.</p><p>© 2025 WaveSignals. All rights reserved.</p></div></footer></body></html>`;
 
-          const recent = document.getElementById("recent-posts");
-          posts.slice(0, 5).forEach(p => {
-            const li = document.createElement("li");
-            li.textContent = p.title;
-            recent.appendChild(li);
-          });
-        })
-        .catch(() => {});
+        try {
+          const blob = new Blob([html], { type: 'text/html' });
+          const url = URL.createObjectURL(blob);
+          window.open(url, '_blank');
+          setTimeout(() => URL.revokeObjectURL(url), 20000);
+        } catch (e) {
+          alert('Preview failed: ' + (e && e.message));
+        }
+      });
 
-      // Load search intent from localStorage (editor-side)
-      const searchList = document.getElementById("search-signals");
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key.startsWith("ws_search_")) {
-          const term = key.replace("ws_search_", "");
-          const li = document.createElement("li");
-          li.textContent = term;
-          searchList.appendChild(li);
+      // ------- SAVE POSTS TO FILE (FileSystem API or download fallback) -------
+      async function savePosts() {
+        const payload = { posts };
+        // Try File System Access API
+        try {
+          if (!postsFileHandle) {
+            if (window.showSaveFilePicker) {
+              postsFileHandle = await window.showSaveFilePicker({
+                suggestedName: 'posts.json',
+                types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }]
+              });
+            } else if (window.showOpenFilePicker) {
+              const [h] = await window.showOpenFilePicker({ multiple: false, types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }] });
+              postsFileHandle = h;
+            }
+          }
+
+          if (postsFileHandle) {
+            const writable = await postsFileHandle.createWritable();
+            await writable.write(JSON.stringify(payload, null, 2));
+            await writable.close();
+            return true;
+          }
+        } catch (e) {
+          // Fall through to download fallback
+          console.warn('FileSystem API write failed', e);
+        }
+
+        // Download fallback
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'posts.json';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        return false;
+      }
+
+      // ------- HELPERS: SEARCH SIGNALS + ANALYTICS -------
+      function loadSearchSignals() {
+        const searchList = document.getElementById('search-signals');
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key.startsWith('ws_search_')) {
+            const term = key.replace('ws_search_', '');
+            const li = document.createElement('li');
+            li.textContent = term;
+            searchList.appendChild(li);
+          }
         }
       }
 
-      // ===== ANALYTICS READ (LOCAL) =====
-      function read(prefix) {
-        return Object.keys(localStorage)
-          .filter(k => k.startsWith(prefix))
-          .map(k => k.replace(prefix, ""));
+      // ------- ADS: load/save -------
+      let ads = { slots: { 'header': '', 'post-bottom': '', 'footer': '' } };
+      let adsFileHandle = null;
+
+      async function loadAds() {
+        try {
+          const res = await fetch('/data/ads.json', { cache: 'no-store' });
+          const data = await res.json();
+          ads = data || ads;
+        } catch (e) {
+          ads = { slots: { 'header': '', 'post-bottom': '', 'footer': '' } };
+        }
+        document.getElementById('ad-header').value = ads.slots['header'] || '';
+        document.getElementById('ad-post-bottom').value = ads.slots['post-bottom'] || '';
+        document.getElementById('ad-footer').value = ads.slots['footer'] || '';
+        // attach save handler
+        document.getElementById('save-ads').addEventListener('click', async () => {
+          ads.slots['header'] = document.getElementById('ad-header').value;
+          ads.slots['post-bottom'] = document.getElementById('ad-post-bottom').value;
+          ads.slots['footer'] = document.getElementById('ad-footer').value;
+          await saveAds();
+          alert('Ad slots saved. If browser could not write files, a download was offered.');
+        });
       }
 
-      const views = read("ws_view_");
-      const engages = read("ws_engage_");
-      const emails = read("ws_email_");
-      const affs = read("ws_aff_");
+      async function saveAds() {
+        const payload = ads;
+        try {
+          if (!adsFileHandle) {
+            if (window.showSaveFilePicker) {
+              adsFileHandle = await window.showSaveFilePicker({ suggestedName: 'ads.json', types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }] });
+            } else if (window.showOpenFilePicker) {
+              const [h] = await window.showOpenFilePicker({ multiple: false, types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }] });
+              adsFileHandle = h;
+            }
+          }
+          if (adsFileHandle) {
+            const writable = await adsFileHandle.createWritable();
+            await writable.write(JSON.stringify(payload, null, 2));
+            await writable.close();
+            return true;
+          }
+        } catch (e) {
+          console.warn('FileSystem API write failed', e);
+        }
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'ads.json';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        return false;
+      }
 
-      console.log("📊 Views:", views);
-      console.log("📈 Engaged:", engages);
-      console.log("📧 Emails:", emails.length);
-      console.log("💰 Affiliate clicks:", affs.length);
+      // ------- SETTINGS: load/save automation settings -------
+      let settings = { automation: { enabled: true, manualOnly: false, emergencyStop: false } };
+      let settingsFileHandle = null;
+
+      async function loadSettings() {
+        try {
+          const res = await fetch('/data/settings.json', { cache: 'no-store' });
+          if (res.ok) settings = await res.json();
+        } catch (e) { settings = { automation: { enabled: true, manualOnly: false, emergencyStop: false } }; }
+
+        document.getElementById('automation-enabled').checked = !!settings.automation.enabled;
+        document.getElementById('automation-manual-only').checked = !!settings.automation.manualOnly;
+        document.getElementById('automation-emergency').checked = !!settings.automation.emergencyStop;
+
+        document.getElementById('save-settings').addEventListener('click', async () => {
+          settings.automation.enabled = !!document.getElementById('automation-enabled').checked;
+          settings.automation.manualOnly = !!document.getElementById('automation-manual-only').checked;
+          settings.automation.emergencyStop = !!document.getElementById('automation-emergency').checked;
+          settings.automation.lastUpdated = new Date().toISOString();
+          await saveSettings();
+          alert('Settings saved. If browser could not write files, a download was offered.');
+        });
+      }
+
+      async function saveSettings() {
+        const payload = settings;
+        try {
+          if (!settingsFileHandle) {
+            if (window.showSaveFilePicker) {
+              settingsFileHandle = await window.showSaveFilePicker({ suggestedName: 'settings.json', types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }] });
+            } else if (window.showOpenFilePicker) {
+              const [h] = await window.showOpenFilePicker({ multiple: false, types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }] });
+              settingsFileHandle = h;
+            }
+          }
+          if (settingsFileHandle) {
+            const writable = await settingsFileHandle.createWritable();
+            await writable.write(JSON.stringify(payload, null, 2));
+            await writable.close();
+            return true;
+          }
+        } catch (e) {
+          console.warn('FileSystem API write failed', e);
+        }
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'settings.json';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        return false;
+      }
+
+      function populateAnalytics() {
+        function read(prefix) {
+          return Object.keys(localStorage).filter(k => k.startsWith(prefix)).map(k => k.replace(prefix, ''));
+        }
+        const views = read('ws_view_');
+        const engages = read('ws_engage_');
+        const emails = read('ws_email_');
+        const affs = read('ws_aff_');
+
+        document.getElementById('meta-views').textContent = views.length || 0;
+        document.getElementById('meta-engaged').textContent = engages.length || 0;
+        document.getElementById('meta-emails').textContent = emails.length || 0;
+        document.getElementById('meta-affs').textContent = affs.length || 0;
+      }
+
+      // ------- PER-POST ANALYTICS -------
+      function populatePerPostAnalytics() {
+        const tbody = document.getElementById('per-post-analytics-body');
+        tbody.innerHTML = '';
+        if (!posts.length) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = '<td colspan="5" style="padding:8px">No posts</td>';
+          tbody.appendChild(tr);
+          return;
+        }
+
+        // sort posts by date desc
+        const sorted = posts.slice().sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+
+        sorted.forEach(p => {
+          const slug = p.slug || p.id;
+          const views = Number(localStorage.getItem('ws_view_' + slug)) || 0;
+          const engagedTs = localStorage.getItem('ws_engage_' + slug);
+          const affTs = localStorage.getItem('ws_aff_' + slug);
+          const emailTs = localStorage.getItem('ws_email_' + slug);
+
+          const engaged = engagedTs ? formatTs(engagedTs) : '';
+          const aff = affTs ? formatTs(affTs) : '';
+          const email = emailTs ? formatTs(emailTs) : '';
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td style="padding:8px;border-bottom:1px solid #fafafa;">${escapeHtml(p.title)}</td>
+            <td style="padding:8px;border-bottom:1px solid #fafafa;text-align:right;">${views}</td>
+            <td style="padding:8px;border-bottom:1px solid #fafafa;text-align:right;">${engaged}</td>
+            <td style="padding:8px;border-bottom:1px solid #fafafa;text-align:right;">${aff}</td>
+            <td style="padding:8px;border-bottom:1px solid #fafafa;text-align:right;">${email}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      function formatTs(v) {
+        const n = Number(v);
+        if (!n) return '';
+        try { return new Date(n).toLocaleString(); } catch (e) { return String(v); }
+      }
+
+      // ------- UTIL -------
+      function escapeHtml(s) {
+        return (s||'').replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":"&#39;"})[c]);
+      }
     });
   </script>
 

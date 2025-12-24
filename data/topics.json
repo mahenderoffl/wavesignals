@@ -1,0 +1,36 @@
+{
+  "pillars": {
+    "Career": {
+      "weight": 3,
+      "topics": [
+        "Why visibility now beats skill in modern careers",
+        "Why most promotions are decided before performance reviews",
+        "The hidden career tax of being \"low maintenance\""
+      ]
+    },
+    "Money": {
+      "weight": 2,
+      "topics": [
+        "Why hustle culture benefits employers more than workers",
+        "The quiet cost of lifestyle upgrades",
+        "Why most people misunderstand financial freedom"
+      ]
+    },
+    "Tech": {
+      "weight": 2,
+      "topics": [
+        "Why most AI products won’t survive 18 months",
+        "The hidden maintenance cost of modern software",
+        "Why speed matters more than features in early tech"
+      ]
+    },
+    "Behavior": {
+      "weight": 1,
+      "topics": [
+        "Why comfort is often mistaken for stability",
+        "The psychology behind avoiding hard decisions",
+        "Why people delay action even when clarity exists"
+      ]
+    }
+  }
+}

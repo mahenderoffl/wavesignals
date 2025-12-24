@@ -68,6 +68,7 @@
         </ul>
       </nav>
 
+      <!-- AD_SLOT: header -->
     </div>
   </header>
 
@@ -87,25 +88,24 @@
           <ul id="resource-list"></ul>
         </div>
         
+        <!-- AD_SLOT: post-bottom -->
+
           <!-- Email signup (Buttondown) - quiet, human opt-in -->
           <section class="email-signup">
             <p><strong>Get new signals in your inbox.</strong></p>
             <p style="color:#555;">One clear insight. No spam. Unsubscribe anytime.</p>
 
-            <form
-              action="https://buttondown.email/api/emails/embed-subscribe/wavesignals"
-              method="post"
-              target="popupwindow"
-              onsubmit="localStorage.setItem('ws_email_signup', Date.now()); window.open('https://buttondown.email/wavesignals','popupwindow')"
-            >
+            <form id="email-form">
               <input
                 type="email"
+                id="email-input"
                 name="email"
                 placeholder="you@example.com"
                 required
               />
               <button type="submit">Subscribe</button>
             </form>
+            <p id="email-message" style="display:none;color:#0a0;margin-top:8px"></p>
           </section>
       </article>
 
@@ -119,6 +119,7 @@
   <!-- FOOTER -->
   <footer class="site-footer">
     <div class="container">
+      <!-- AD_SLOT: footer -->
       <p class="affiliate-disclaimer">We may earn a small commission from links to products or services we recommend. No tracking pixels; no intrusive ads.</p>
       <p>© 2025 WaveSignals. All rights reserved.</p>
     </div>
@@ -214,13 +215,78 @@
           article.insertAdjacentHTML("beforeend", recHtml);
         }
 
+        // ===== Internal linking: Related Signals (1-2 older published posts)
+        try {
+          const relatedBox = document.createElement('div');
+          relatedBox.id = 'related-signals';
+          relatedBox.className = 'related-signals';
+
+          const relatedList = document.createElement('ul');
+          relatedList.id = 'related-list';
+
+          const published = posts.filter(p => p.published && p.slug !== slug && new Date(p.date) < new Date(post.date));
+          // sort by date desc (most recent older first)
+          published.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+          const picks = published.slice(0, 2);
+          if (picks.length) {
+            const h = document.createElement('h3');
+            h.textContent = 'Related Signals';
+            relatedBox.appendChild(h);
+
+            picks.forEach(r => {
+              const li = document.createElement('li');
+              li.innerHTML = `<a href="/app/post.html?slug=${r.slug}">${r.title}</a>`;
+              relatedList.appendChild(li);
+            });
+
+            relatedBox.appendChild(relatedList);
+            const article = document.getElementById('post');
+            article.insertAdjacentElement('beforeend', relatedBox);
+          }
+        } catch (e) {
+          // silent
+        }
+
       } catch (err) {
         console.error(err);
         document.getElementById("post-title").textContent = "Error loading post";
       }
     }
 
-    loadPost();
+    // load post then inject ads
+    async function injectAds() {
+      try {
+        const res = await fetch('/data/ads.json', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const slots = (data && data.slots) || {};
+
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_COMMENT, null, false);
+        const toReplace = [];
+        let node;
+        while (node = walker.nextNode()) {
+          const m = /AD_SLOT:\s*([a-zA-Z0-9_-]+)/.exec(node.nodeValue);
+          if (m) toReplace.push({ node, name: m[1] });
+        }
+
+        toReplace.forEach(({ node, name }) => {
+          const html = slots[name];
+          if (html && html.trim()) {
+            const wrapper = document.createElement('div');
+            wrapper.className = `ad-slot ad-slot-${name.replace(/[^a-z0-9_-]/gi,'')}`;
+            try { wrapper.innerHTML = html; } catch (e) { wrapper.textContent = html; }
+            node.parentNode.replaceChild(wrapper, node);
+          } else {
+            node.parentNode.removeChild(node);
+          }
+        });
+      } catch (e) {
+        // silent
+      }
+    }
+
+    (async () => { await loadPost(); await injectAds(); })();
   </script>
 
   <!-- Analytics+: local-first views, engagement and affiliate capture -->
@@ -254,6 +320,48 @@
       });
     })();
   </script>
+
+    <script>
+      // Subscribe form handler - posts to local /api/subscribe proxy; falls back to Buttondown embed
+      (function(){
+        const form = document.getElementById('email-form');
+        const input = document.getElementById('email-input');
+        const msg = document.getElementById('email-message');
+        if (!form) return;
+
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const email = input.value.trim();
+          if (!email) return;
+          // Optimistically store local flag
+          try { localStorage.setItem('ws_email_signup', Date.now()); } catch (err) {}
+
+          // Try local proxy
+          try {
+            const r = await fetch('/api/subscribe', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email })
+            });
+            if (r.ok) {
+              msg.style.display='block'; msg.style.color='#080'; msg.textContent='Thanks — check your inbox.'; input.value=''; return;
+            }
+            // If proxy fails, fall through to Buttondown POST
+          } catch (err) {
+            // ignore and fallback
+          }
+
+          // Fallback: submit to Buttondown embed endpoint with form POST (opens same page)
+          try {
+            const b = document.createElement('form');
+            b.method = 'post';
+            b.action = 'https://buttondown.email/api/emails/embed-subscribe/wavesignals';
+            const i = document.createElement('input'); i.type='hidden'; i.name='email'; i.value = email; b.appendChild(i);
+            document.body.appendChild(b); b.submit();
+          } catch (e) {
+            msg.style.display='block'; msg.style.color='#a00'; msg.textContent = 'Subscription failed.';
+          }
+        });
+      })();
+    </script>
 
 </body>
 </html>

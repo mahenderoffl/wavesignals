@@ -39,6 +39,7 @@
         </ul>
       </nav>
 
+      <!-- AD_SLOT: header -->
     </div>
   </header>
 
@@ -47,6 +48,28 @@
     <div class="container">
       <h1>Latest Signals</h1>
       <p class="page-subtitle">Fresh insights and ideas, thoughtfully published.</p>
+
+      <section class="pillars">
+        <div class="pillar">
+          <h3>Career</h3>
+          <p>Visibility now often determines career momentum more than technical skill alone. We explore how narratives, timing, and network signals translate into opportunity — and what practical shifts create real professional advantage.</p>
+        </div>
+
+        <div class="pillar">
+          <h3>Money</h3>
+          <p>Financial decisions are shaped by hidden incentives and small recurring choices. We surface the quiet costs and trade-offs that compound over time, and when modest shifts produce outsized results.</p>
+        </div>
+
+        <div class="pillar">
+          <h3>Tech</h3>
+          <p>Technical speed, operational costs, and product framing determine which innovations survive. We favor pattern-driven analysis that explains why some tools win and others erode under maintenance.</p>
+        </div>
+
+        <div class="pillar">
+          <h3>Behavior</h3>
+          <p>Small behavioral biases shape big outcomes. We examine the psychology of decision inertia, comfort, and commitment, and how clearer mental models unlock better choices.</p>
+        </div>
+      </section>
 
       <div class="search-box">
         <input
@@ -66,6 +89,7 @@
   <!-- FOOTER -->
   <footer class="site-footer">
     <div class="container">
+      <!-- AD_SLOT: footer -->
       <p>© 2025 WaveSignals. All rights reserved.</p>
     </div>
   </footer>
@@ -122,7 +146,38 @@
       }
     }
 
-    loadPosts();
+    loadPosts().then(() => injectAds()).catch(()=>{});
+    
+    async function injectAds() {
+      try {
+        const res = await fetch('/data/ads.json', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const slots = (data && data.slots) || {};
+
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_COMMENT, null, false);
+        const toReplace = [];
+        let node;
+        while (node = walker.nextNode()) {
+          const m = /AD_SLOT:\s*([a-zA-Z0-9_-]+)/.exec(node.nodeValue);
+          if (m) toReplace.push({ node, name: m[1] });
+        }
+
+        toReplace.forEach(({ node, name }) => {
+          const html = slots[name];
+          if (html && html.trim()) {
+            const wrapper = document.createElement('div');
+            wrapper.className = `ad-slot ad-slot-${name.replace(/[^a-z0-9_-]/gi,'')}`;
+            try { wrapper.innerHTML = html; } catch (e) { wrapper.textContent = html; }
+            node.parentNode.replaceChild(wrapper, node);
+          } else {
+            node.parentNode.removeChild(node);
+          }
+        });
+      } catch (e) {
+        // silent
+      }
+    }
   </script>
 
   <script>
