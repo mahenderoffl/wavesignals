@@ -378,7 +378,19 @@
         </li>
       </ul>
 
-      <div class="nav-footer">
+      <!-- LOGIN MODAL -->
+      <div id="login-modal" class="hidden"
+        style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(5px);">
+        <div
+          style="background:var(--card-bg); padding:2rem; border-radius:12px; border:1px solid var(--border); width:300px; text-align:center;">
+          <h2 style="margin-bottom:1rem;">Security Check</h2>
+          <input type="password" id="login-pass" placeholder="Admin Password"
+            style="width:100%; padding:0.8rem; margin-bottom:1rem; border-radius:6px; border:1px solid var(--border); background:var(--bg-body); color:#fff;">
+          <button onclick="doLogin()" class="btn-primary" style="width:100%;">Unlock</button>
+        </div>
+      </div>
+
+      <div class="app-container">
         <button onclick="location.reload()">Logout</button>
       </div>
     </aside>
@@ -654,55 +666,34 @@
       // Recent Activity
       const list = document.getElementById('dashboard-activity');
       list.innerHTML = '';
-      posts.slice(0, 5).forEach(p => {
-        list.innerHTML += `
-      <div class="post-row">
-        <div>${p.title}</div>
-        <div style="font-size:0.8rem; color:var(--text-muted)">${new Date(p.date).toLocaleDateString()}</div>
-      </div>
-    `;
-      });
-    }
+      // --- 2. POSTS MANAGEMENT ---
+      async function renderPosts() {
+        const token = await checkAuth();
+        if (!token) return;
 
-    /* SUBSCRIBERS */
-    function renderSubscribers() {
-      const c = document.getElementById('subscribers-list');
-      c.innerHTML = '';
-      if (!subscribers.length) {
-        c.innerHTML = '<div style="padding:1rem;">No subscribers yet.</div>';
-        return;
-      }
-      subscribers.reverse().forEach(s => {
-        const div = document.createElement('div');
-        div.className = 'post-row';
-        div.innerHTML = `<div>${s.email}</div><div style="font-size:0.8rem; color:var(--text-muted)">${new Date(s.date).toLocaleDateString()}</div>`;
-        c.appendChild(div);
-      });
-    }
+        const list = document.getElementById('posts-list-container'); // Changed from admin-posts-list
+        list.innerHTML = '<p style="color:var(--text-muted);">Loading from Brain...</p>'; // Updated style
 
-    // --- 2. POSTS MANAGEMENT ---
-    async function renderPosts() {
-      const list = document.getElementById('posts-list-container'); // Changed from admin-posts-list
-      list.innerHTML = '<p style="color:var(--text-muted);">Loading from Brain...</p>'; // Updated style
+        try {
+          const res = await fetch(`${API_URL}/posts`, {
+            headers: { 'X-Admin-Key': token }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            posts = data.posts || [];
+          }
+        } catch (e) { console.error("API Error", e); }
 
-      try {
-        const res = await fetch(`${API_URL}/posts`);
-        if (res.ok) {
-          const data = await res.json();
-          posts = data.posts || [];
+        list.innerHTML = '';
+        if (posts.length === 0) {
+          list.innerHTML = '<p style="padding:1rem;">No signals found.</p>';
+          return;
         }
-      } catch (e) { console.error("API Error", e); }
 
-      list.innerHTML = '';
-      if (posts.length === 0) {
-        list.innerHTML = '<p style="padding:1rem;">No signals found.</p>';
-        return;
-      }
-
-      posts.slice().sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(post => { // Added sorting back
-        const div = document.createElement('div');
-        div.className = 'post-row'; // Changed from post-item-row
-        div.innerHTML = `
+        posts.slice().sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(post => { // Added sorting back
+          const div = document.createElement('div');
+          div.className = 'post-row'; // Changed from post-item-row
+          div.innerHTML = `
           <div>
             <div style="font-weight:600; font-size:1.05rem;">${post.title}</div>
             <div style="font-size:0.85rem; color:var(--text-muted);">
@@ -714,91 +705,109 @@
             <button class="btn-secondary" style="padding:6px 12px; font-size:0.85rem; color:#f87171; border-color:#f87171;" onclick="deletePost(${post.id})">Delete</button>
           </div>
         `;
-        list.appendChild(div);
-      });
-    }
+          list.appendChild(div);
+        });
+      }
 
-    window.deletePost = async (id) => {
-      if (!confirm('Delete this signal permanently?')) return;
-      try {
-        const r = await fetch(`${API_URL}/posts/${id}`, { method: 'DELETE' });
-        if (r.ok) {
-          renderPosts(); // Refresh list
-          renderDashboard(); // Refresh dashboard stats
-        } else {
-          alert('Failed to delete on server');
-        }
-      } catch (e) { alert('Error: ' + e); }
-    };
+      window.deletePost = async (id) => {
+        if (!confirm('Delete this signal permanently?')) return;
 
-    /* EDITOR LOGIC */
-    let currentId = null;
+        const token = sessionStorage.getItem('ws_admin_key');
 
-    window.createNewPost = () => {
-      currentId = null;
-      document.getElementById('edit-title').value = '';
-      document.getElementById('edit-slug').value = '';
-      document.getElementById('edit-excerpt').value = '';
-      document.getElementById('edit-tags').value = ''; // Assuming these fields exist now
-      document.getElementById('edit-image').value = ''; // Assuming these fields exist now
-      if (window.quill) window.quill.setText(''); // Assuming Quill editor is used
-      document.getElementById('edit-publish').checked = false; // Reset publish status
-      openEditor();
-    };
-
-    window.editPost = (id) => {
-      const p = posts.find(x => x.id == id); // loose equal for string/int ids
-      if (!p) return;
-      currentId = id;
-      document.getElementById('edit-title').value = p.title;
-      document.getElementById('edit-slug').value = p.slug;
-      document.getElementById('edit-excerpt').value = p.excerpt;
-      document.getElementById('edit-tags').value = p.tags || ''; // Populate tags
-      document.getElementById('edit-image').value = p.image || ''; // Populate image
-      if (window.quill) window.quill.root.innerHTML = p.content; // Set Quill content
-      document.getElementById('edit-publish').checked = p.published;
-      openEditor();
-    };
-
-    function openEditor() {
-      document.getElementById('editor-ui').classList.remove('hidden');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    window.closeEditor = () => {
-      document.getElementById('editor-ui').classList.add('hidden');
-      document.getElementById('edit-title').value = '';
-      document.getElementById('edit-content').value = ''; // This might need to be quill.setText('')
-    };
-
-    window.savePost = async () => { // Renamed from editor-save-btn.onclick
-      const title = document.getElementById('edit-title').value;
-      if (!title) return alert('Title required');
-
-      const tagsRaw = document.getElementById('edit-tags').value;
-
-      const payload = {
-        title,
-        slug: document.getElementById('edit-slug').value || title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
-        excerpt: document.getElementById('edit-excerpt').value,
-        content: window.quill ? window.quill.root.innerHTML : document.getElementById('edit-content').value, // Use Quill if available
-        published: document.getElementById('edit-publish').checked,
-        tags: tagsRaw,
-        image: document.getElementById('edit-image').value
+        try {
+          const r = await fetch(`${API_URL}/posts/${id}`, {
+            method: 'DELETE',
+            headers: { 'X-Admin-Key': token }
+          });
+          if (r.ok) {
+            renderPosts();
+            renderDashboard();
+          } else {
+            alert('Failed to delete on server (Check Permissions)');
+          }
+        } catch (e) { alert('Error: ' + e); }
       };
 
-      try {
-        await fetch('/api/posts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(p)
-        });
-        alert('Saved!');
-        closeEditor();
-        renderPosts();
-        renderDashboard();
-      } catch (e) { alert('Error saving' + e); }
-    };
+      /* EDITOR LOGIC */
+      let currentId = null;
+
+      window.createNewPost = () => {
+        currentId = null;
+        document.getElementById('edit-title').value = '';
+        document.getElementById('edit-slug').value = '';
+        document.getElementById('edit-excerpt').value = '';
+        document.getElementById('edit-tags').value = '';
+        document.getElementById('edit-image').value = '';
+        if (window.quill) window.quill.setText('');
+        document.getElementById('edit-publish').checked = false;
+        openEditor();
+      };
+
+      window.editPost = (id) => {
+        const p = posts.find(x => x.id == id);
+        if (!p) return;
+        currentId = id;
+        document.getElementById('edit-title').value = p.title;
+        document.getElementById('edit-slug').value = p.slug;
+        document.getElementById('edit-excerpt').value = p.excerpt;
+        document.getElementById('edit-tags').value = p.tags || '';
+        document.getElementById('edit-image').value = p.image || '';
+        if (window.quill) window.quill.root.innerHTML = p.content;
+        document.getElementById('edit-publish').checked = p.published;
+        openEditor();
+      };
+
+      function openEditor() {
+        document.getElementById('editor-ui').classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      window.closeEditor = () => {
+        document.getElementById('editor-ui').classList.add('hidden');
+        document.getElementById('edit-title').value = '';
+        document.getElementById('edit-content').value = '';
+      };
+
+      window.savePost = async () => {
+        const title = document.getElementById('edit-title').value;
+        if (!title) return alert('Title required');
+
+        const tagsRaw = document.getElementById('edit-tags').value;
+        const token = sessionStorage.getItem('ws_admin_key');
+
+        const payload = {
+          title,
+          slug: document.getElementById('edit-slug').value || title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
+          excerpt: document.getElementById('edit-excerpt').value,
+          content: window.quill ? window.quill.root.innerHTML : document.getElementById('edit-content').value,
+          published: document.getElementById('edit-publish').checked,
+          tags: tagsRaw,
+          image: document.getElementById('edit-image').value
+        };
+
+        try {
+          // Decide URL based on ID
+          const url = currentId ? `${API_URL}/posts/${currentId}` : `${API_URL}/posts`;
+          const method = currentId ? 'PUT' : 'POST';
+
+          const res = await fetch(url, {
+            method,
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Admin-Key': token
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (res.ok) {
+            closeEditor();
+            renderPosts();
+            renderDashboard();
+          } else {
+            alert('Error saving (Check Permissions)');
+          }
+        } catch (e) { console.error(e); alert('Save failed'); }
+      };
 
   </script>
 </body>

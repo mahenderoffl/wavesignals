@@ -1,0 +1,15 @@
+name: Keep Brain Alive
+
+on:
+  schedule:
+    - cron: '0 */4 * * *' # Run every 4 hours
+  workflow_dispatch: # Allow manual run
+
+jobs:
+  ping_brain:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wake up Hugging Face
+        run: |
+          curl -I https://mahendercreates-wavesignals-backend.hf.space/
+          echo "Brain poked successfully."
