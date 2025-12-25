@@ -87,47 +87,50 @@
     </div>
   </footer>
 
-  <!-- POSTS SCRIPT -->
+  <!-- DATA LOADER (Headless Mode) -->
   <script>
-    const DATA_URL = "/data/posts.json";
+    // CONFIG: Connected to Hugging Face Brain 🧠
+    const API_URL = "https://mahendercreates-wavesignals-backend.hf.space/api";
 
     async function loadPosts() {
-      const list = document.getElementById("posts-list");
+      const container = document.getElementById("posts-list"); // Changed from "posts-container" to "posts-list" to match existing HTML
 
       try {
-        const res = await fetch(DATA_URL, { cache: "no-store" });
-        if (!res.ok) throw new Error("Failed to load posts.json");
+        const res = await fetch(`${API_URL}/posts`);
+        if (!res.ok) throw new Error("API Connection Failed");
 
         const data = await res.json();
-        const posts = Array.isArray(data.posts) ? data.posts : [];
+        const posts = data.posts || [];
 
-        const published = posts.filter(p => p.published === true);
+        container.innerHTML = "";
 
-        if (!published.length) {
-          list.innerHTML = "<li style='grid-column: 1/-1; text-align:center;'>No posts published yet.</li>";
+        if (posts.length === 0) {
+          container.innerHTML = `<li style="grid-column: 1/-1; text-align:center; color:var(--text-muted);">No signals found properly. The Brain might be sleeping.</li>`; // Changed to <li>
           return;
         }
 
-        list.innerHTML = "";
+        posts.forEach(post => {
+          // Fallback structure if DB columns differ slightly
+          const dateStr = new Date(post.date).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' });
 
-        published.forEach(post => {
-          const li = document.createElement("li");
-          li.className = "post-item";
+          const li = document.createElement("li"); // Changed to li
+          li.className = "post-item"; // Added class for search functionality
+          li.onclick = () => window.location.href = `/app/post.html?slug=${post.slug}`;
+
+          // Check for Featured Image
+          let imageHtml = '';
+          if (post.image) {
+            imageHtml = `<img src="${post.image}" alt="${post.title}" style="width:100%; height:160px; object-fit:cover; border-radius:12px 12px 0 0; margin-bottom:1rem;">`;
+          }
 
           li.innerHTML = `
-            <a href="/app/post.html?slug=${encodeURIComponent(post.slug)}" class="post-link">
-              <article>
-                <h2 class="post-title">${post.title}</h2>
-                <p class="post-excerpt">${post.excerpt || ""}</p>
-                <div class="post-meta">
-                  <time datetime="${post.date}">
-                    ${new Date(post.date).toDateString()}
-                  </time>
-                  <span>•</span>
-                  <span>${post.author || "WaveSignals"}</span>
-                </div>
-              </article>
-            </a>
+            ${imageHtml}
+            <div class="post-meta">
+              <span>${dateStr}</span>
+              ${post.tags ? `<span>• ${post.tags.split(',')[0]}</span>` : ''}
+            </div>
+            <h3 class="post-title">${post.title}</h3>
+            <p class="post-excerpt">${post.excerpt || 'Click to read more...'}</p>
           `;
 
           list.appendChild(li);

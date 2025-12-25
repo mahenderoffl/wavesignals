@@ -160,9 +160,11 @@
     }
   </script>
 
-  <!-- DATA LOADER -->
+  <!-- DATA LOADER (Headless Mode) -->
   <script>
-    const DATA_URL = "/data/posts.json";
+    // CONFIG: Connected to Hugging Face Brain 🧠
+    const API_URL = "https://mahendercreates-wavesignals-backend.hf.space/api";
+
     const params = new URLSearchParams(window.location.search);
     const slug = params.get("slug");
 
@@ -170,39 +172,37 @@
 
     async function loadPost() {
       try {
-        const res = await fetch(DATA_URL, { cache: "no-store" });
-        if (!res.ok) throw new Error("Failed");
+        // Fetch from API instead of local JSON
+        const res = await fetch(`${API_URL}/posts/${slug}`);
 
-        const data = await res.json();
-        const post = (data.posts || []).find(p => p.slug === slug);
-
-        if (!post) {
+        if (!res.ok) {
           document.getElementById("post-title").textContent = "Signal Not Found";
-          document.getElementById("post-content").innerHTML = "<p>This post may have been moved or deleted.</p>";
+          document.getElementById("post-content").innerHTML = "<p>The brain could not locate this memory.</p>";
           return;
         }
+
+        const post = await res.json();
 
         // SEO & Meta
         document.title = `${post.title} — WaveSignals`;
         document.getElementById("seo-description").content = post.excerpt || post.title;
         document.getElementById("canonical-url").href = window.location.href;
+
         document.getElementById("post-title").textContent = post.title;
         document.getElementById("post-author").textContent = post.author || "WaveSignals";
         document.getElementById("post-date").textContent = new Date(post.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
         document.getElementById("post-content").innerHTML = post.content;
 
-        // NEW: Render Featured Image (if exists)
+        // Render Featured Image
         if (post.image) {
           const img = document.createElement('img');
           img.src = post.image;
-          img.alt = post.title; // Fallback SEO Alt
-          img.className = 'post-featured-image'; // Usage: width:100%; border-radius:12px; margin-bottom:2rem;
-
-          // Insert after header, before content
+          img.alt = post.title;
+          img.className = 'post-featured-image';
           document.querySelector('.article-header').after(img);
         }
 
-        // NEW: Update JSON-LD Schema
+        // JSON-LD Schema Update
         const schema = {
           "@context": "https://schema.org",
           "@type": "BlogPosting",
@@ -210,10 +210,7 @@
           "image": post.image ? [post.image] : ["https://wavesignals.waveseed.app/public/og-default.png"],
           "datePublished": post.date,
           "dateModified": post.date,
-          "author": {
-            "@type": "Organization",
-            "name": post.author || "WaveSignals"
-          },
+          "author": { "@type": "Organization", "name": post.author || "WaveSignals" },
           "description": post.excerpt || ""
         };
         document.getElementById('json-ld-data').textContent = JSON.stringify(schema);
@@ -231,6 +228,7 @@
 
       } catch (e) {
         console.error(e);
+        document.getElementById("post-content").innerHTML = "<p>Error connecting to the Signal Brain (Backend).</p>";
       }
     }
 

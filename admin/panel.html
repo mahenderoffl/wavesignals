@@ -559,6 +559,8 @@
   <script>
     /* LOGIC */
     const ADMIN_KEY = 'wavesignals@2025';
+    // CONFIG: Backend API URL (Production)
+    const API_URL = "https://mahendercreates-wavesignals-backend.hf.space/api";
     let posts = [];
     let subscribers = [];
 
@@ -678,37 +680,51 @@
       });
     }
 
-    /* POSTS */
-    function renderPosts() {
-      const c = document.getElementById('posts-list-container');
-      c.innerHTML = '';
+    // --- 2. POSTS MANAGEMENT ---
+    async function renderPosts() {
+      const list = document.getElementById('posts-list-container'); // Changed from admin-posts-list
+      list.innerHTML = '<p style="color:var(--text-muted);">Loading from Brain...</p>'; // Updated style
 
-      posts.slice().sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(p => {
+      try {
+        const res = await fetch(`${API_URL}/posts`);
+        if (res.ok) {
+          const data = await res.json();
+          posts = data.posts || [];
+        }
+      } catch (e) { console.error("API Error", e); }
+
+      list.innerHTML = '';
+      if (posts.length === 0) {
+        list.innerHTML = '<p style="padding:1rem;">No signals found.</p>';
+        return;
+      }
+
+      posts.slice().sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(post => { // Added sorting back
         const div = document.createElement('div');
-        div.className = 'post-row';
+        div.className = 'post-row'; // Changed from post-item-row
         div.innerHTML = `
           <div>
-            <div style="font-weight:600; font-size:1.05rem;">${p.title}</div>
-            <div style="font-size:0.85rem; color:var(--text-muted)">/${p.slug}</div>
+            <div style="font-weight:600; font-size:1.05rem;">${post.title}</div>
+            <div style="font-size:0.85rem; color:var(--text-muted);">
+               ${new Date(post.date).toLocaleDateString()} • ${post.published ? '<span class="badge published">Published</span>' : '<span class="badge draft">Draft</span>'}
+            </div>
           </div>
           <div style="display:flex; gap:0.5rem; align-items:center;">
-            <span class="badge ${p.published ? 'published' : 'draft'}">${p.published ? 'Published' : 'Draft'}</span>
-            <button class="btn-secondary" style="padding:6px 12px; font-size:0.85rem;" onclick="editPost('${p.id}')">Edit</button>
-            <button class="btn-secondary" style="padding:6px 12px; font-size:0.85rem; color:#f87171; border-color:#f87171;" onclick="deletePost('${p.id}')">Delete</button>
+            <button class="btn-secondary" style="padding:6px 12px; font-size:0.85rem;" onclick="editPost(${post.id})">Edit</button>
+            <button class="btn-secondary" style="padding:6px 12px; font-size:0.85rem; color:#f87171; border-color:#f87171;" onclick="deletePost(${post.id})">Delete</button>
           </div>
         `;
-        c.appendChild(div);
+        list.appendChild(div);
       });
     }
 
     window.deletePost = async (id) => {
       if (!confirm('Delete this signal permanently?')) return;
       try {
-        const r = await fetch('/api/posts/' + id, { method: 'DELETE' });
+        const r = await fetch(`${API_URL}/posts/${id}`, { method: 'DELETE' });
         if (r.ok) {
-          posts = posts.filter(p => String(p.id) !== String(id));
-          renderPosts();
-          renderDashboard();
+          renderPosts(); // Refresh list
+          renderDashboard(); // Refresh dashboard stats
         } else {
           alert('Failed to delete on server');
         }
@@ -720,6 +736,13 @@
 
     window.createNewPost = () => {
       currentId = null;
+      document.getElementById('edit-title').value = '';
+      document.getElementById('edit-slug').value = '';
+      document.getElementById('edit-excerpt').value = '';
+      document.getElementById('edit-tags').value = ''; // Assuming these fields exist now
+      document.getElementById('edit-image').value = ''; // Assuming these fields exist now
+      if (window.quill) window.quill.setText(''); // Assuming Quill editor is used
+      document.getElementById('edit-publish').checked = false; // Reset publish status
       openEditor();
     };
 
@@ -730,7 +753,9 @@
       document.getElementById('edit-title').value = p.title;
       document.getElementById('edit-slug').value = p.slug;
       document.getElementById('edit-excerpt').value = p.excerpt;
-      document.getElementById('edit-content').value = p.content;
+      document.getElementById('edit-tags').value = p.tags || ''; // Populate tags
+      document.getElementById('edit-image').value = p.image || ''; // Populate image
+      if (window.quill) window.quill.root.innerHTML = p.content; // Set Quill content
       document.getElementById('edit-publish').checked = p.published;
       openEditor();
     };
@@ -743,32 +768,25 @@
     window.closeEditor = () => {
       document.getElementById('editor-ui').classList.add('hidden');
       document.getElementById('edit-title').value = '';
-      document.getElementById('edit-content').value = '';
+      document.getElementById('edit-content').value = ''; // This might need to be quill.setText('')
     };
 
-    document.getElementById('editor-save-btn').onclick = async () => {
+    window.savePost = async () => { // Renamed from editor-save-btn.onclick
       const title = document.getElementById('edit-title').value;
-      const content = document.getElementById('edit-content').value;
       if (!title) return alert('Title required');
 
-      const p = {
-        id: currentId || Date.now(),
+      const tagsRaw = document.getElementById('edit-tags').value;
+
+      const payload = {
         title,
-        slug: document.getElementById('edit-slug').value || title.toLowerCase().replace(/ /g, '-'),
+        slug: document.getElementById('edit-slug').value || title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
         excerpt: document.getElementById('edit-excerpt').value,
-        content,
+        content: window.quill ? window.quill.root.innerHTML : document.getElementById('edit-content').value, // Use Quill if available
         published: document.getElementById('edit-publish').checked,
-        date: new Date().toISOString()
+        tags: tagsRaw,
+        image: document.getElementById('edit-image').value
       };
 
-      if (currentId) {
-        const idx = posts.findIndex(x => x.id == currentId);
-        if (idx >= 0) posts[idx] = p;
-      } else {
-        posts.unshift(p);
-      }
-
-      // Save to server
       try {
         await fetch('/api/posts', {
           method: 'POST',
