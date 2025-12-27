@@ -1,6 +1,50 @@
 {
   "posts": [
     {
+      "id": "bot-1766797077203",
+      "title": "[Error generating content: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent: [404 Not Found] models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.]",
+      "slug": "-error-generating-content-googlegenerativeai-error-error-fetching-from-https-generativelanguage-googleapis-com-v1beta-models-gemini-1-5-flash-generatecontent-404-not-found-models-gemini-1-5-flash-is-not-found-for-api-version-v1beta-or-is-not-supported-for-generatecontent-call-listmodels-to-see-the-list-of-available-models-and-their-supported-methods-",
+      "excerpt": "Automated analysis on [Error generating content: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent: [404 Not Found] models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.]",
+      "content": "[Error generating content: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent: [404 Not Found] models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.]",
+      "date": "2025-12-27T00:57:57.204Z",
+      "published": true,
+      "status": "published",
+      "author": "WaveSignals Team"
+    },
+    {
+      "id": "bot-1766740565638",
+      "title": "Random Trend in SaaS",
+      "slug": "random-trend-in-saas",
+      "excerpt": "Automated analysis on Random Trend in SaaS",
+      "content": "[MOCK CONTENT by Editor] - \n    Act as a Senior Editor. Improve this draft:\n ...",
+      "date": "2025-12-26T09:16:05.638Z",
+      "published": true,
+      "status": "published",
+      "author": "WaveSignals Team"
+    },
+    {
+      "id": "bot-1766710780898",
+      "title": "[Error generating content: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent: [404 Not Found] models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.]",
+      "slug": "-error-generating-content-googlegenerativeai-error-error-fetching-from-https-generativelanguage-googleapis-com-v1beta-models-gemini-1-5-flash-generatecontent-404-not-found-models-gemini-1-5-flash-is-not-found-for-api-version-v1beta-or-is-not-supported-for-generatecontent-call-listmodels-to-see-the-list-of-available-models-and-their-supported-methods-",
+      "excerpt": "Automated analysis on [Error generating content: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent: [404 Not Found] models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.]",
+      "content": "[Error generating content: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent: [404 Not Found] models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.]",
+      "date": "2025-12-26T00:59:40.898Z",
+      "published": true,
+      "status": "published",
+      "author": "WaveSignals Team"
+    },
+    {
+      "id": "bot-1766624355016",
+      "title": "[Error generating content: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent: [404 Not Found] models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.]",
+      "slug": "-error-generating-content-googlegenerativeai-error-error-fetching-from-https-generativelanguage-googleapis-com-v1beta-models-gemini-1-5-flash-generatecontent-404-not-found-models-gemini-1-5-flash-is-not-found-for-api-version-v1beta-or-is-not-supported-for-generatecontent-call-listmodels-to-see-the-list-of-available-models-and-their-supported-methods-",
+      "excerpt": "Automated analysis on [Error generating content: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent: [404 Not Found] models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.]",
+      "content": "[Error generating content: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent: [404 Not Found] models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.]",
+      "date": "2025-12-25T00:59:15.017Z",
+      "published": true,
+      "status": "published",
+      "author": "WaveSignals Team"
+    },
+    {
       "id": "bot-1766591774614",
       "title": "Top 10 AI Tools for Coding in 2025",
       "slug": "top-10-ai-tools-for-coding-in-2025",

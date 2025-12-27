@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
-    <loc>https://wavesignals.waveseed.app/sitemap-pages.xml</loc>
-    <lastmod>2025-12-26</lastmod>
+    <loc>https://wavesignals.netlify.app/sitemap-pages.xml</loc>
+    <lastmod>2025-12-27</lastmod>
   </sitemap>
   <sitemap>
-    <loc>https://wavesignals.waveseed.app/sitemap-posts.xml</loc>
-    <lastmod>2025-12-26</lastmod>
+    <loc>https://wavesignals.netlify.app/sitemap-posts.xml</loc>
+    <lastmod>2025-12-27</lastmod>
   </sitemap>
 </sitemapindex>
