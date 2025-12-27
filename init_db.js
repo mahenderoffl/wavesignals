@@ -1,7 +1,7 @@
 const { Client } = require('pg');
 
 // User's provided connection string
-const connectionString = 'postgresql://neondb_owner:npg_kbJ0CXZwTV6d@ep-crimson-frog-aexv6lr8-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require';
+const connectionString = connection string
 
 const client = new Client({ connectionString });
 
