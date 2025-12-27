@@ -1,6 +1,10 @@
 flask
 flask-cors
+apscheduler
 psycopg2-binary
+python-dotenv
+requests
+gradio
 python-dotenv
 requests
 apscheduler

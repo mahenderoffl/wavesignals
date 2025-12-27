@@ -1,4 +1,10 @@
 User-agent: *
+Allow: /
+
+# Disallow admin pages
 Disallow: /admin/
 
+# Sitemaps
 Sitemap: https://wavesignals.waveseed.app/sitemap.xml
+Sitemap: https://wavesignals.waveseed.app/sitemap-pages.xml
+Sitemap: https://wavesignals.waveseed.app/sitemap-posts.xml

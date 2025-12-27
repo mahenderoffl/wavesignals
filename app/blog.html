@@ -2,136 +2,194 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-    <title>All Signals — WaveSignals</title>
-    <meta name="description" content="Browse the complete archive of WaveSignals insights." />
-    <meta name="robots" content="index,follow" />
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signals – WaveSignals</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <link rel="icon" href="/favicon.ico">
     <link rel="stylesheet" href="/styles/main.css">
 </head>
 
 <body>
 
     <header class="site-header">
-        <div class="container header-inner">
-            <div class="brand-container">
-                <a href="/app/index.html" class="home-link">
-                    <img src="/public/logo-header.svg" alt="WaveSignals" class="site-logo">
-                </a>
-            </div>
-
-            <nav class="main-nav">
-                <ul class="nav-list">
-                    <li><a href="/app/index.html" class="nav-link">Home</a></li>
-                    <li><a href="/app/blog.html" class="nav-link" style="color:#fff;">Signals</a></li>
-                    <li><a href="/contact.html" class="nav-link">Contact</a></li>
-                </ul>
+        <div class="header-container">
+            <a href="/app/index.html" class="site-logo">
+                <img src="/public/logo-header.svg" alt="WaveSignals">
+            </a>
+            <nav class="site-nav">
+                <a href="/app/blog.html">Signals</a>
+                <a href="/about.html">About</a>
+                <a href="/contact.html">Contact</a>
             </nav>
         </div>
     </header>
 
-    <main class="site-main">
-        <div class="container">
+    <main class="container">
+        <h1>Signals</h1>
 
-            <div style="text-align:center; padding: 4rem 0 2rem;">
-                <h1 style="font-family:'Outfit', sans-serif; font-size:2.5rem; margin-bottom:1rem; color:#fff;">Signals
-                    Archive</h1>
-                <p class="page-subtitle">Explore our library of insights.</p>
-
-                <!-- SEARCH BAR -->
-                <div class="search-box">
-                    <input type="text" id="search-input" placeholder="Search signals..." onkeyup="filterPosts()">
-                </div>
-            </div>
-
-            <ul class="posts-list" id="posts-list">
-                <!-- Posts injected here -->
-                <li style="text-align:center; color:var(--text-muted);">Loading...</li>
-            </ul>
-
+        <!-- Search Bar -->
+        <div style="max-width: 600px; margin: 2rem auto; position: relative;">
+            <input type="text" id="search-input" placeholder="Search signals..."
+                style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 1px solid var(--gray-200); border-radius: 8px; font-family: var(--font-sans); font-size: 1rem; background: var(--gray-100);">
+            <svg style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; color: var(--gray-400);"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
         </div>
+
+        <!-- Category Filters -->
+        <div
+            style="margin: 2rem 0; display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; font-family: var(--font-sans); font-size: 0.875rem;">
+            <button data-filter="all" class="filter-btn"
+                style="border: 1px solid var(--gray-300); background: var(--black); color: var(--white); padding: 0.5rem 1rem; cursor: pointer; border-radius: 4px; font-family: var(--font-sans);">All</button>
+            <button data-filter="Career" class="filter-btn"
+                style="border: 1px solid var(--gray-300); background: var(--white); color: var(--black); padding: 0.5rem 1rem; cursor: pointer; border-radius: 4px; font-family: var(--font-sans);">Career</button>
+            <button data-filter="Money" class="filter-btn"
+                style="border: 1px solid var(--gray-300); background: var(--white); color: var(--black); padding: 0.5rem 1rem; cursor: pointer; border-radius: 4px; font-family: var(--font-sans);">Money</button>
+            <button data-filter="Technology" class="filter-btn"
+                style="border: 1px solid var(--gray-300); background: var(--white); color: var(--black); padding: 0.5rem 1rem; cursor: pointer; border-radius: 4px; font-family: var(--font-sans);">Technology</button>
+            <button data-filter="Behavior" class="filter-btn"
+                style="border: 1px solid var(--gray-300); background: var(--white); color: var(--black); padding: 0.5rem 1rem; cursor: pointer; border-radius: 4px; font-family: var(--font-sans);">Behavior</button>
+        </div>
+
+        <ul class="article-list" id="posts-list">
+            <li style="color: #999;">Loading...</li>
+        </ul>
     </main>
 
-    <footer class="site-footer">
-        <div class="container">
-            <p>© 2025 WaveSignals. • <a href="/privacy.html">Privacy</a> • <a href="/terms.html">Terms</a></p>
-        </div>
-    </footer>
-
-    <script src="/scripts/main.js"></script>
     <script>
+        const API_URL = 'https://mahendercreates-wavesignals-backend.hf.space/api';
         let allPosts = [];
+        let currentFilter = 'all';
+        let currentSearch = '';
 
         async function loadPosts() {
-            const list = document.getElementById("posts-list");
+            const list = document.getElementById('posts-list');
             try {
-                // Fetch from API (or local json if static)
-                // Note: In production static site, this might fetch from /data/posts.json
-                // In local dev, /api/posts. 
-                // We'll try /data/posts.json for static compatibility
-                const res = await fetch('/data/posts.json');
-                if (!res.ok) throw new Error("Failed to load");
-
+                const res = await fetch(`${API_URL}/posts`);
                 const data = await res.json();
-                const posts = Array.isArray(data.posts) ? data.posts : [];
-
-                // Filter only published
-                allPosts = posts.filter(p => p.published === true);
-
-                renderPosts(allPosts);
-            } catch (err) {
-                console.error(err);
-                list.innerHTML = "<li style='text-align:center;'>Unable to load archive.</li>";
+                allPosts = data.posts || [];
+                renderPosts();
+            } catch (e) {
+                list.innerHTML = '<li class="text-muted">Unable to load posts.</li>';
             }
         }
 
-        function renderPosts(posts) {
-            const list = document.getElementById("posts-list");
-            if (!posts.length) {
-                list.innerHTML = "<li style='grid-column: 1/-1; text-align:center;'>No signals found.</li>";
+        function renderPosts() {
+            const list = document.getElementById('posts-list');
+
+            let filtered = allPosts.filter(p => p.published);
+
+            // Apply category filter
+            if (currentFilter !== 'all') {
+                filtered = filtered.filter(p => p.tags === currentFilter);
+            }
+
+            // Apply search
+            if (currentSearch) {
+                const query = currentSearch.toLowerCase();
+                filtered = filtered.filter(post =>
+                    post.title.toLowerCase().includes(query) ||
+                    (post.content && post.content.toLowerCase().includes(query)) ||
+                    (post.excerpt && post.excerpt.toLowerCase().includes(query)) ||
+                    (post.tags && post.tags.toLowerCase().includes(query))
+                );
+            }
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<li class="text-muted">No posts found.</li>';
                 return;
             }
 
-            list.innerHTML = "";
-            posts.forEach(post => {
-                const li = document.createElement("li");
-                li.className = "post-item";
+            list.innerHTML = filtered.map(post => `
+        <li class="article-item">
+          <div class="article-meta">${new Date(post.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} · ${post.tags || 'Essay'}</div>
+          <h2 class="article-title"><a href="/app/post.html?slug=${post.slug}">${post.title}</a></h2>
+          ${post.excerpt ? `<p class="article-excerpt">${post.excerpt}</p>` : ''}
+        </li>
+      `).join('');
+        }
 
-                li.innerHTML = `
-            <a href="/app/post.html?slug=${encodeURIComponent(post.slug)}" class="post-link">
-              <article>
-                <h2 class="post-title">${post.title}</h2>
-                <p class="post-excerpt">${post.excerpt || ""}</p>
-                <div class="post-meta">
-                  <time datetime="${post.date}">
-                    ${new Date(post.date).toDateString()}
-                  </time>
-                  <span>•</span>
-                  <span>${post.author || "WaveSignals Team"}</span>
-                </div>
-              </article>
-            </a>
-          `;
-                list.appendChild(li);
+        // Search
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            currentSearch = e.target.value.trim();
+            renderPosts();
+        });
+
+        // Filter functionality
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentFilter = btn.dataset.filter;
+
+                // Update active state
+                document.querySelectorAll('.filter-btn').forEach(b => {
+                    b.style.background = 'var(--white)';
+                    b.style.color = 'var(--black)';
+                });
+                btn.style.background = 'var(--black)';
+                btn.style.color = 'var(--white)';
+
+                renderPosts();
             });
-        }
+        });
 
-        function filterPosts() {
-            const query = document.getElementById('search-input').value.toLowerCase();
-            const filtered = allPosts.filter(p =>
-                p.title.toLowerCase().includes(query) ||
-                (p.excerpt && p.excerpt.toLowerCase().includes(query))
-            );
-            renderPosts(filtered);
-        }
-
-        // Init
         loadPosts();
     </script>
+
+    <footer class="site-footer"
+        style="background: #f9f9f9; border-top: 1px solid #e6e6e6; padding: 48px 0 24px; margin-top: 64px;">
+        <div class="container" style="max-width: 1200px;">
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px; margin-bottom: 24px;">
+
+                <div>
+                    <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">WaveSignals</h4>
+                    <p style="font-size: 13px; color: #666; line-height: 1.5;">AI-powered insights delivered daily</p>
+                    <p style="font-size: 12px; color: #999; margin-top: 8px;">
+                        Powered by <a href="https://waveseed.app" target="_blank" rel="noopener"
+                            style="color: #1A8917;">WaveSeed</a>
+                    </p>
+                </div>
+
+                <div>
+                    <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Navigate</h4>
+                    <div style="display: flex; flex-direction: column; gap: 6px; font-size: 13px;">
+                        <a href="/app/index.html" style="color: #666;">Home</a>
+                        <a href="/app/blog.html" style="color: #666;">All Signals</a>
+                        <a href="/about.html" style="color: #666;">About</a>
+                        <a href="/contact.html" style="color: #666;">Contact</a>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">WaveSeed Network</h4>
+                    <div style="display: flex; flex-direction: column; gap: 6px; font-size: 13px;">
+                        <a href="https://waveseed.app" target="_blank" rel="noopener" style="color: #666;">WaveSeed
+                            Home</a>
+                        <a href="https://waveseed.app/products" target="_blank" rel="noopener" style="color: #666;">AI
+                            Products</a>
+                        <a href="https://waveseed.app/blog" target="_blank" rel="noopener" style="color: #666;">Blog</a>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Legal</h4>
+                    <div style="display: flex; flex-direction: column; gap: 6px; font-size: 13px;">
+                        <a href="/terms.html" style="color: #666;">Terms</a>
+                        <a href="/privacy.html" style="color: #666;">Privacy</a>
+                    </div>
+                </div>
+
+            </div>
+
+            <div
+                style="padding-top: 16px; border-top: 1px solid #e6e6e6; text-align: center; font-size: 13px; color: #999;">
+                © 2025 WaveSignals · Part of <a href="https://waveseed.app" target="_blank" rel="noopener"
+                    style="color: #1A8917;">WaveSeed</a>
+            </div>
+        </div>
+    </footer>
 </body>
 
 </html>

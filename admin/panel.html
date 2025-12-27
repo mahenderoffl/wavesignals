@@ -2,813 +2,2392 @@
 <html lang="en">
 
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="robots" content="noindex,nofollow" />
-  <title>WaveSignals Admin</title>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin – WaveSignals</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/styles/main.css"> <!-- Re-using main site theme -->
-
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Quill Rich Text Editor -->
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     :root {
-      --sidebar-width: 260px;
+      --green: #1A8917;
+      --gray-50: #F9F9F9;
+      --gray-100: #F2F2F2;
+      --gray-200: #E6E6E6;
+      --gray-400: #999999;
+      --gray-600: #666666;
+      --gray-900: #242424;
+      --black: #000000;
     }
 
     body {
-      background-color: #0f172a;
-      /* Slate 900 */
-      color: #f1f5f9;
-      margin: 0;
-      overflow: hidden;
-      /* App-like feel */
-      display: flex;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.4;
+      color: var(--gray-900);
+      background: #fff;
     }
 
-    /* --- LOGIN OVERLAY --- */
-    #login-screen {
-      position: fixed;
-      inset: 0;
-      background: #0f172a;
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 1.5rem;
-    }
-
-    #login-screen input {
-      width: 300px;
-      text-align: center;
-    }
-
-    /* --- LAYOUT --- */
-    .app-shell {
-      display: flex;
-      width: 100vw;
-      height: 100vh;
-    }
-
-    /* SIDEBAR */
-    .sidebar {
-      width: var(--sidebar-width);
-      background: rgba(15, 23, 42, 0.95);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      padding: 1.5rem;
-    }
-
-    .brand-area {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 2.5rem;
-      opacity: 0.9;
-    }
-
-    .brand-area img {
-      height: 28px;
-    }
-
-    .brand-area span {
-      font-weight: 700;
-      font-family: 'Outfit', sans-serif;
-      letter-spacing: -0.5px;
-    }
-
-    .nav-menu {
-      list-style: none;
-      padding: 0;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .nav-item {
-      padding: 0.75rem 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-      color: var(--text-muted);
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      transition: all 0.2s;
-    }
-
-    .nav-item:hover,
-    .nav-item.active {
-      background: var(--bg-card);
-      color: #fff;
-    }
-
-    .nav-item.active {
-      border-left: 3px solid var(--accent);
-    }
-
-    .nav-footer {
-      margin-top: auto;
-      padding-top: 1rem;
-      border-top: 1px solid var(--border);
-    }
-
-    .nav-footer button {
-      background: transparent;
-      border: 1px solid var(--border);
-      width: 100%;
-      color: var(--text-muted);
-      padding: 0.5rem;
-    }
-
-    /* MAIN CONTENT */
-    .main-viewport {
-      flex: 1;
-      overflow-y: auto;
-      padding: 2.5rem;
-      position: relative;
-    }
-
-    .view-section {
-      display: none;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .view-section.active {
-      display: block;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(5px);
-      }
-
-      to {
-        opacity: 1;
-      }
-    }
-
-    header h2 {
-      margin: 0 0 0.5rem 0;
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.8rem;
-    }
-
-    header p {
-      color: var(--text-muted);
-      margin: 0 0 2rem 0;
-    }
-
-    /* --- DASHBOARD WIDGETS --- */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 3rem;
-    }
-
-    .stat-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      padding: 1.5rem;
-      border-radius: 12px;
-    }
-
-    .stat-val {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #fff;
-      margin: 0.5rem 0;
-    }
-
-    .stat-label {
-      color: var(--text-muted);
-      font-size: 0.9rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    /* --- EDITOR & FORMS --- */
-    .form-grid {
-      display: grid;
-      gap: 1.5rem;
-      max-width: 800px;
-    }
-
-    input,
-    textarea,
-    select {
-      width: 100%;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: #1e293b;
-      color: #fff;
-      font-family: inherit;
-      font-size: 1rem;
-    }
-
-    textarea {
-      min-height: 200px;
-      font-family: 'Courier New', monospace;
-      line-height: 1.5;
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
-      border: none;
+    /* === ADMIN HEADER === */
+    .admin-header {
+      border-bottom: 1px solid var(--gray-200);
       padding: 12px 24px;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .btn-secondary {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      padding: 12px 24px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    /* --- POST LIST --- */
-    .post-table-container {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    .post-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid var(--border);
-      transition: background 0.2s;
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 100;
     }
 
-    .post-row:last-child {
-      border-bottom: none;
+    .admin-logo {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--black);
+      text-decoration: none;
     }
 
-    .post-row:hover {
-      background: rgba(255, 255, 255, 0.02);
+    .admin-nav {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
+
+    .admin-nav a {
+      color: var(--gray-600);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+
+    .admin-nav a:hover,
+    .admin-nav a.active {
+      color: var(--black);
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--green);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #156D13;
+    }
+
+    .btn-secondary {
+      background: var(--gray-100);
+      color: var(--gray-900);
+    }
+
+    .btn-secondary:hover {
+      background: var(--gray-200);
+    }
+
+    /* === LAYOUT === */
+    .admin-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 48px 24px;
+    }
+
+    .page-header {
+      margin-bottom: 32px;
+    }
+
+    .page-title {
+      font-size: 42px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .page-subtitle {
+      color: var(--gray-600);
+      font-size: 16px;
+    }
+
+    /* === STATS GRID === */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+
+    .stat-card {
+      padding: 24px;
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--gray-600);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 600;
+      color: var(--black);
+    }
+
+    /* === TABLE === */
+    .content-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .content-table thead {
+      background: var(--gray-50);
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .content-table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-600);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .content-table td {
+      padding: 16px;
+      border-top: 1px solid var(--gray-200);
+    }
+
+    .content-table tr:hover {
+      background: var(--gray-50);
+    }
+
+    .post-title {
+      font-weight: 500;
+      color: var(--black);
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+
+    .post-meta {
+      font-size: 13px;
+      color: var(--gray-600);
     }
 
     .badge {
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
     }
 
-    .badge.published {
-      background: rgba(74, 222, 128, 0.2);
-      color: #4ade80;
+    .badge-published {
+      background: #E8F5E9;
+      color: var(--green);
     }
 
-    .badge.draft {
-      background: rgba(148, 163, 184, 0.2);
-      color: #94a3b8;
+    .badge-draft {
+      background: var(--gray-100);
+      color: var(--gray-600);
     }
 
-    /* MOBILE RESPONSIVENESS */
-    @media (max-width: 768px) {
-      .sidebar {
-        position: fixed;
-        left: -280px;
-        top: 0;
-        bottom: 0;
-        z-index: 100;
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
-      }
-
-      .sidebar.open {
-        transform: translateX(280px);
-      }
-
-      .main-viewport {
-        padding: 5rem 1.5rem 1.5rem;
-        /* More top padding for hamburger */
-      }
-
-      .mobile-toggle {
-        display: flex !important;
-      }
-
-      .mobile-close {
-        display: block !important;
-      }
-    }
-
-    /* HAMBURGER BUTTON (Mobile Only) */
-    .mobile-toggle {
+    /* === EDITOR MODAL === */
+    .modal {
       display: none;
       position: fixed;
-      top: 1rem;
-      left: 1rem;
-      z-index: 90;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      color: #fff;
-      width: 40px;
-      height: 40px;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 1000;
+      overflow-y: auto;
+    }
+
+    .modal.active {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 48px 24px;
+    }
+
+    .modal-content {
+      background: #fff;
       border-radius: 8px;
+      max-width: 800px;
+      width: 100%;
+      max-height: calc(100vh - 96px);
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      padding: 24px;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-900);
+    }
+
+    .form-input,
+    .form-textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--gray-200);
+      border-radius: 4px;
+      font-size: 16px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--black);
+    }
+
+    .form-textarea {
+      min-height: 400px;
+      font-family: 'Georgia', serif;
+      line-height: 1.6;
+    }
+
+    /* Quill Editor Styling */
+    .ql-container {
+      font-family: 'Georgia', serif;
+      font-size: 16px;
+      min-height: 400px;
+    }
+
+    .ql-editor {
+      min-height: 400px;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      padding: 24px;
+      border-top: 1px solid var(--gray-200);
+    }
+
+    /* === LOGIN === */
+    .login-screen {
+      display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5rem;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      min-height: 100vh;
+      background: var(--gray-50);
+    }
+
+    .login-box {
+      background: #fff;
+      padding: 48px;
+      border-radius: 8px;
+      border: 1px solid var(--gray-200);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .login-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+
+    .hidden {
+      display: none !important;
     }
   </style>
 </head>
 
 <body>
 
-  <!-- LOGIN -->
-  <div id="login-screen">
-    <div style="text-align: center;">
-      <img src="/public/logo-header.svg?v=1" style="height:40px; margin-bottom:1rem;">
-      <h2 style="margin:0;">Access Control</h2>
+  <!-- LOGIN SCREEN -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-box">
+      <h1 class="login-title">WaveSignals Admin</h1>
+      <div class="form-group">
+        <input type="password" id="admin-password" class="form-input" placeholder="Enter admin key" autofocus>
+      </div>
+      <button class="btn btn-primary" id="login-btn" style="width: 100%;">Sign In</button>
+      <p id="login-error" class="hidden" style="color: red; margin-top: 16px; font-size: 14px;">Invalid key</p>
     </div>
-    <input type="password" id="admin-key" placeholder="Enter Admin Key" />
-    <button class="btn-primary" id="login-btn" style="width:300px">Authenticate</button>
-    <p id="login-error" style="color:#ef4444" class="hidden">Access Denied</p>
   </div>
 
-  <!-- APP SHELL -->
-  <div id="app-shell" class="app-shell hidden">
+  <!-- ADMIN APP -->
+  <div id="admin-app" class="hidden">
+    <!-- Header -->
+    <header class="admin-header">
+      <a href="/" class="admin-logo">WaveSignals</a>
+      <div id="sync-status"
+        style="margin-left: auto; margin-right: 16px; font-size: 13px; color: var(--gray-600); display: none;">
+        <span id="sync-icon">●</span> <span id="sync-text">Synced</span>
+      </div>
+      <nav class="admin-nav">
+        <a href="#" data-view="dashboard" class="active">Dashboard</a>
+        <a href="#" data-view="analytics">Analytics</a>
+        <a href="#" data-view="content">Content</a>
+        <a href="#" data-view="subscribers">Subscribers</a>
+        <a href="#" data-view="settings">Settings</a>
+        <a href="#" data-view="backlinks">Backlinks</a>
+        <button class="btn btn-secondary" onclick="logout()">Sign Out</button>
+      </nav>
+    </header>
 
-    <!-- MOBILE TOGGLE -->
-    <button class="mobile-toggle" onclick="toggleSidebar()">☰</button>
-
-    <!-- SIDEBAR -->
-    <aside class="sidebar" id="sidebar">
-      <div class="brand-area">
-        <img src="/public/logo-header.svg?v=1" alt="Logo">
-        <span>Admin</span>
-        <!-- Close button mobile -->
-        <span onclick="toggleSidebar()" style="margin-left:auto; cursor:pointer; font-size:1.5rem; display:none;"
-          class="mobile-close">×</span>
+    <!-- DASHBOARD VIEW -->
+    <div id="view-dashboard" class="admin-container">
+      <div class="page-header">
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Performance overview</p>
       </div>
 
-      <ul class="nav-menu">
-        <li class="nav-item active" onclick="switchView('dashboard', this); toggleSidebar()">
-          <span>📊</span> Dashboard
-        </li>
-        <li class="nav-item" onclick="switchView('posts', this); toggleSidebar()">
-          <span>📝</span> Content
-        </li>
-        <li class="nav-item" onclick="switchView('subscribers', this); toggleSidebar()">
-          <span>👥</span> Audience
-        </li>
-        <li class="nav-item" onclick="switchView('automation', this); toggleSidebar()">
-          <span>🤖</span> Automation
-        </li>
-        <li class="nav-item" onclick="switchView('settings', this); toggleSidebar()">
-          <span>⚙️</span> Settings
-        </li>
-      </ul>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Posts</div>
+          <div class="stat-value" id="stat-posts">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Subscribers</div>
+          <div class="stat-value" id="stat-subs">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Published</div>
+          <div class="stat-value" id="stat-published">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Drafts</div>
+          <div class="stat-value" id="stat-drafts">0</div>
+        </div>
+      </div>
+    </div>
 
-      <!-- LOGIN MODAL -->
-      <div id="login-modal" class="hidden"
-        style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(5px);">
-        <div
-          style="background:var(--card-bg); padding:2rem; border-radius:12px; border:1px solid var(--border); width:300px; text-align:center;">
-          <h2 style="margin-bottom:1rem;">Security Check</h2>
-          <input type="password" id="login-pass" placeholder="Admin Password"
-            style="width:100%; padding:0.8rem; margin-bottom:1rem; border-radius:6px; border:1px solid var(--border); background:var(--bg-body); color:#fff;">
-          <button onclick="doLogin()" class="btn-primary" style="width:100%;">Unlock</button>
+    <!-- ANALYTICS VIEW -->
+    <div id="view-analytics" class="admin-container hidden">
+      <div class="page-header">
+        <h1 class="page-title">Analytics</h1>
+        <p class="page-subtitle">Performance insights</p>
+      </div>
+
+      <!-- Overview Stats -->
+      <div class="stats-grid" style="margin-bottom: 48px;">
+        <div class="stat-card">
+          <div class="stat-label">Total Posts</div>
+          <div class="stat-value" id="analytics-posts">0</div>
+          <div style="font-size: 13px; color: var(--gray-600); margin-top: 8px;">
+            <span id="posts-growth">—</span> this month
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Subscribers</div>
+          <div class="stat-value" id="analytics-subs">0</div>
+          <div style="font-size: 13px; color: var(--gray-600); margin-top: 8px;">
+            <span id="subs-growth">—</span> this month
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">This Month</div>
+          <div class="stat-value" id="posts-this-month">0</div>
+          <div style="font-size: 13px; color: var(--gray-600); margin-top: 8px;">posts published</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Publishing Rate</div>
+          <div class="stat-value" id="publishing-rate">—</div>
+          <div style="font-size: 13px; color: var(--gray-600); margin-top: 8px;">posts/week avg</div>
         </div>
       </div>
 
-      <div class="app-container">
-        <button onclick="location.reload()">Logout</button>
+      <!-- Charts Section -->
+      <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; margin-bottom: 48px;">
+
+        <!-- Posts Over Time -->
+        <div style="background: #fff; border: 1px solid var(--gray-200); border-radius: 8px; padding: 24px;">
+          <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Posts Published (Last 30 Days)</h3>
+          <canvas id="postsChart"></canvas>
+        </div>
+
+        <!-- Subscriber Growth -->
+        <div style="background: #fff; border: 1px solid var(--gray-200); border-radius: 8px; padding: 24px;">
+          <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Subscriber Growth (Last 30 Days)</h3>
+          <canvas id="subscribersChart"></canvas>
+        </div>
+
       </div>
-    </aside>
 
-    <!-- CONTENT -->
-    <main class="main-viewport">
+      <!-- Future Developments Roadmap -->
+      <div
+        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 24px; margin-bottom: 32px; color: white; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: -20px; right: -20px; font-size: 120px; opacity: 0.1;">🚀</div>
+        <div style="position: relative; z-index: 1;">
+          <h3
+            style="font-size: 20px; font-weight: 700; margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+            <span>🎯</span>
+            <span>Future Developments</span>
+            <span
+              style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 500;">ROADMAP</span>
+          </h3>
+          <p style="margin: 0 0 16px 0; opacity: 0.9; font-size: 14px;">Based on "The Art of Digital Marketing" by Ian
+            Dodson</p>
 
-      <!-- VIEW: DASHBOARD -->
-      <section id="view-dashboard" class="view-section active">
-        <header>
-          <h2>Mission Control</h2>
-          <p>Real-time performance overview.</p>
-        </header>
-
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-label">Total Revenue</div>
-            <div class="stat-val">$0.00</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Total Signals</div>
-            <div class="stat-val" id="d-total-posts">-</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Subscribers</div>
-            <div class="stat-val" id="d-subscribers">-</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">30-Day Views</div>
-            <div class="stat-val" id="d-views">-</div>
-          </div>
-        </div>
-
-        <h3>Recent Activity</h3>
-        <div class="post-table-container" id="dashboard-activity">
-          <div class="post-row" style="color:var(--text-muted); justify-content:center;">Loading...</div>
-        </div>
-      </section>
-
-      <!-- VIEW: POSTS -->
-      <section id="view-posts" class="view-section">
-        <header style="display:flex; justify-content:space-between; align-items:center;">
-          <div>
-            <h2>Content Library</h2>
-            <p>Manage your signals and essays.</p>
-          </div>
-          <button class="btn-primary" onclick="createNewPost()">+ New Signal</button>
-        </header>
-
-        <!-- Editor (Hidden by default) -->
-        <div id="editor-ui" class="hidden"
-          style="margin-bottom: 2rem; background: var(--bg-card); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border);">
-          <div style="display:flex; justify-content:space-between; margin-bottom:1rem;">
-            <h3 style="margin:0;">Editor</h3>
-            <button class="btn-secondary" onclick="closeEditor()"
-              style="padding:4px 12px; font-size:0.8rem;">Close</button>
-          </div>
-
-          <div class="form-grid">
-            <input id="edit-title" placeholder="Title" />
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
-              <input id="edit-slug" placeholder="Slug (optional)" />
-              <input id="edit-date" type="datetime-local" />
+          <div
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 16px;">
+            <div
+              style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);">
+              <div
+                style="font-size: 13px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                <span>📧</span>
+                <span>Email Marketing</span>
+                <span style="background: #ff6b6b; padding: 1px 6px; border-radius: 4px; font-size: 10px;">HIGH
+                  PRIORITY</span>
+              </div>
+              <ul style="margin: 0; padding-left: 20px; font-size: 12px; opacity: 0.9; line-height: 1.6;">
+                <li>Newsletter automation</li>
+                <li>Welcome sequences</li>
+                <li>Subscriber segmentation</li>
+              </ul>
             </div>
-            <textarea id="edit-excerpt" style="min-height:80px" placeholder="Excerpt (SEO Description)"></textarea>
-            <textarea id="edit-content" style="min-height:300px" placeholder="HTML Content..."></textarea>
-
-            <div style="display:flex; gap: 1rem; align-items:center;">
-              <label style="display:flex; gap:0.5rem; align-items:center; cursor:pointer;">
-                <input type="checkbox" id="edit-publish" style="width:auto;"> Publish immediately
-              </label>
-              <div style="flex:1;"></div>
-              <button class="btn-secondary" id="editor-preview-btn">Preview</button>
-              <button class="btn-primary" id="editor-save-btn">Save Content</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="post-table-container" id="posts-list-container">
-          <!-- Populated by JS -->
-        </div>
-      </section>
-
-      <!-- VIEW: AUTOMATION -->
-      <section id="view-automation" class="view-section">
-        <header>
-          <h2>Automation Engine</h2>
-          <p>Configure your digital employees.</p>
-        </header>
-
-        <div class="card"
-          style="background:var(--bg-card); padding:2rem; border-radius:12px; border:1px solid var(--border); max-width:600px;">
-          <h3 style="margin-top:0;">Bot Status: <span style="color:#4ade80">Active</span></h3>
-          <p style="color:var(--text-muted)">The content generator runs on a schedule (Mon, Wed, Fri).</p>
-
-          <div style="margin-top:2rem; display:flex; flex-direction:column; gap:1rem;">
-            <label
-              style="display:flex; gap:1rem; align-items:center; padding:1rem; border:1px solid var(--border); border-radius:8px;">
-              <input type="checkbox" checked style="width:20px; height:20px;">
-              <div>
-                <strong>Auto-Publish</strong>
-                <div style="font-size:0.85rem; color:var(--text-muted)">Allow bot to publish directly without draft
-                  review.</div>
-              </div>
-            </label>
-
-            <label
-              style="display:flex; gap:1rem; align-items:center; padding:1rem; border:1px solid #7f1d1d; background:rgba(127,29,29,0.1); border-radius:8px;">
-              <input type="checkbox" style="width:20px; height:20px;">
-              <div>
-                <strong style="color:#f87171">Emergency Stop</strong>
-                <div style="font-size:0.85rem; color:#fca5a5">Halt all automated activities immediately.</div>
-              </div>
-            </label>
-          </div>
-        </div>
-      </section>
-
-      <!-- VIEW: SUBSCRIBERS (NEW) -->
-      <section id="view-subscribers" class="view-section">
-        <header>
-          <h2>Audience</h2>
-          <p>Locally stored email list.</p>
-        </header>
-        <div class="post-table-container">
-          <div id="subscribers-list">Loading...</div>
-        </div>
-      </section>
-
-      <!-- VIEW: SETTINGS -->
-      <section id="view-settings" class="view-section">
-        <header>
-          <h2>Settings</h2>
-          <p>Global configuration and Ad slots.</p>
-        </header>
-
-        <div class="form-grid">
-          <!-- ADS -->
-          <div style="background:var(--bg-card); padding:1.5rem; border-radius:12px; border:1px solid var(--border);">
-            <h3>Ad Slots (Revenue)</h3>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-              <div>
-                <label>Header (All Pages)</label>
-                <textarea id="set-ad-header" style="min-height:80px; margin-bottom:1rem;"
-                  placeholder="Top banner..."></textarea>
-              </div>
-              <div>
-                <label>Footer (All Pages)</label>
-                <textarea id="set-ad-footer" style="min-height:80px; margin-bottom:1rem;"
-                  placeholder="Bottom banner..."></textarea>
-              </div>
-            </div>
-
-            <label>Post Bottom (Article End)</label>
-            <textarea id="set-ad-bottom" style="min-height:80px; margin-bottom:1rem;"
-              placeholder="After content..."></textarea>
 
             <div
-              style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border);">
-              <div>
-                <label>Left Sidebar (Desktop Only)</label>
-                <textarea id="set-ad-left" style="min-height:120px;" placeholder="Skyscraper (160x600)..."></textarea>
+              style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);">
+              <div
+                style="font-size: 13px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                <span>📱</span>
+                <span>Social Media</span>
+                <span
+                  style="background: #ffd93d; color: #333; padding: 1px 6px; border-radius: 4px; font-size: 10px;">MEDIUM</span>
               </div>
-              <div>
-                <label>Right Sidebar (Desktop Only)</label>
-                <textarea id="set-ad-right" style="min-height:120px;" placeholder="Skyscraper (160x600)..."></textarea>
-              </div>
+              <ul style="margin: 0; padding-left: 20px; font-size: 12px; opacity: 0.9; line-height: 1.6;">
+                <li>Auto-posting to Twitter</li>
+                <li>LinkedIn integration</li>
+                <li>Social analytics</li>
+              </ul>
             </div>
 
-            <button class="btn-primary" id="save-ads-btn" style="margin-top:1.5rem;">Save Ad Slots</button>
+            <div
+              style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);">
+              <div
+                style="font-size: 13px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                <span>🎁</span>
+                <span>Lead Magnets</span>
+                <span style="background: #6bcf7f; padding: 1px 6px; border-radius: 4px; font-size: 10px;">PLANNED</span>
+              </div>
+              <ul style="margin: 0; padding-left: 20px; font-size: 12px; opacity: 0.9; line-height: 1.6;">
+                <li>PDF guide generator</li>
+                <li>Email-gated downloads</li>
+                <li>Conversion tracking</li>
+              </ul>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 12px; font-size: 13px;">
+            <a href="/DIGITAL_MARKETING_IMPLEMENTATION.md" target="_blank"
+              style="background: white; color: #667eea; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+              <span>📖</span>
+              <span>View Full Roadmap</span>
+            </a>
+            <span style="opacity: 0.8;">Project Status: 60% Complete</span>
           </div>
         </div>
-      </section>
+      </div>
 
-    </main>
+      <!-- Bottom Row Charts -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+
+        <!-- Category Distribution -->
+        <div style="background: #fff; border: 1px solid var(--gray-200); border-radius: 8px; padding: 24px;">
+          <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Content by Category</h3>
+          <canvas id="categoryChart" style="max-height: 300px;"></canvas>
+        </div>
+
+        <!-- Publishing Activity by Month -->
+        <div style="background: #fff; border: 1px solid var(--gray-200); border-radius: 8px; padding: 24px;">
+          <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Monthly Activity</h3>
+          <canvas id="monthlyChart"></canvas>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CONTENT VIEW -->
+    <div id="view-content" class="admin-container hidden">
+      <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h1 class="page-title">Content</h1>
+          <p class="page-subtitle">Manage all posts</p>
+        </div>
+        <button class="btn btn-primary" onclick="openEditor()">New Post</button>
+      </div>
+
+      <table class="content-table" id="posts-table">
+        <thead>
+          <tr>
+            <th>Post</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="posts-tbody">
+          <tr>
+            <td colspan="4" style="text-align: center; padding: 48px; color: var(--gray-400);">Loading...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SUBSCRIBERS VIEW -->
+    <div id="view-subscribers" class="admin-container hidden">
+      <div class="page-header">
+        <h1 class="page-title">Subscribers</h1>
+        <p class="page-subtitle">Email list</p>
+      </div>
+
+      <table class="content-table">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Subscribed</th>
+          </tr>
+        </thead>
+        <tbody id="subs-tbody">
+          <tr>
+            <td colspan="2" style="text-align: center; padding: 48px; color: var(--gray-400);">Loading...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SETTINGS VIEW -->
+    <div id="view-settings" class="admin-container hidden">
+      <div class="page-header">
+        <h1 class="page-title">Settings</h1>
+        <p class="page-subtitle">Manage your site configuration</p>
+      </div>
+
+      <!-- Settings Tabs -->
+      <div style="border-bottom: 1px solid var(--gray-200); margin-bottom: 32px;">
+        <div style="display: flex; gap: 24px; font-family: var(--font-sans); font-size: 14px;">
+          <button class="settings-tab active" data-tab="site"
+            style="padding: 12px 0; border: none; background: none; cursor: pointer; border-bottom: 2px solid #1A8917; font-weight: 500;">Site
+            Info</button>
+          <button class="settings-tab" data-tab="seo"
+            style="padding: 12px 0; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; color: var(--gray-600);">SEO
+            & Analytics</button>
+          <button class="settings-tab" data-tab="social"
+            style="padding: 12px 0; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; color: var(--gray-600);">Social
+            Media</button>
+          <button class="settings-tab" data-tab="publishing"
+            style="padding: 12px 0; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; color: var(--gray-600);">Publishing</button>
+          <button class="settings-tab" data-tab="monetization"
+            style="padding: 12px 0; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; color: var(--gray-600);">Monetization</button>
+          <button class="settings-tab" data-tab="backlinks"
+            style="padding: 12px 0; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; color: var(--gray-600);">Backlinks</button>
+          <button class="settings-tab" data-tab="advanced"
+            style="padding: 12px 0; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; color: var(--gray-600);">Advanced</button>
+        </div>
+      </div>
+
+      <!-- Site Info Tab -->
+      <div id="settings-site" class="settings-panel">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 24px;">Site Information</h3>
+
+        <div class="form-group">
+          <label class="form-label">Site Name</label>
+          <input type="text" id="setting-site-name" class="form-input" placeholder="WaveSignals">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Site Description</label>
+          <textarea id="setting-site-description" class="form-textarea" rows="3"
+            placeholder="Minimal editorial UI with reader-first UX"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Site URL</label>
+          <input type="url" id="setting-site-url" class="form-input" placeholder="https://wavesignals.waveseed.app">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Contact Email</label>
+          <input type="email" id="setting-contact-email" class="form-input" placeholder="hello@wavesignals.com">
+        </div>
+
+        <button class="btn btn-primary" onclick="saveSettings()">Save Changes</button>
+      </div>
+
+      <!-- SEO & Analytics Tab -->
+      <div id="settings-seo" class="settings-panel hidden">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 24px;">SEO & Analytics</h3>
+
+        <div class="form-group">
+          <label class="form-label">Google Analytics ID</label>
+          <input type="text" id="setting-ga-id" class="form-input" placeholder="G-XXXXXXXXXX" value="G-RGL9J7FMMN">
+          <p style="font-size: 13px; color: var(--gray-600); margin-top: 4px;">Currently active in all pages</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Google Search Console Verification</label>
+          <input type="text" id="setting-gsc-verification" class="form-input"
+            placeholder="google-site-verification code">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Default Meta Description</label>
+          <textarea id="setting-meta-description" class="form-textarea" rows="2"
+            placeholder="One signal per day. No noise."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Meta Keywords (comma separated)</label>
+          <input type="text" id="setting-meta-keywords" class="form-input"
+            placeholder="career, money, technology, behavior">
+        </div>
+
+        <button class="btn btn-primary" onclick="saveSettings()">Save Changes</button>
+      </div>
+
+      <!-- Social Media Tab -->
+      <div id="settings-social" class="settings-panel hidden">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 24px;">Social Media Links</h3>
+
+        <div class="form-group">
+          <label class="form-label">Twitter / X Handle</label>
+          <input type="text" id="setting-twitter" class="form-input" placeholder="@wavesignals">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">LinkedIn URL</label>
+          <input type="url" id="setting-linkedin" class="form-input"
+            placeholder="https://linkedin.com/company/wavesignals">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">GitHub URL</label>
+          <input type="url" id="setting-github" class="form-input" placeholder="https://github.com/wavesignals">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Facebook Page</label>
+          <input type="url" id="setting-facebook" class="form-input" placeholder="https://facebook.com/wavesignals">
+        </div>
+
+        <button class="btn btn-primary" onclick="saveSettings()">Save Changes</button>
+      </div>
+
+      <!-- Publishing Tab -->
+      <div id="settings-publishing" class="settings-panel hidden">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 24px;">Publishing Settings</h3>
+
+        <div class="form-group">
+          <label class="form-label">Default Category</label>
+          <select id="setting-default-category" class="form-input">
+            <option value="Career">Career</option>
+            <option value="Money">Money</option>
+            <option value="Technology">Technology</option>
+            <option value="Behavior">Behavior</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Posts Per Page</label>
+          <input type="number" id="setting-posts-per-page" class="form-input" placeholder="10" min="5" max="50">
+        </div>
+
+        <div class="form-group">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="setting-auto-publish" style="width: auto;">
+            <span>Auto-publish new posts</span>
+          </label>
+          <p style="font-size: 13px; color: var(--gray-600); margin-top: 4px;">Automatically publish posts created by
+            the bot</p>
+        </div>
+
+        <div class="form-group">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="setting-show-excerpts" style="width: auto;">
+            <span>Show post excerpts on archive page</span>
+          </label>
+        </div>
+
+        <button class="btn btn-primary" onclick="saveSettings()">Save Changes</button>
+      </div>
+
+      <!-- Monetization Tab -->
+      <div id="settings-monetization" class="settings-panel hidden">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 24px;">Monetization & Ads</h3>
+
+        <div
+          style="padding: 16px; background: #E7F5E6; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #1A8917;">
+          <p style="font-size: 14px; color: #1A6814; margin: 0;"><strong>💡 Status:</strong> <span id="ads-status">Ads
+              are currently disabled</span></p>
+        </div>
+
+        <div class="form-group">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="ads-enabled" style="width: auto;" onchange="toggleAdsStatus()">
+            <span style="font-weight: 600;">Enable Ads Globally</span>
+          </label>
+          <p style="font-size: 13px; color: var(--gray-600); margin-top: 4px;">Master switch for all ad placements</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Google AdSense Publisher ID</label>
+          <input type="text" id="ads-adsense-id" class="form-input" placeholder="ca-pub-XXXXXXXXXXXXXXXX">
+          <p style="font-size: 13px; color: var(--gray-600); margin-top: 4px;">Find this in your AdSense dashboard →
+            Account → Account Information</p>
+        </div>
+
+        <hr style="margin: 32px 0; border: none; border-top: 1px solid var(--gray-200);">
+
+        <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Ad Placements</h4>
+
+        <!-- Homepage Ads -->
+        <div style="background: #F9F9F9; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+          <h5 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Homepage</h5>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="ads-homepage-header" class="ad-placement-toggle" style="width: auto;">
+              <span style="font-size: 13px;">Header Leaderboard (728×90)</span>
+            </label>
+            <input type="text" id="ads-homepage-header-slot" class="form-input" placeholder="Ad Slot ID"
+              style="margin-top: 4px; font-size: 13px;">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="ads-homepage-sidebar" class="ad-placement-toggle" style="width: auto;">
+              <span style="font-size: 13px;">Sidebar Rectangle (300×250)</span>
+            </label>
+            <input type="text" id="ads-homepage-sidebar-slot" class="form-input" placeholder="Ad Slot ID"
+              style="margin-top: 4px; font-size: 13px;">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="ads-homepage-footer" class="ad-placement-toggle" style="width: auto;">
+              <span style="font-size: 13px;">Footer Leaderboard (728×90)</span>
+            </label>
+            <input type="text" id="ads-homepage-footer-slot" class="form-input" placeholder="Ad Slot ID"
+              style="margin-top: 4px; font-size: 13px;">
+          </div>
+        </div>
+
+        <!-- Blog Archive Ads -->
+        <div style="background: #F9F9F9; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+          <h5 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Blog Archive</h5>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="ads-archive-header" class="ad-placement-toggle" style="width: auto;">
+              <span style="font-size: 13px;">Header Leaderboard (728×90)</span>
+            </label>
+            <input type="text" id="ads-archive-header-slot" class="form-input" placeholder="Ad Slot ID"
+              style="margin-top: 4px; font-size: 13px;">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="ads-archive-infeed" class="ad-placement-toggle" style="width: auto;">
+              <span style="font-size: 13px;">In-Feed Ad (300×250, every 3 posts)</span>
+            </label>
+            <input type="text" id="ads-archive-infeed-slot" class="form-input" placeholder="Ad Slot ID"
+              style="margin-top: 4px; font-size: 13px;">
+          </div>
+        </div>
+
+        <!-- Single Post Ads -->
+        <div style="background: #F9F9F9; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+          <h5 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Single Posts (Highest Revenue)</h5>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="ads-post-header" class="ad-placement-toggle" style="width: auto;">
+              <span style="font-size: 13px;">Header Leaderboard (728×90)</span>
+            </label>
+            <input type="text" id="ads-post-header-slot" class="form-input" placeholder="Ad Slot ID"
+              style="margin-top: 4px; font-size: 13px;">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="ads-post-incontent" class="ad-placement-toggle" style="width: auto;">
+              <span style="font-size: 13px;">In-Content (336×280, mid-article)</span>
+            </label>
+            <input type="text" id="ads-post-incontent-slot" class="form-input" placeholder="Ad Slot ID"
+              style="margin-top: 4px; font-size: 13px;">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="ads-post-sidebar" class="ad-placement-toggle" style="width: auto;">
+              <span style="font-size: 13px;">Sticky Sidebar (300×600)</span>
+            </label>
+            <input type="text" id="ads-post-sidebar-slot" class="form-input" placeholder="Ad Slot ID"
+              style="margin-top: 4px; font-size: 13px;">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="ads-post-footer" class="ad-placement-toggle" style="width: auto;">
+              <span style="font-size: 13px;">End of Post (300×250)</span>
+            </label>
+            <input type="text" id="ads-post-footer-slot" class="form-input" placeholder="Ad Slot ID"
+              style="margin-top: 4px; font-size: 13px;">
+          </div>
+        </div>
+
+        <!-- Mobile Ads -->
+        <div style="background: #F9F9F9; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+          <h5 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Mobile</h5>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="ads-mobile-top" class="ad-placement-toggle" style="width: auto;">
+              <span style="font-size: 13px;">Top Banner (320×50)</span>
+            </label>
+            <input type="text" id="ads-mobile-top-slot" class="form-input" placeholder="Ad Slot ID"
+              style="margin-top: 4px; font-size: 13px;">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="ads-mobile-incontent" class="ad-placement-toggle" style="width: auto;">
+              <span style="font-size: 13px;">In-Content (300×250)</span>
+            </label>
+            <input type="text" id="ads-mobile-incontent-slot" class="form-input" placeholder="Ad Slot ID"
+              style="margin-top: 4px; font-size: 13px;">
+          </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="saveAdSettings()">Save Ad Settings</button>
+
+        <div style="margin-top: 16px; padding: 12px; background: #FFF9E6; border-radius: 8px;">
+          <p style="font-size: 13px; color: #856404; margin: 0;">📖 Need help? Read <a href="/ADSENSE_SETUP.md"
+              target="_blank" style="color: #856404; text-decoration: underline;">ADSENSE_SETUP.md</a> for complete
+            instructions.</p>
+        </div>
+      </div>
+
+      <!-- Backlinks Tab -->
+      <div id="settings-backlinks" class="settings-panel hidden">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 24px;">Footer & Backlink Management</h3>
+
+        <div
+          style="padding: 16px; background: #E7F5E6; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #1A8917;">
+          <p style="font-size: 14px; color: #1A6814; margin: 0;"><strong>💡 SEO Boost:</strong> These backlinks to
+            WaveSeed.app improve your domain authority and drive referral traffic.</p>
+        </div>
+
+        <!-- Footer About Section -->
+        <div class="form-group">
+          <label class="form-label">Footer About Text</label>
+          <input type="text" id="footer-about-text" class="form-input"
+            placeholder="AI-powered insights delivered daily">
+          <p style="font-size: 13px; color: var(--gray-600); margin-top: 4px;">Short description shown in footer</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Parent Company Name</label>
+          <input type="text" id="footer-company-name" class="form-input" value="WaveSeed" placeholder="WaveSeed">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Parent Company URL</label>
+          <input type="text" id="footer-company-url" class="form-input" value="https://waveseed.app"
+            placeholder="https://waveseed.app">
+          <p style="font-size: 13px; color: var(--gray-600); margin-top: 4px;">Main backlink - very important for SEO
+          </p>
+        </div>
+
+        <hr style="margin: 32px 0; border: none; border-top: 1px solid var(--gray-200);">
+
+        <!-- WaveSeed Network Links -->
+        <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">WaveSeed Network Links</h4>
+        <p style="font-size: 13px; color: var(--gray-600); margin-bottom: 16px;">These appear in the "WaveSeed Network"
+          section of the footer</p>
+
+        <div class="form-group">
+          <label class="form-label">Link 1: Home</label>
+          <input type="text" id="footer-link1-url" class="form-input" value="https://waveseed.app"
+            placeholder="https://waveseed.app">
+          <input type="text" id="footer-link1-text" class="form-input" placeholder="WaveSeed Home"
+            style="margin-top: 8px;" value="WaveSeed Home">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Link 2: Products</label>
+          <input type="text" id="footer-link2-url" class="form-input" value="https://waveseed.app/products"
+            placeholder="https://waveseed.app/products">
+          <input type="text" id="footer-link2-text" class="form-input" placeholder="AI Products"
+            style="margin-top: 8px;" value="AI Products">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Link 3: Blog</label>
+          <input type="text" id="footer-link3-url" class="form-input" value="https://waveseed.app/blog"
+            placeholder="https://waveseed.app/blog">
+          <input type="text" id="footer-link3-text" class="form-input" placeholder="Blog" style="margin-top: 8px;"
+            value="Blog">
+        </div>
+
+        <hr style="margin: 32px 0; border: none; border-top: 1px solid var(--gray-200);">
+
+        <!-- Footer Copyright -->
+        <div class="form-group">
+          <label class="form-label">Copyright Text</label>
+          <input type="text" id="footer-copyright" class="form-input" value="© 2025 WaveSignals"
+            placeholder="© 2025 WaveSignals">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Footer Tagline</label>
+          <input type="text" id="footer-tagline" class="form-input" value="Part of" placeholder="Part of">
+          <p style="font-size: 13px; color: var(--gray-600); margin-top: 4px;">Shows as: "Part of WaveSeed"</p>
+        </div>
+
+        <button class="btn btn-primary" onclick="saveBacklinks()">Save Backlink Settings</button>
+
+        <div style="margin-top: 16px; padding: 12px; background: #FFF9E6; border-radius: 8px;">
+          <p style="font-size: 13px; color: #856404; margin: 0;">
+            <strong>📊 SEO Impact:</strong> Each page has 5 backlinks to WaveSeed = 25 total backlinks across the site.
+            <a href="/SEO_BACKLINKING_STRATEGY.md" target="_blank"
+              style="color: #856404; text-decoration: underline;">Learn more</a>
+          </p>
+        </div>
+      </div>
+
+      <!-- Advanced Tab -->
+      <div id="settings-advanced" class="settings-panel hidden">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 24px;">Advanced Settings</h3>
+
+        <div class="form-group">
+          <label class="form-label">Custom CSS</label>
+          <textarea id="setting-custom-css" class="form-textarea" rows="6" placeholder=".custom-class { color: #000; }"
+            style="font-family: var(--font-mono); font-size: 13px;"></textarea>
+          <p style="font-size: 13px; color: var(--gray-600); margin-top: 4px;">Will be injected into all public pages
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Custom JavaScript</label>
+          <textarea id="setting-custom-js" class="form-textarea" rows="6" placeholder="console.log('Custom code');"
+            style="font-family: var(--font-mono); font-size: 13px;"></textarea>
+          <p style="font-size: 13px; color: var(--gray-600); margin-top: 4px;">Executes on all public pages (use with
+            caution)</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Webhook URL (on new post)</label>
+          <input type="url" id="setting-webhook-url" class="form-input" placeholder="https://your-webhook.com/endpoint">
+          <p style="font-size: 13px; color: var(--gray-600); margin-top: 4px;">POST request sent when new post is
+            published</p>
+        </div>
+
+        <div style="padding: 16px; background: #FFF9E6; border-radius: 8px; margin-top: 24px;">
+          <p style="font-size: 14px; color: #856404; margin: 0;">⚠️ Custom code can break your site. Test thoroughly
+            before deploying.</p>
+        </div>
+
+        <button class="btn btn-primary" onclick="saveSettings()">Save Changes</button>
+      </div>
+
+      <!-- Success Message -->
+      <div id="settings-success" class="hidden"
+        style="position: fixed; bottom: 24px; right: 24px; background: #1A8917; color: white; padding: 16px 24px; border-radius: 8px; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+        ✓ Settings saved successfully
+      </div>
+    </div>
+  </div>
+
+  <!-- Backlinks View -->
+  <div id="view-backlinks" class="admin-container hidden">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+      <div>
+        <h2 style="font-size: 24px; font-weight: 700; margin: 0 0 8px 0;">Backlink Manager</h2>
+        <p style="color: var(--gray-600); margin: 0;">Track and manage external backlinks to boost SEO</p>
+      </div>
+      <button class="btn btn-primary" onclick="showAddBacklinkModal()">+ Add Backlink</button>
+    </div>
+
+    <!-- Stats Overview -->
+    <div
+      style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;">
+      <div class="stat-card"
+        style="padding: 20px; background: #E7F5E6; border-radius: 8px; border-left: 4px solid #1A8917;">
+        <div style="font-size: 28px; font-weight: 700; color: #1A6814;" id="total-backlinks">0</div>
+        <div style="font-size: 13px; color: #1A6814; margin-top: 4px;">Total Backlinks</div>
+      </div>
+      <div class="stat-card"
+        style="padding: 20px; background: #FFF9E6; border-radius: 8px; border-left: 4px solid #856404;">
+        <div style="font-size: 28px; font-weight: 700; color: #856404;" id="pending-backlinks">0</div>
+        <div style="font-size: 13px; color: #856404; margin-top: 4px;">Pending</div>
+      </div>
+      <div class="stat-card"
+        style="padding: 20px; background: #E6F3FF; border-radius: 8px; border-left: 4px solid #0066CC;">
+        <div style="font-size: 28px; font-weight: 700; color: #0066CC;" id="active-backlinks">0</div>
+        <div style="font-size: 13px; color: #0066CC; margin-top: 4px;">Active</div>
+      </div>
+      <div class="stat-card"
+        style="padding: 20px; background: #FFE6E6; border-radius: 8px; border-left: 4px solid #CC0000;">
+        <div style="font-size: 28px; font-weight: 700; color: #CC0000;" id="broken-backlinks">0</div>
+        <div style="font-size: 13px; color: #CC0000; margin-top: 4px;">Broken</div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div
+      style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 32px;">
+      <div style="padding: 16px; background: #f9f9f9; border-radius: 8px; border: 1px solid #e6e6e6;">
+        <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">📊 Quick Stats</h4>
+        <div style="font-size: 13px; color: #666; display: flex; flex-direction: column; gap: 6px;">
+          <div>Domain Authority: <strong id="avg-da">N/A</strong></div>
+          <div>This Month: <strong id="monthly-backlinks">0 added</strong></div>
+        </div>
+      </div>
+
+      <div style="padding: 16px; background: #f9f9f9; border-radius: 8px; border: 1px solid #e6e6e6;">
+        <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">🎯 Backlink Goals</h4>
+        <div style="font-size: 13px; color: #666;">
+          <div style="margin-bottom: 6px;">Target: <strong>50 backlinks</strong></div>
+          <div style="background: #e6e6e6; height: 8px; border-radius: 4px; overflow: hidden;">
+            <div id="backlink-progress" style="background: #1A8917; height: 100%; width: 0%; transition: width 0.3s;">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding: 16px; background: #E7F5E6; border-radius: 8px; border: 1px solid #1A8917;">
+        <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">💡 Next Steps</h4>
+        <ul style="font-size: 13px; color: #1A6814; margin: 0; padding-left: 20px;">
+          <li>Request WaveSeed backlink</li>
+          <li>Submit to 3 directories</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Backlinks Table -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 30%;">Source Website</th>
+            <th style="width: 25%;">Link Type</th>
+            <th style="width: 15%;">Status</th>
+            <th style="width: 15%;">Added</th>
+            <th style="width: 15%;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="backlinks-tbody">
+          <tr>
+            <td colspan="5" style="text-align: center; padding: 48px; color: var(--gray-400);">
+              No backlinks tracked yet. Click "+ Add Backlink" to start building your SEO profile.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Resources -->
+    <div style="margin-top: 32px; padding: 16px; background: #f9f9f9; border-radius: 8px;">
+      <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">📚 Backlink Resources</h4>
+      <div
+        style="font-size: 13px; color: #666; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+        <a href="/SEO_BACKLINKING_STRATEGY.md" target="_blank" style="color: #1A8917;">📖 SEO Strategy Guide</a>
+        <a href="https://feedly.com" target="_blank" style="color: #666;">🔗 Submit to Feedly</a>
+        <a href="https://alltop.com" target="_blank" style="color: #666;">🔗 AllTop Directory</a>
+        <a href="https://blogarama.com" target="_blank" style="color: #666;">🔗 Blogarama</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDITOR MODAL -->
+  <div id="editor-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-title">New Post</h2>
+        <button class="btn btn-secondary" onclick="closeEditor()">Close</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Title</label>
+          <input type="text" id="post-title" class="form-input" placeholder="Enter title">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Content</label>
+          <textarea id="post-content" class="form-textarea" placeholder="Write your post..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select id="post-category" class="form-input">
+            <option>Career</option>
+            <option>Money</option>
+            <option>Technology</option>
+            <option>Behavior</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="post-published" style="width: 18px; height: 18px;">
+            <span>Publish immediately</span>
+          </label>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-secondary" onclick="closeEditor()">Cancel</button>
+        <button class="btn btn-primary" onclick="savePost()">Save Post</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Backlink Modal -->
+  <div id="backlink-modal" class="modal hidden">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3>Add New Backlink</h3>
+        <button onclick="closeBacklinkModal()"
+          style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Source Website URL</label>
+          <input type="url" id="backlink-source-url" class="form-input" placeholder="https://example.com" required>
+          <p style="font-size: 13px; color: var(--gray-600); margin-top: 4px;">Where is the backlink located?</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Source Website Name</label>
+          <input type="text" id="backlink-source-name" class="form-input" placeholder="Example Blog">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Link Type</label>
+          <select id="backlink-type" class="form-input">
+            <option value="directory">Directory Listing</option>
+            <option value="guest-post">Guest Post</option>
+            <option value="social">Social Profile</option>
+            <option value="partner">Partner/Network</option>
+            <option value="comment">Blog Comment</option>
+            <option value="forum">Forum/Community</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Domain Authority (DA)</label>
+          <input type="number" id="backlink-da" class="form-input" placeholder="0-100" min="0" max="100">
+          <p style="font-size: 13px; color: var(--gray-600); margin-top: 4px;">Check at <a
+              href="https://moz.com/link-explorer" target="_blank">Moz</a></p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select id="backlink-status" class="form-input">
+            <option value="pending">Pending (Submitted, waiting)</option>
+            <option value="active">Active (Live)</option>
+            <option value="broken">Broken (Dead link)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Notes (Optional)</label>
+          <textarea id="backlink-notes" class="form-textarea" rows="3"
+            placeholder="Contact person, submission date, etc."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeBacklinkModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveBacklink()">Add Backlink</button>
+      </div>
+    </div>
   </div>
 
   <script>
-    /* LOGIC */
+    const API_URL = 'https://mahendercreates-wavesignals-backend.hf.space/api';
     const ADMIN_KEY = 'wavesignals@2025';
-    // CONFIG: Backend API URL (Production)
-    const API_URL = "https://mahendercreates-wavesignals-backend.hf.space/api";
     let posts = [];
     let subscribers = [];
+    let messages = [];
+    let currentPostId = null;
 
-    // Auth
+    // Login
     document.getElementById('login-btn').onclick = () => {
-      if (document.getElementById('admin-key').value === ADMIN_KEY) {
+      const key = document.getElementById('admin-password').value;
+      if (key === ADMIN_KEY) {
+        sessionStorage.setItem('ws_admin', key);
         document.getElementById('login-screen').classList.add('hidden');
-        document.getElementById('app-shell').classList.remove('hidden');
+        document.getElementById('admin-app').classList.remove('hidden');
         init();
       } else {
         document.getElementById('login-error').classList.remove('hidden');
       }
     };
 
-    // Routing
-    window.switchView = (viewName, el) => {
-      document.querySelectorAll('.view-section').forEach(d => d.classList.remove('active'));
-      document.getElementById('view-' + viewName).classList.add('active');
-
-      document.querySelectorAll('.nav-item').forEach(d => d.classList.remove('active'));
-      if (el) el.classList.add('active');
+    window.logout = () => {
+      sessionStorage.removeItem('ws_admin');
+      location.reload();
     };
 
+    // Navigation
+    document.querySelectorAll('.admin-nav a[data-view]').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const view = link.dataset.view;
+
+        // Update active link
+        document.querySelectorAll('.admin-nav a').forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+
+        // Show view
+        document.querySelectorAll('.admin-container').forEach(v => v.classList.add('hidden'));
+        document.getElementById('view-' + view).classList.remove('hidden');
+      });
+    });
+
+    // Automatic Sync System
+    let syncTimer = null;
+    let lastSyncAttempt = Date.now();
+    const SYNC_INTERVAL = 30000; // Try to sync every 30 seconds
+
+    function updateSyncStatus(status, text) {
+      const statusEl = document.getElementById('sync-status');
+      const iconEl = document.getElementById('sync-icon');
+      const textEl = document.getElementById('sync-text');
+
+      if (!statusEl) return;
+
+      statusEl.style.display = 'flex';
+      statusEl.style.alignItems = 'center';
+      statusEl.style.gap = '6px';
+
+      switch (status) {
+        case 'synced':
+          iconEl.style.color = '#1A8917';
+          textEl.textContent = 'Synced';
+          textEl.style.color = 'var(--gray-600)';
+          break;
+        case 'syncing':
+          iconEl.style.color = '#1A8917';
+          textEl.textContent = 'Syncing...';
+          textEl.style.color = 'var(--gray-600)';
+          break;
+        case 'offline':
+          iconEl.style.color = '#FFA500';
+          textEl.textContent = 'Offline - saved locally';
+          textEl.style.color = '#FFA500';
+          break;
+        case 'pending':
+          iconEl.style.color = '#FFA500';
+          textEl.textContent = 'Pending sync';
+          textEl.style.color = '#FFA500';
+          break;
+      }
+    }
+
+    async function checkAndSync() {
+      // Check if we have pending local changes
+      const hasLocalSettings = localStorage.getItem('ws_settings');
+      const pendingSync = localStorage.getItem('ws_pending_sync');
+
+      if (!hasLocalSettings && !pendingSync) return;
+
+      try {
+        // Test if API is reachable
+        const healthCheck = await fetch(`${API_URL}/posts`, {
+          method: 'HEAD',
+          signal: AbortSignal.timeout(5000)
+        });
+
+        if (healthCheck.ok && pendingSync === 'true') {
+          // API is back online and we have pending changes!
+          updateSyncStatus('syncing');
+          await syncLocalToAPI();
+        } else if (healthCheck.ok) {
+          updateSyncStatus('synced');
+        }
+      } catch (e) {
+        // API still offline
+        if (pendingSync === 'true') {
+          updateSyncStatus('pending');
+        } else {
+          updateSyncStatus('offline');
+        }
+      }
+    }
+
+    async function syncLocalToAPI() {
+      const localSettings = localStorage.getItem('ws_settings');
+      if (!localSettings) return;
+
+      try {
+        const settings = JSON.parse(localSettings);
+        const res = await fetch(`${API_URL}/settings`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admin-Key': ADMIN_KEY
+          },
+          body: JSON.stringify(settings)
+        });
+
+        if (res.ok) {
+          localStorage.removeItem('ws_pending_sync');
+          updateSyncStatus('synced');
+          console.log('✓ Successfully synced local settings to API');
+
+          // Show brief notification
+          const notification = document.createElement('div');
+          notification.style.cssText = `
+            position: fixed; top: 80px; right: 24px; 
+            background: #1A8917; color: white; 
+            padding: 12px 20px; border-radius: 6px; 
+            font-size: 14px; z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          `;
+          notification.textContent = '✓ Settings synced to server';
+          document.body.appendChild(notification);
+
+          setTimeout(() => notification.remove(), 3000);
+        }
+      } catch (e) {
+        console.error('Sync failed:', e);
+        updateSyncStatus('pending');
+      }
+    }
+
+    // Start periodic sync checks
+    function startSyncMonitor() {
+      // Initial check after 5 seconds
+      setTimeout(checkAndSync, 5000);
+
+      // Then check every 30 seconds
+      syncTimer = setInterval(checkAndSync, SYNC_INTERVAL);
+    }
+
+    // Backlink Management Functions
+    let backlinks = [];
+
+    function loadBacklinks() {
+      const stored = localStorage.getItem('ws_backlinks');
+      if (stored) {
+        backlinks = JSON.parse(stored);
+      } else {
+        // Initialize with WaveSeed backlinks
+        backlinks = [
+          {
+            id: 1,
+            sourceUrl: 'https://waveseed.app',
+            sourceName: 'WaveSeed (Parent Company)',
+            type: 'partner',
+            status: 'active',
+            domainAuthority: 0,
+            notes: 'Reciprocal link needed',
+            addedDate: new Date().toISOString()
+          }
+        ];
+        localStorage.setItem('ws_backlinks', JSON.stringify(backlinks));
+      }
+      renderBacklinks();
+      updateBacklinkStats();
+    }
+
+    function renderBacklinks() {
+      const tbody = document.getElementById('backlinks-tbody');
+      if (backlinks.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 48px; color: var(--gray-400);">No backlinks tracked yet.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = backlinks.map(bl => `
+        <tr>
+          <td>
+            <div style="font-weight: 500;">${bl.sourceName}</div>
+            <div style="font-size: 12px; color: var(--gray-600); margin-top: 2px;">
+              <a href="${bl.sourceUrl}" target="_blank" style="color: inherit;">${bl.sourceUrl}</a>
+            </div>
+          </td>
+          <td>
+            <span style="padding: 4px 8px; background: #f0f0f0; border-radius: 4px; font-size: 12px;">
+              ${formatType(bl.type)}
+            </span>
+          </td>
+          <td>
+            <span style="padding: 4px 8px; background: ${getStatusColor(bl.status)}; border-radius: 4px; font-size: 12px; color: white;">
+              ${bl.status.toUpperCase()}
+            </span>
+          </td>
+          <td style="font-size: 13px; color: var(--gray-600);">
+            ${new Date(bl.addedDate).toLocaleDateString()}
+          </td>
+          <td>
+            <button onclick="editBacklink(${bl.id})" style="padding: 4px 8px; font-size: 12px; background: none; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">Edit</button>
+            <button onclick="deleteBacklink(${bl.id})" style="padding: 4px 8px; font-size: 12px; background: none; border: 1px solid #cc0000; color: #cc0000; border-radius: 4px; cursor: pointer; margin-left: 4px;">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function updateBacklinkStats() {
+      document.getElementById('total-backlinks').textContent = backlinks.length;
+      document.getElementById('pending-backlinks').textContent = backlinks.filter(b => b.status === 'pending').length;
+      document.getElementById('active-backlinks').textContent = backlinks.filter(b => b.status === 'active').length;
+      document.getElementById('broken-backlinks').textContent = backlinks.filter(b => b.status === 'broken').length;
+
+      const progress = Math.min((backlinks.length / 50) * 100, 100);
+      document.getElementById('backlink-progress').style.width = progress + '%';
+
+      const avgDA = backlinks.filter(b => b.domainAuthority > 0).reduce((sum, b) => sum + b.domainAuthority, 0) / backlinks.filter(b => b.domainAuthority > 0).length || 0;
+      document.getElementById('avg-da').textContent = avgDA > 0 ? Math.round(avgDA) : 'N/A';
+
+      const thisMonth = backlinks.filter(b => {
+        const date = new Date(b.addedDate);
+        const now = new Date();
+        return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+      }).length;
+      document.getElementById('monthly-backlinks').textContent = thisMonth + ' added';
+    }
+
+    function showAddBacklinkModal() {
+      document.getElementById('backlink-modal').classList.remove('hidden');
+      // Clear form
+      document.getElementById('backlink-source-url').value = '';
+      document.getElementById('backlink-source-name').value = '';
+      document.getElementById('backlink-type').value = 'directory';
+      document.getElementById('backlink-da').value = '';
+      document.getElementById('backlink-status').value = 'pending';
+      document.getElementById('backlink-notes').value = '';
+    }
+
+    function closeBacklinkModal() {
+      document.getElementById('backlink-modal').classList.add('hidden');
+    }
+
+    function saveBacklink() {
+      const newBacklink = {
+        id: Date.now(),
+        sourceUrl: document.getElementById('backlink-source-url').value,
+        sourceName: document.getElementById('backlink-source-name').value,
+        type: document.getElementById('backlink-type').value,
+        status: document.getElementById('backlink-status').value,
+        domainAuthority: parseInt(document.getElementById('backlink-da').value) || 0,
+        notes: document.getElementById('backlink-notes').value,
+        addedDate: new Date().toISOString()
+      };
+
+      if (!newBacklink.sourceUrl) {
+        alert('Please enter a source URL');
+        return;
+      }
+
+      backlinks.push(newBacklink);
+      localStorage.setItem('ws_backlinks', JSON.stringify(backlinks));
+      renderBacklinks();
+      updateBacklinkStats();
+      closeBacklinkModal();
+
+      alert('✅ Backlink added successfully!');
+    }
+
+    function editBacklink(id) {
+      const backlink = backlinks.find(b => b.id === id);
+      if (!backlink) return;
+
+      document.getElementById('backlink-source-url').value = backlink.sourceUrl;
+      document.getElementById('backlink-source-name').value = backlink.sourceName;
+      document.getElementById('backlink-type').value = backlink.type;
+      document.getElementById('backlink-da').value = backlink.domainAuthority;
+      document.getElementById('backlink-status').value = backlink.status;
+      document.getElementById('backlink-notes').value = backlink.notes;
+
+      showAddBacklinkModal();
+
+      // Change button behavior during edit
+      const saveBtn = document.querySelector('#backlink-modal .btn-primary');
+      saveBtn.textContent = 'Update Backlink';
+      saveBtn.onclick = () => {
+        const index = backlinks.findIndex(b => b.id === id);
+        backlinks[index] = {
+          ...backlink,
+          sourceUrl: document.getElementById('backlink-source-url').value,
+          sourceName: document.getElementById('backlink-source-name').value,
+          type: document.getElementById('backlink-type').value,
+          status: document.getElementById('backlink-status').value,
+          domainAuthority: parseInt(document.getElementById('backlink-da').value) || 0,
+          notes: document.getElementById('backlink-notes').value
+        };
+        localStorage.setItem('ws_backlinks', JSON.stringify(backlinks));
+        renderBacklinks();
+        updateBacklinkStats();
+        closeBacklinkModal();
+        saveBtn.textContent = 'Add Backlink';
+        saveBtn.onclick = saveBacklink;
+      };
+    }
+
+    function deleteBacklink(id) {
+      if (!confirm('Delete this backlink?')) return;
+      backlinks = backlinks.filter(b => b.id !== id);
+      localStorage.setItem('ws_backlinks', JSON.stringify(backlinks));
+      renderBacklinks();
+      updateBacklinkStats();
+    }
+
+    function formatType(type) {
+      return type.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    }
+
+    function getStatusColor(status) {
+      switch (status) {
+        case 'active': return '#1A8917';
+        case 'pending': return '#856404';
+        case 'broken': return '#CC0000';
+        default: return '#666';
+      }
+    }
+
+    // Initialize
     async function init() {
-      await loadData();
-      await loadAds();
+      await loadPosts();
       await loadSubscribers();
+      await loadSettings();
+      await loadBacklinks();
+      await loadAdSettings();
       renderDashboard();
       renderPosts();
       renderSubscribers();
+      renderAnalytics();
+      startSyncMonitor(); // Start auto-sync
     }
 
-    async function loadData() {
+    async function loadPosts() {
       try {
-        const r = await fetch('/data/posts.json');
-        const d = await r.json();
-        posts = d.posts || [];
-      } catch (e) { posts = []; }
+        const res = await fetch(`${API_URL}/posts`);
+        const data = await res.json();
+        posts = data.posts || [];
+      } catch (e) {
+        console.error(e);
+      }
     }
 
     async function loadSubscribers() {
       try {
-        const r = await fetch('/api/subscribers');
-        subscribers = await r.json();
-      } catch (e) { subscribers = []; }
+        const res = await fetch(`${API_URL}/subscribers`);
+        subscribers = await res.json();
+      } catch (e) {
+        console.error(e);
+      }
     }
 
-    async function loadAds() {
-      try {
-        const r = await fetch('/api/ads');
-        const d = await r.json();
-        ads = d || { slots: {} };
-        if (!ads.slots) ads.slots = {};
-      } catch (e) { ads = { slots: {} }; }
-
-      document.getElementById('set-ad-header').value = ads.slots.header || '';
-      document.getElementById('set-ad-footer').value = ads.slots.footer || '';
-      document.getElementById('set-ad-bottom').value = ads.slots['post-bottom'] || '';
-      document.getElementById('set-ad-left').value = ads.slots['sidebar-left'] || '';
-      document.getElementById('set-ad-right').value = ads.slots['sidebar-right'] || '';
+    function renderDashboard() {
+      document.getElementById('stat-posts').textContent = posts.length;
+      document.getElementById('stat-subs').textContent = subscribers.length;
+      document.getElementById('stat-published').textContent = posts.filter(p => p.published).length;
+      document.getElementById('stat-drafts').textContent = posts.filter(p => !p.published).length;
     }
 
-    document.getElementById('save-ads-btn').onclick = async () => {
-      ads.slots.header = document.getElementById('set-ad-header').value;
-      ads.slots.footer = document.getElementById('set-ad-footer').value;
-      ads.slots['post-bottom'] = document.getElementById('set-ad-bottom').value;
-      ads.slots['sidebar-left'] = document.getElementById('set-ad-left').value;
-      ads.slots['sidebar-right'] = document.getElementById('set-ad-right').value;
+    function renderPosts() {
+      const tbody = document.getElementById('posts-tbody');
+      if (posts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 48px; color: var(--gray-400);">No posts yet</td></tr>';
+        return;
+      }
 
-      try {
-        const r = await fetch('/api/ads', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(ads)
+      tbody.innerHTML = posts.map(post => `
+        <tr>
+          <td>
+            <div class="post-title">${post.title}</div>
+            <div class="post-meta">${post.tags || 'Essay'}</div>
+          </td>
+          <td>${new Date(post.date).toLocaleDateString()}</td>
+          <td><span class="badge ${post.published ? 'badge-published' : 'badge-draft'}">${post.published ? 'Published' : 'Draft'}</span></td>
+          <td>
+            <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px;" onclick="editPost(${post.id})">Edit</button>
+            <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px; color: #DC2626;" onclick="deletePost(${post.id})">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderSubscribers() {
+      const tbody = document.getElementById('subs-tbody');
+      if (subscribers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="2" style="text-align: center; padding: 48px; color: var(--gray-400);">No subscribers yet</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = subscribers.map(sub => `
+        <tr>
+          <td>${sub.email}</td>
+          <td>${new Date(sub.date || sub.created_at).toLocaleDateString()}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Settings Functions
+    let currentSettings = {};
+
+    // Settings Tab Switching
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.settings-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          const tabName = tab.dataset.tab;
+
+          // Update active state
+          document.querySelectorAll('.settings-tab').forEach(t => {
+            t.classList.remove('active');
+            t.style.borderBottom = '2px solid transparent';
+            t.style.color = 'var(--gray-600)';
+            t.style.fontWeight = '400';
+          });
+          tab.classList.add('active');
+          tab.style.borderBottom = '2px solid #1A8917';
+          tab.style.color = '#000';
+          tab.style.fontWeight = '500';
+
+          // Show panel
+          document.querySelectorAll('.settings-panel').forEach(panel => {
+            panel.classList.add('hidden');
+          });
+          document.getElementById('settings-' + tabName).classList.remove('hidden');
         });
-        if (r.ok) alert('Ad config saved!');
-        else throw new Error('Server error');
-      } catch (e) { alert('Error: ' + e); }
+      });
+    });
+
+    async function loadSettings() {
+      try {
+        const res = await fetch(`${API_URL}/settings`);
+        const settings = await res.json();
+        currentSettings = settings;
+
+        // Populate all fields
+        document.getElementById('setting-site-name').value = settings.siteName || 'WaveSignals';
+        document.getElementById('setting-site-description').value = settings.siteDescription || '';
+        document.getElementById('setting-site-url').value = settings.siteUrl || 'https://wavesignals.waveseed.app';
+        document.getElementById('setting-contact-email').value = settings.contactEmail || '';
+
+        document.getElementById('setting-ga-id').value = settings.gaId || 'G-RGL9J7FMMN';
+        document.getElementById('setting-gsc-verification').value = settings.gscVerification || '';
+        document.getElementById('setting-meta-description').value = settings.metaDescription || '';
+        document.getElementById('setting-meta-keywords').value = settings.metaKeywords || '';
+
+        document.getElementById('setting-twitter').value = settings.twitter || '';
+        document.getElementById('setting-linkedin').value = settings.linkedin || '';
+        document.getElementById('setting-github').value = settings.github || '';
+        document.getElementById('setting-facebook').value = settings.facebook || '';
+
+        document.getElementById('setting-default-category').value = settings.defaultCategory || 'Career';
+        document.getElementById('setting-posts-per-page').value = settings.postsPerPage || '10';
+        document.getElementById('setting-auto-publish').checked = settings.autoPublish || false;
+        document.getElementById('setting-show-excerpts').checked = settings.showExcerpts !== false;
+
+        document.getElementById('setting-custom-css').value = settings.customCss || '';
+        document.getElementById('setting-custom-js').value = settings.customJs || '';
+        document.getElementById('setting-webhook-url').value = settings.webhookUrl || '';
+      } catch (e) {
+        console.error('Error loading settings from API:', e);
+        // Try localStorage fallback
+        const cached = localStorage.getItem('ws_settings');
+        if (cached) {
+          try {
+            const settings = JSON.parse(cached);
+            currentSettings = settings;
+            // Populate all fields with cached data
+            document.getElementById('setting-site-name').value = settings.siteName || 'WaveSignals';
+            document.getElementById('setting-site-description').value = settings.siteDescription || '';
+            document.getElementById('setting-site-url').value = settings.siteUrl || 'https://wavesignals.waveseed.app';
+            document.getElementById('setting-contact-email').value = settings.contactEmail || '';
+            document.getElementById('setting-ga-id').value = settings.gaId || 'G-RGL9J7FMMN';
+            document.getElementById('setting-gsc-verification').value = settings.gscVerification || '';
+            document.getElementById('setting-meta-description').value = settings.metaDescription || '';
+            document.getElementById('setting-meta-keywords').value = settings.metaKeywords || '';
+            document.getElementById('setting-twitter').value = settings.twitter || '';
+            document.getElementById('setting-linkedin').value = settings.linkedin || '';
+            document.getElementById('setting-github').value = settings.github || '';
+            document.getElementById('setting-facebook').value = settings.facebook || '';
+            document.getElementById('setting-default-category').value = settings.defaultCategory || 'Career';
+            document.getElementById('setting-posts-per-page').value = settings.postsPerPage || '10';
+            document.getElementById('setting-auto-publish').checked = settings.autoPublish || false;
+            document.getElementById('setting-show-excerpts').checked = settings.showExcerpts !== false;
+            document.getElementById('setting-custom-css').value = settings.customCss || '';
+            document.getElementById('setting-custom-js').value = settings.customJs || '';
+            document.getElementById('setting-webhook-url').value = settings.webhookUrl || '';
+            console.log('✓ Settings loaded from localStorage');
+          } catch (parseError) {
+            console.error('Error parsing cached settings:', parseError);
+          }
+        }
+      }
+    }
+
+    async function saveSettings() {
+      const settings = {
+        siteName: document.getElementById('setting-site-name').value,
+        siteDescription: document.getElementById('setting-site-description').value,
+        siteUrl: document.getElementById('setting-site-url').value,
+        contactEmail: document.getElementById('setting-contact-email').value,
+
+        gaId: document.getElementById('setting-ga-id').value,
+        gscVerification: document.getElementById('setting-gsc-verification').value,
+        metaDescription: document.getElementById('setting-meta-description').value,
+        metaKeywords: document.getElementById('setting-meta-keywords').value,
+
+        twitter: document.getElementById('setting-twitter').value,
+        linkedin: document.getElementById('setting-linkedin').value,
+        github: document.getElementById('setting-github').value,
+        facebook: document.getElementById('setting-facebook').value,
+
+        defaultCategory: document.getElementById('setting-default-category').value,
+        postsPerPage: parseInt(document.getElementById('setting-posts-per-page').value) || 10,
+        autoPublish: document.getElementById('setting-auto-publish').checked,
+        showExcerpts: document.getElementById('setting-show-excerpts').checked,
+
+        customCss: document.getElementById('setting-custom-css').value,
+        customJs: document.getElementById('setting-custom-js').value,
+        webhookUrl: document.getElementById('setting-webhook-url').value
+      };
+
+      try {
+        const res = await fetch(`${API_URL}/settings`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admin-Key': ADMIN_KEY
+          },
+          body: JSON.stringify(settings)
+        });
+
+        if (res.ok) {
+          currentSettings = settings;
+          localStorage.setItem('ws_settings', JSON.stringify(settings));
+          showSettingsSuccess();
+          console.log('✓ Saved to API and localStorage');
+        } else {
+          // API failed but save locally
+          localStorage.setItem('ws_settings', JSON.stringify(settings));
+          localStorage.setItem('ws_pending_sync', 'true');
+          currentSettings = settings;
+          showSettingsSuccess();
+          updateSyncStatus('pending');
+          console.warn('API unavailable, saved locally');
+        }
+      } catch (e) {
+        console.error('API error:', e);
+        localStorage.setItem('ws_settings', JSON.stringify(settings));
+        localStorage.setItem('ws_pending_sync', 'true');
+        currentSettings = settings;
+        showSettingsSuccess();
+        updateSyncStatus('offline');
+        console.log('✓ Saved locally (offline mode)');
+      }
+    }
+
+    function showSettingsSuccess() {
+      const msg = document.getElementById('settings-success');
+      msg.classList.remove('hidden');
+      setTimeout(() => {
+        msg.classList.add('hidden');
+      }, 3000);
+    }
+
+    // Backlink Settings Functions
+    async function loadBacklinks() {
+      const settings = currentSettings;
+
+      document.getElementById('footer-about-text').value = settings.footerAboutText || 'AI-powered insights delivered daily';
+      document.getElementById('footer-company-name').value = settings.footerCompanyName || 'WaveSeed';
+      document.getElementById('footer-company-url').value = settings.footerCompanyUrl || 'https://waveseed.app';
+
+      document.getElementById('footer-link1-url').value = settings.footerLink1Url || 'https://waveseed.app';
+      document.getElementById('footer-link1-text').value = settings.footerLink1Text || 'WaveSeed Home';
+      document.getElementById('footer-link2-url').value = settings.footerLink2Url || 'https://waveseed.app/products';
+      document.getElementById('footer-link2-text').value = settings.footerLink2Text || 'AI Products';
+      document.getElementById('footer-link3-url').value = settings.footerLink3Url || 'https://waveseed.app/blog';
+      document.getElementById('footer-link3-text').value = settings.footerLink3Text || 'Blog';
+
+      document.getElementById('footer-copyright').value = settings.footerCopyright || '© 2025 WaveSignals';
+      document.getElementById('footer-tagline').value = settings.footerTagline || 'Part of';
+    }
+
+    async function saveBacklinks() {
+      const backlinkSettings = {
+        footerAboutText: document.getElementById('footer-about-text').value,
+        footerCompanyName: document.getElementById('footer-company-name').value,
+        footerCompanyUrl: document.getElementById('footer-company-url').value,
+
+        footerLink1Url: document.getElementById('footer-link1-url').value,
+        footerLink1Text: document.getElementById('footer-link1-text').value,
+        footerLink2Url: document.getElementById('footer-link2-url').value,
+        footerLink2Text: document.getElementById('footer-link2-text').value,
+        footerLink3Url: document.getElementById('footer-link3-url').value,
+        footerLink3Text: document.getElementById('footer-link3-text').value,
+
+        footerCopyright: document.getElementById('footer-copyright').value,
+        footerTagline: document.getElementById('footer-tagline').value
+      };
+
+      // Merge with existing settings
+      const allSettings = { ...currentSettings, ...backlinkSettings };
+
+      try {
+        const res = await fetch(`${API_URL}/settings`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admin-Key': ADMIN_KEY
+          },
+          body: JSON.stringify(allSettings)
+        });
+
+        if (res.ok) {
+          currentSettings = allSettings;
+          localStorage.setItem('ws_settings', JSON.stringify(allSettings));
+          showSettingsSuccess();
+          console.log('✓ Backlink settings saved');
+          alert('Backlink settings saved! \n\nNote: You need to refresh the public pages to see the changes.');
+        } else {
+          localStorage.setItem('ws_settings', JSON.stringify(allSettings));
+          localStorage.setItem('ws_pending_sync', 'true');
+          currentSettings = allSettings;
+          showSettingsSuccess();
+          updateSyncStatus('pending');
+        }
+      } catch (e) {
+        console.error('API error:', e);
+        localStorage.setItem('ws_settings', JSON.stringify(allSettings));
+        localStorage.setItem('ws_pending_sync', 'true');
+        currentSettings = allSettings;
+        showSettingsSuccess();
+        updateSyncStatus('offline');
+      }
+    }
+
+    // Ad Settings Functions
+    let currentAdSettings = {};
+
+    async function loadAdSettings() {
+      try {
+        const res = await fetch('/data/ads.json');
+        const adConfig = await res.json();
+        currentAdSettings = adConfig;
+
+        // Global settings
+        document.getElementById('ads-enabled').checked = adConfig.enabled || false;
+        document.getElementById('ads-adsense-id').value = adConfig.adsenseId || '';
+        updateAdsStatus();
+
+        // Homepage
+        document.getElementById('ads-homepage-header').checked = adConfig.placements?.homepage?.headerLeaderboard?.enabled || false;
+        document.getElementById('ads-homepage-header-slot').value = adConfig.placements?.homepage?.headerLeaderboard?.adSlot || '';
+        document.getElementById('ads-homepage-sidebar').checked = adConfig.placements?.homepage?.sidebarRectangle?.enabled || false;
+        document.getElementById('ads-homepage-sidebar-slot').value = adConfig.placements?.homepage?.sidebarRectangle?.adSlot || '';
+        document.getElementById('ads-homepage-footer').checked = adConfig.placements?.homepage?.footerLeaderboard?.enabled || false;
+        document.getElementById('ads-homepage-footer-slot').value = adConfig.placements?.homepage?.footerLeaderboard?.adSlot || '';
+
+        // Archive
+        document.getElementById('ads-archive-header').checked = adConfig.placements?.blogArchive?.headerLeaderboard?.enabled || false;
+        document.getElementById('ads-archive-header-slot').value = adConfig.placements?.blogArchive?.headerLeaderboard?.adSlot || '';
+        document.getElementById('ads-archive-infeed').checked = adConfig.placements?.blogArchive?.inFeed?.enabled || false;
+        document.getElementById('ads-archive-infeed-slot').value = adConfig.placements?.blogArchive?.inFeed?.adSlot || '';
+
+        // Posts
+        document.getElementById('ads-post-header').checked = adConfig.placements?.singlePost?.headerLeaderboard?.enabled || false;
+        document.getElementById('ads-post-header-slot').value = adConfig.placements?.singlePost?.headerLeaderboard?.adSlot || '';
+        document.getElementById('ads-post-incontent').checked = adConfig.placements?.singlePost?.inContent?.enabled || false;
+        document.getElementById('ads-post-incontent-slot').value = adConfig.placements?.singlePost?.inContent?.adSlot || '';
+        document.getElementById('ads-post-sidebar').checked = adConfig.placements?.singlePost?.sidebarHalfPage?.enabled || false;
+        document.getElementById('ads-post-sidebar-slot').value = adConfig.placements?.singlePost?.sidebarHalfPage?.adSlot || '';
+        document.getElementById('ads-post-footer').checked = adConfig.placements?.singlePost?.endOfPost?.enabled || false;
+        document.getElementById('ads-post-footer-slot').value = adConfig.placements?.singlePost?.endOfPost?.adSlot || '';
+
+        // Mobile
+        document.getElementById('ads-mobile-top').checked = adConfig.placements?.mobile?.topBanner?.enabled || false;
+        document.getElementById('ads-mobile-top-slot').value = adConfig.placements?.mobile?.topBanner?.adSlot || '';
+        document.getElementById('ads-mobile-incontent').checked = adConfig.placements?.mobile?.inContent?.enabled || false;
+        document.getElementById('ads-mobile-incontent-slot').value = adConfig.placements?.mobile?.inContent?.adSlot || '';
+      } catch (e) {
+        console.error('Error loading ad settings:', e);
+      }
+    }
+
+    function toggleAdsStatus() {
+      updateAdsStatus();
+    }
+
+    function updateAdsStatus() {
+      const enabled = document.getElementById('ads-enabled').checked;
+      const statusEl = document.getElementById('ads-status');
+      if (enabled) {
+        statusEl.textContent = 'Ads are ENABLED - will show on all pages';
+        statusEl.parentElement.style.background = '#E7F5E6';
+        statusEl.parentElement.style.borderLeft = '4px solid #1A8917';
+        statusEl.style.color = '#1A6814';
+      } else {
+        statusEl.textContent = 'Ads are currently DISABLED';
+        statusEl.parentElement.style.background = '#FFF9E6';
+        statusEl.parentElement.style.borderLeft = '4px solid #FFA500';
+        statusEl.style.color = '#856404';
+      }
+    }
+
+    async function saveAdSettings() {
+      const adConfig = {
+        enabled: document.getElementById('ads-enabled').checked,
+        adsenseId: document.getElementById('ads-adsense-id').value,
+        placements: {
+          homepage: {
+            headerLeaderboard: {
+              enabled: document.getElementById('ads-homepage-header').checked,
+              size: "728x90",
+              position: "top",
+              adSlot: document.getElementById('ads-homepage-header-slot').value
+            },
+            sidebarRectangle: {
+              enabled: document.getElementById('ads-homepage-sidebar').checked,
+              size: "300x250",
+              position: "sidebar",
+              adSlot: document.getElementById('ads-homepage-sidebar-slot').value
+            },
+            footerLeaderboard: {
+              enabled: document.getElementById('ads-homepage-footer').checked,
+              size: "728x90",
+              position: "bottom",
+              adSlot: document.getElementById('ads-homepage-footer-slot').value
+            }
+          },
+          blogArchive: {
+            headerLeaderboard: {
+              enabled: document.getElementById('ads-archive-header').checked,
+              size: "728x90",
+              position: "top",
+              adSlot: document.getElementById('ads-archive-header-slot').value
+            },
+            inFeed: {
+              enabled: document.getElementById('ads-archive-infeed').checked,
+              size: "300x250",
+              position: "between-posts",
+              frequency: 3,
+              adSlot: document.getElementById('ads-archive-infeed-slot').value
+            }
+          },
+          singlePost: {
+            headerLeaderboard: {
+              enabled: document.getElementById('ads-post-header').checked,
+              size: "728x90",
+              position: "top",
+              adSlot: document.getElementById('ads-post-header-slot').value
+            },
+            inContent: {
+              enabled: document.getElementById('ads-post-incontent').checked,
+              size: "336x280",
+              position: "mid-article",
+              adSlot: document.getElementById('ads-post-incontent-slot').value
+            },
+            sidebarHalfPage: {
+              enabled: document.getElementById('ads-post-sidebar').checked,
+              size: "300x600",
+              position: "sticky-sidebar",
+              adSlot: document.getElementById('ads-post-sidebar-slot').value
+            },
+            endOfPost: {
+              enabled: document.getElementById('ads-post-footer').checked,
+              size: "300x250",
+              position: "bottom",
+              adSlot: document.getElementById('ads-post-footer-slot').value
+            }
+          },
+          mobile: {
+            topBanner: {
+              enabled: document.getElementById('ads-mobile-top').checked,
+              size: "320x50",
+              position: "top",
+              adSlot: document.getElementById('ads-mobile-top-slot').value
+            },
+            inContent: {
+              enabled: document.getElementById('ads-mobile-incontent').checked,
+              size: "300x250",
+              position: "mid-article",
+              adSlot: document.getElementById('ads-mobile-incontent-slot').value
+            }
+          }
+        }
+      };
+
+      // In production, this would save to a backend endpoint
+      // For now, show success message
+      currentAdSettings = adConfig;
+      console.log('Ad settings to save:', adConfig);
+
+      // Show success message
+      showSettingsSuccess();
+
+      alert('Ad settings saved!\n\nNote: To persist these changes, you need to update /data/ads.json with the new configuration.\n\nCheck the browser console for the full JSON.');
+    }
+
+    // Analytics Functions
+    let postsChart, subscribersChart, categoryChart, monthlyChart;
+
+    function renderAnalytics() {
+      const now = new Date();
+      const thisMonth = now.getMonth();
+      const thisYear = now.getFullYear();
+
+      // Filter this month's posts
+      const postsThisMonth = posts.filter(p => {
+        const d = new Date(p.date);
+        return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+      });
+
+      const subsThisMonth = subscribers.filter(s => {
+        const d = new Date(s.date || s.created_at);
+        return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+      });
+
+      // Update stat cards
+      document.getElementById('analytics-posts').textContent = posts.length;
+      document.getElementById('analytics-subs').textContent = subscribers.length;
+      document.getElementById('posts-this-month').textContent = postsThisMonth.length;
+      document.getElementById('posts-growth').textContent = `+${postsThisMonth.length}`;
+      document.getElementById('subs-growth').textContent = `+${subsThisMonth.length}`;
+
+      // Publishing rate (posts per week average over last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const recent = posts.filter(p => new Date(p.date) >= thirtyDaysAgo);
+      const rate = ((recent.length / 30) * 7).toFixed(1);
+      document.getElementById('publishing-rate').textContent = rate;
+
+      // Render charts
+      renderPostsChart();
+      renderSubscribersChart();
+      renderCategoryChart();
+      renderMonthlyChart();
+    }
+
+    function renderPostsChart() {
+      const ctx = document.getElementById('postsChart');
+      if (!ctx) return;
+
+      // Get last 30 days
+      const days = [];
+      const counts = [];
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        days.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+
+        const count = posts.filter(p => {
+          const pd = new Date(p.date);
+          return pd.toDateString() === d.toDateString();
+        }).length;
+        counts.push(count);
+      }
+
+      if (postsChart) postsChart.destroy();
+      postsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: days,
+          datasets: [{
+            label: 'Posts',
+            data: counts,
+            borderColor: '#1A8917',
+            backgroundColor: 'rgba(26, 137, 23, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 1 }
+            }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    function renderSubscribersChart() {
+      const ctx = document.getElementById('subscribersChart');
+      if (!ctx) return;
+
+      // Cumulative growth over 30 days
+      const days = [];
+      const counts = [];
+      let cumulative = 0;
+
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        days.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+
+        const todayCount = subscribers.filter(s => {
+          const sd = new Date(s.date || s.created_at);
+          return sd <= d;
+        }).length;
+        counts.push(todayCount);
+      }
+
+      if (subscribersChart) subscribersChart.destroy();
+      subscribersChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: days,
+          datasets: [{
+            label: 'Subscribers',
+            data: counts,
+            borderColor: '#1A8917',
+            backgroundColor: 'rgba(26, 137, 23, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          scales: {
+            y: { beginAtZero: true }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    function renderCategoryChart() {
+      const ctx = document.getElementById('categoryChart');
+      if (!ctx) return;
+
+      const categories = {};
+      posts.forEach(p => {
+        const cat = p.tags || 'Uncategorized';
+        categories[cat] = (categories[cat] || 0) + 1;
+      });
+
+      if (categoryChart) categoryChart.destroy();
+      categoryChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(categories),
+          datasets: [{
+            data: Object.values(categories),
+            backgroundColor: [
+              '#1A8917',
+              '#2FAC2B',
+              '#47CF3F',
+              '#5FE253',
+              '#7FF567'
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              position: 'right'
+            }
+          }
+        }
+      });
+    }
+
+    function renderMonthlyChart() {
+      const ctx = document.getElementById('monthlyChart');
+      if (!ctx) return;
+
+      // Last 6 months
+      const months = [];
+      const counts = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date();
+        d.setMonth(d.getMonth() - i);
+        months.push(d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }));
+
+        const count = posts.filter(p => {
+          const pd = new Date(p.date);
+          return pd.getMonth() === d.getMonth() && pd.getFullYear() === d.getFullYear();
+        }).length;
+        counts.push(count);
+      }
+
+      if (monthlyChart) monthlyChart.destroy();
+      monthlyChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: months,
+          datasets: [{
+            label: 'Posts',
+            data: counts,
+            backgroundColor: '#1A8917'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 1 }
+            }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    // Editor
+    window.openEditor = () => {
+      currentPostId = null;
+      document.getElementById('modal-title').textContent = 'New Post';
+      document.getElementById('post-title').value = '';
+      document.getElementById('post-content').value = '';
+      document.getElementById('post-category').value = 'Career';
+      document.getElementById('post-published').checked = true;
+      document.getElementById('editor-modal').classList.add('active');
     };
 
-    /* DASHBOARD */
-    function renderDashboard() {
-      document.getElementById('d-total-posts').innerText = posts.length;
-      document.getElementById('d-subscribers').innerText = subscribers.length;
+    window.closeEditor = () => {
+      document.getElementById('editor-modal').classList.remove('active');
+    };
 
-      // Calculate views from local storage for demo
-      let views = 0;
-      for (let k in localStorage) { if (k.startsWith('ws_view_')) views += Number(localStorage.getItem(k)); }
-      document.getElementById('d-views').innerText = views;
+    window.editPost = (id) => {
+      const post = posts.find(p => p.id == id);
+      if (!post) return;
 
-      // Recent Activity
-      const list = document.getElementById('dashboard-activity');
-      list.innerHTML = '';
-      // --- 2. POSTS MANAGEMENT ---
-      async function renderPosts() {
-        const token = await checkAuth();
-        if (!token) return;
+      currentPostId = id;
+      document.getElementById('modal-title').textContent = 'Edit Post';
+      document.getElementById('post-title').value = post.title;
+      document.getElementById('post-content').value = post.content;
+      document.getElementById('post-category').value = post.tags || 'Career';
+      document.getElementById('post-published').checked = post.published;
+      document.getElementById('editor-modal').classList.add('active');
+    };
 
-        const list = document.getElementById('posts-list-container'); // Changed from admin-posts-list
-        list.innerHTML = '<p style="color:var(--text-muted);">Loading from Brain...</p>'; // Updated style
+    window.savePost = async () => {
+      const title = document.getElementById('post-title').value;
+      const content = document.getElementById('post-content').value;
+      const tags = document.getElementById('post-category').value;
+      const published = document.getElementById('post-published').checked;
 
-        try {
-          const res = await fetch(`${API_URL}/posts`, {
-            headers: { 'X-Admin-Key': token }
-          });
-          if (res.ok) {
-            const data = await res.json();
-            posts = data.posts || [];
-          }
-        } catch (e) { console.error("API Error", e); }
+      if (!title || !content) {
+        alert('Title and content are required');
+        return;
+      }
 
-        list.innerHTML = '';
-        if (posts.length === 0) {
-          list.innerHTML = '<p style="padding:1rem;">No signals found.</p>';
-          return;
-        }
+      const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const payload = { title, content, tags, published, slug, date: new Date().toISOString() };
 
-        posts.slice().sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(post => { // Added sorting back
-          const div = document.createElement('div');
-          div.className = 'post-row'; // Changed from post-item-row
-          div.innerHTML = `
-          <div>
-            <div style="font-weight:600; font-size:1.05rem;">${post.title}</div>
-            <div style="font-size:0.85rem; color:var(--text-muted);">
-               ${new Date(post.date).toLocaleDateString()} • ${post.published ? '<span class="badge published">Published</span>' : '<span class="badge draft">Draft</span>'}
-            </div>
-          </div>
-          <div style="display:flex; gap:0.5rem; align-items:center;">
-            <button class="btn-secondary" style="padding:6px 12px; font-size:0.85rem;" onclick="editPost(${post.id})">Edit</button>
-            <button class="btn-secondary" style="padding:6px 12px; font-size:0.85rem; color:#f87171; border-color:#f87171;" onclick="deletePost(${post.id})">Delete</button>
-          </div>
-        `;
-          list.appendChild(div);
+      try {
+        const url = currentPostId ? `${API_URL}/posts/${currentPostId}` : `${API_URL}/posts`;
+        const method = currentPostId ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admin-Key': ADMIN_KEY
+          },
+          body: JSON.stringify(payload)
         });
+
+        if (res.ok) {
+          closeEditor();
+          await loadPosts();
+          renderPosts();
+          renderDashboard();
+        } else {
+          alert('Save failed');
+        }
+      } catch (e) {
+        alert('Error: ' + e.message);
       }
+    };
 
-      window.deletePost = async (id) => {
-        if (!confirm('Delete this signal permanently?')) return;
+    window.deletePost = async (id) => {
+      if (!confirm('Delete this post?')) return;
 
-        const token = sessionStorage.getItem('ws_admin_key');
+      try {
+        const res = await fetch(`${API_URL}/posts/${id}`, {
+          method: 'DELETE',
+          headers: { 'X-Admin-Key': ADMIN_KEY }
+        });
 
-        try {
-          const r = await fetch(`${API_URL}/posts/${id}`, {
-            method: 'DELETE',
-            headers: { 'X-Admin-Key': token }
-          });
-          if (r.ok) {
-            renderPosts();
-            renderDashboard();
-          } else {
-            alert('Failed to delete on server (Check Permissions)');
-          }
-        } catch (e) { alert('Error: ' + e); }
-      };
-
-      /* EDITOR LOGIC */
-      let currentId = null;
-
-      window.createNewPost = () => {
-        currentId = null;
-        document.getElementById('edit-title').value = '';
-        document.getElementById('edit-slug').value = '';
-        document.getElementById('edit-excerpt').value = '';
-        document.getElementById('edit-tags').value = '';
-        document.getElementById('edit-image').value = '';
-        if (window.quill) window.quill.setText('');
-        document.getElementById('edit-publish').checked = false;
-        openEditor();
-      };
-
-      window.editPost = (id) => {
-        const p = posts.find(x => x.id == id);
-        if (!p) return;
-        currentId = id;
-        document.getElementById('edit-title').value = p.title;
-        document.getElementById('edit-slug').value = p.slug;
-        document.getElementById('edit-excerpt').value = p.excerpt;
-        document.getElementById('edit-tags').value = p.tags || '';
-        document.getElementById('edit-image').value = p.image || '';
-        if (window.quill) window.quill.root.innerHTML = p.content;
-        document.getElementById('edit-publish').checked = p.published;
-        openEditor();
-      };
-
-      function openEditor() {
-        document.getElementById('editor-ui').classList.remove('hidden');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (res.ok) {
+          await loadPosts();
+          renderPosts();
+          renderDashboard();
+        }
+      } catch (e) {
+        alert('Delete failed');
       }
+    };
 
-      window.closeEditor = () => {
-        document.getElementById('editor-ui').classList.add('hidden');
-        document.getElementById('edit-title').value = '';
-        document.getElementById('edit-content').value = '';
-      };
-
-      window.savePost = async () => {
-        const title = document.getElementById('edit-title').value;
-        if (!title) return alert('Title required');
-
-        const tagsRaw = document.getElementById('edit-tags').value;
-        const token = sessionStorage.getItem('ws_admin_key');
-
-        const payload = {
-          title,
-          slug: document.getElementById('edit-slug').value || title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
-          excerpt: document.getElementById('edit-excerpt').value,
-          content: window.quill ? window.quill.root.innerHTML : document.getElementById('edit-content').value,
-          published: document.getElementById('edit-publish').checked,
-          tags: tagsRaw,
-          image: document.getElementById('edit-image').value
-        };
-
-        try {
-          // Decide URL based on ID
-          const url = currentId ? `${API_URL}/posts/${currentId}` : `${API_URL}/posts`;
-          const method = currentId ? 'PUT' : 'POST';
-
-          const res = await fetch(url, {
-            method,
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Admin-Key': token
-            },
-            body: JSON.stringify(payload)
-          });
-
-          if (res.ok) {
-            closeEditor();
-            renderPosts();
-            renderDashboard();
-          } else {
-            alert('Error saving (Check Permissions)');
-          }
-        } catch (e) { console.error(e); alert('Save failed'); }
-      };
-
+    // Auto-login if key exists
+    if (sessionStorage.getItem('ws_admin')) {
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('admin-app').classList.remove('hidden');
+      init();
+    }
   </script>
 </body>
 

@@ -1,9 +1,119 @@
 {
-  "slots": {
-    "header": "",
-    "post-bottom": "",
-    "footer": "",
-    "sidebar-left": "",
-    "sidebar-right": ""
+  "enabled": false,
+  "networks": {
+    "adsense": {
+      "enabled": false,
+      "publisherId": ""
+    },
+    "medianet": {
+      "enabled": false,
+      "publisherId": ""
+    },
+    "carbonads": {
+      "enabled": false,
+      "siteId": ""
+    },
+    "direct": {
+      "enabled": false
+    }
+  },
+  "placements": {
+    "homepage": {
+      "headerLeaderboard": {
+        "enabled": true,
+        "size": "728x90",
+        "position": "top",
+        "network": "adsense",
+        "adSlot": "",
+        "customCode": ""
+      },
+      "sidebarRectangle": {
+        "enabled": true,
+        "size": "300x250",
+        "position": "sidebar",
+        "network": "adsense",
+        "adSlot": "",
+        "customCode": ""
+      },
+      "footerLeaderboard": {
+        "enabled": true,
+        "size": "728x90",
+        "position": "bottom",
+        "network": "adsense",
+        "adSlot": "",
+        "customCode": ""
+      }
+    },
+    "blogArchive": {
+      "headerLeaderboard": {
+        "enabled": true,
+        "size": "728x90",
+        "position": "top",
+        "network": "adsense",
+        "adSlot": "",
+        "customCode": ""
+      },
+      "inFeed": {
+        "enabled": true,
+        "size": "300x250",
+        "position": "between-posts",
+        "frequency": 3,
+        "network": "adsense",
+        "adSlot": "",
+        "customCode": ""
+      }
+    },
+    "singlePost": {
+      "headerLeaderboard": {
+        "enabled": true,
+        "size": "728x90",
+        "position": "top",
+        "network": "adsense",
+        "adSlot": "",
+        "customCode": ""
+      },
+      "inContent": {
+        "enabled": true,
+        "size": "336x280",
+        "position": "mid-article",
+        "network": "adsense",
+        "adSlot": "",
+        "customCode": ""
+      },
+      "sidebarHalfPage": {
+        "enabled": true,
+        "size": "300x600",
+        "position": "sticky-sidebar",
+        "network": "adsense",
+        "adSlot": "",
+        "customCode": ""
+      },
+      "endOfPost": {
+        "enabled": true,
+        "size": "300x250",
+        "position": "bottom",
+        "network": "adsense",
+        "adSlot": "",
+        "customCode": ""
+      }
+    },
+    "mobile": {
+      "topBanner": {
+        "enabled": true,
+        "size": "320x50",
+        "position": "top",
+        "network": "adsense",
+        "adSlot": "",
+        "customCode": ""
+      },
+      "inContent": {
+        "enabled": true,
+        "size": "300x250",
+        "position": "mid-article",
+        "network": "adsense",
+        "adSlot": "",
+        "customCode": ""
+      }
+    }
   }
 }

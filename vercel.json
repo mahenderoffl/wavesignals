@@ -1,7 +1,18 @@
 {
+  "version": 2,
+  "builds": [
+    { "src": "app/*.html", "use": "@vercel/static" },
+    { "src": "admin/*.html", "use": "@vercel/static" },
+    { "src": "*.html", "use": "@vercel/static" },
+    { "src": "styles/*.css", "use": "@vercel/static" },
+    { "src": "scripts/*.js", "use": "@vercel/static" },
+    { "src": "data/*.json", "use": "@vercel/static" }
+  ],
   "routes": [
-    { "src": "^/$", "dest": "/app/index.html" },
-    { "src": "^/(.*)", "dest": "/$1" }
+    { "src": "/", "dest": "/app/index.html" },
+    { "src": "/post", "dest": "/app/post.html" },
+    { "src": "/blog", "dest": "/app/blog.html" },
+    { "src": "/admin", "dest": "/admin/panel.html" },
+    { "src": "/(.*)", "dest": "/$1" }
   ]
 }
-

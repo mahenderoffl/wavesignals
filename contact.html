@@ -2,63 +2,125 @@
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Contact — WaveSignals</title>
-  <meta name="description" content="Contact WaveSignals for feedback, questions, or general inquiries.">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact – WaveSignals</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/styles/main.css">
+
+  <!-- Google Analytics 4 Tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RGL9J7FMMN"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-RGL9J7FMMN');
+  </script>
 </head>
 
 <body>
+
   <header class="site-header">
-    <div class="container header-inner">
-      <div class="brand-container">
-        <a href="/app/index.html" class="brand">
-          <img src="/public/logo-header.svg?v=1" alt="WaveSignals logo" class="site-logo">
-        </a>
-      </div>
+    <div class="header-container">
+      <a href="/app/index.html" class="site-logo">
+        <img src="/public/logo-header.svg" alt="WaveSignals">
+      </a>
       <nav class="site-nav">
-        <ul class="nav-list">
-          <li><a href="/app/index.html" class="nav-link">Home</a></li>
-          <li><a href="/app/blog.html" class="nav-link">Signals</a></li>
-          <li><a href="/about.html" class="nav-link">About</a></li>
-          <li><a href="/contact.html" class="nav-link">Contact</a></li>
-        </ul>
+        <a href="/app/blog.html">Signals</a>
+        <a href="/about.html">About</a>
+        <a href="/contact.html">Contact</a>
       </nav>
     </div>
   </header>
 
-  <main class="site-main">
-    <div class="container" style="max-width: 680px; padding: 4rem 1.5rem;">
-      <h1 style="font-family: 'Outfit', sans-serif; font-size: 2.5rem; margin-bottom: 2rem;">Contact</h1>
+  <article class="container" style="max-width: 680px;">
+    <h1>Contact</h1>
 
-      <div style="font-size: 1.1rem; color: #cbd5e1; line-height: 1.8;">
-        <p style="margin-bottom: 2rem;">
-          For general inquiries, feedback, or support, you can reach us at:
-        </p>
+    <p>Have a question, feedback, or want to discuss a collaboration?</p>
 
-        <div
-          style="background: var(--bg-card); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border); display: inline-block;">
-          <strong>Email:</strong>
-          <a href="mailto:support@waveseed.app"
-            style="color: var(--accent); margin-left: 0.5rem;">support@waveseed.app</a>
+    <!-- Netlify Forms (no database needed) -->
+    <form name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field" action="/contact-success.html"
+      style="margin-top: 2rem;">
+      <input type="hidden" name="form-name" value="contact">
+      <p style="display: none;">
+        <label>Don't fill this out: <input name="bot-field"></label>
+      </p>
+
+      <p>
+        <label for="name"
+          style="display: block; margin-bottom: 0.5rem; font-family: var(--font-sans); font-size: 0.875rem;">Name</label>
+        <input type="text" id="name" name="name" required>
+      </p>
+
+      <p>
+        <label for="email"
+          style="display: block; margin-bottom: 0.5rem; font-family: var(--font-sans); font-size: 0.875rem;">Email</label>
+        <input type="email" id="email" name="email" required>
+      </p>
+
+      <p>
+        <label for="message"
+          style="display: block; margin-bottom: 0.5rem; font-family: var(--font-sans); font-size: 0.875rem;">Message</label>
+        <textarea id="message" name="message" rows="6" required></textarea>
+      </p>
+
+      <button type="submit">Send Message</button>
+
+      <p class="text-sm text-muted" style="margin-top: 1rem;">We'll respond within 24 hours.</p>
+    </form>
+  </article>
+
+  <footer class="site-footer"
+    style="background: #f9f9f9; border-top: 1px solid #e6e6e6; padding: 48px 0 24px; margin-top: 64px;">
+    <div class="container" style="max-width: 1200px;">
+      <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px; margin-bottom: 24px;">
+
+        <div>
+          <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">WaveSignals</h4>
+          <p style="font-size: 13px; color: #666; line-height: 1.5;">AI-powered insights delivered daily</p>
+          <p style="font-size: 12px; color: #999; margin-top: 8px;">
+            Powered by <a href="https://waveseed.app" target="_blank" rel="noopener"
+              style="color: #1A8917;">WaveSeed</a>
+          </p>
         </div>
 
-        <p style="margin-top: 2rem; font-size: 0.95rem; color: var(--text-muted);">
-          We read every message and respond when appropriate.
-        </p>
+        <div>
+          <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Navigate</h4>
+          <div style="display: flex; flex-direction: column; gap: 6px; font-size: 13px;">
+            <a href="/app/index.html" style="color: #666;">Home</a>
+            <a href="/app/blog.html" style="color: #666;">All Signals</a>
+            <a href="/about.html" style="color: #666;">About</a>
+            <a href="/contact.html" style="color: #666;">Contact</a>
+          </div>
+        </div>
+
+        <div>
+          <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">WaveSeed Network</h4>
+          <div style="display: flex; flex-direction: column; gap: 6px; font-size: 13px;">
+            <a href="https://waveseed.app" target="_blank" rel="noopener" style="color: #666;">WaveSeed Home</a>
+            <a href="https://waveseed.app/products" target="_blank" rel="noopener" style="color: #666;">AI Products</a>
+            <a href="https://waveseed.app/blog" target="_blank" rel="noopener" style="color: #666;">Blog</a>
+          </div>
+        </div>
+
+        <div>
+          <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Legal</h4>
+          <div style="display: flex; flex-direction: column; gap: 6px; font-size: 13px;">
+            <a href="/terms.html" style="color: #666;">Terms</a>
+            <a href="/privacy.html" style="color: #666;">Privacy</a>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="padding-top: 16px; border-top: 1px solid #e6e6e6; text-align: center; font-size: 13px; color: #999;">
+        © 2025 WaveSignals · Part of <a href="https://waveseed.app" target="_blank" rel="noopener"
+          style="color: #1A8917;">WaveSeed</a>
       </div>
     </div>
-  </main>
-
-  <footer class="site-footer">
-    <div class="container">
-      <p>
-        © 2025 WaveSignals · <a href="/privacy.html">Privacy</a>
-      </p>
-    </div>
   </footer>
+
 </body>
 
 </html>

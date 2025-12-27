@@ -8,44 +8,129 @@
 </head>
 
 <body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand-container">
+        <a href="/app/index.html" class="brand">
+          <img src="/public/logo-header.svg?v=1" alt="WaveSignals logo" class="site-logo">
+        </a>
+      </div>
+      <nav class="main-nav">
+        <button class="mobile-menu-btn" onclick="toggleMenu()" aria-label="Toggle menu">☰</button>
+        <ul class="nav-list" id="nav-list">
+          <li><a href="/app/index.html" class="nav-link">Home</a></li>
+          <li><a href="/app/blog.html" class="nav-link">Signals</a></li>
+          <li><a href="/about.html" class="nav-link">About</a></li>
+          <li><a href="/contact.html" class="nav-link">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- AD SLOT: HEADER -->
+  <div class="container" id="ad-header" style="margin-top:1rem; min-height:90px;"></div>
+
   <main class="site-main">
     <div class="container">
-      <div class="container">
+      <div class="container" style="padding-top:2rem;">
         <h1 class="page-title">Terms of Service</h1>
-        <p class="subtitle">Last Updated: December 25, 2025</p>
+        <p class="subtitle" style="color:var(--text-muted); margin-bottom:2rem;">Last Updated: December 25, 2025</p>
 
         <div class="legal-content">
-          <h2>1. Acceptance of Terms</h2>
-          <p>By accessing and using WaveSignals (the "Service"), you accept and agree to be bound by the terms and
-            provision of this agreement.</p>
+          <h1
+            class="text-4xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent mb-8 font-outfit">
+            Terms of Service</h1>
+          <p class="last-updated mb-8 text-slate-400">Last Updated: December 26, 2025</p>
 
-          <h2>2. Content Disclaimer</h2>
-          <p>The content provided on WaveSignals is for informational purposes only. It is not intended to be
-            professional advice (financial, legal, or technical). The views expressed are those of the authors and
-            AI-assisted editorial team.</p>
-          <p>We make no representations as to the accuracy or completeness of any information on this site or found by
-            following any link on this site.</p>
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-white mb-4">1. Introduction and Acceptance</h2>
+            <p class="mb-4 text-slate-300">Welcome to <strong>WaveSignals Media Group</strong> ("Company," "we," "our,"
+              or "us"). By accessing or using our digital publication, newsletter, API, or any associated data streams
+              (collectively, the "Services"), you ("User," "you") agree to be bound by these Terms of Service ("Terms").
+            </p>
+            <p class="text-slate-300">These Terms constitute a legally binding agreement between you and WaveSignals
+              Media Group. If you do not agree to these Terms, you are strictly prohibited from accessing our Services.
+            </p>
+          </section>
 
-          <h2>3. Limitation of Liability</h2>
-          <p>In no event shall WaveSignals, nor its directors, employees, partners, agents, suppliers, or affiliates, be
-            liable for any indirect, incidental, special, consequential or punitive damages, including without
-            limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to
-            or use of the Service.</p>
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-white mb-4">2. Intellectual Property Rights</h2>
+            <p class="mb-4 text-slate-300"><strong>2.1 Proprietary Content:</strong> All content published on
+              WaveSignals, including but not limited to essays, analysis ("Signals"), proprietary algorithms, code,
+              visual interfaces, and the "Thinking Class" methodology, is the exclusive intellectual property of
+              WaveSignals Media Group and is protected by international copyright, trademark, and trade secret laws.</p>
+            <p class="mb-4 text-slate-300"><strong>2.2 Limited License:</strong> We grant you a limited, non-exclusive,
+              non-transferable, revocable license to access our content for personal, non-commercial use. You may
+              specifically <strong>not</strong>:</p>
+            <ul class="list-disc pl-6 mb-4 text-slate-300 space-y-2">
+              <li>Scrape, mine, or aggregate our data for the purpose of training artificial intelligence models (LLMs).
+              </li>
+              <li>Republish our insights for commercial gain without explicit written consent.</li>
+              <li>Reverse engineer any part of our newsletter delivery system or backend infrastructure.</li>
+            </ul>
+          </section>
 
-          <h2>4. User Conduct</h2>
-          <p>You agree not to use the Service for any unlawful purpose or to solicit others to perform or participate in
-            any unlawful acts.</p>
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-white mb-4">3. Subscription and Access</h2>
+            <p class="mb-4 text-slate-300"><strong>3.1 The "Thinking Class" Membership:</strong> Subscription to our
+              newsletter grants you access to our proprietary insights. We reserve the absolute right to modify,
+              suspend, or discontinue any aspect of our publication at any time.</p>
+            <p class="text-slate-300"><strong>3.2 Termination:</strong> We reserve the right to terminate your access
+              immediately, without prior notice or liability, for any violation of these Terms, including but not
+              limited to "spamming" our forms or attempting to bypass our security measures.</p>
+          </section>
 
-          <h2>5. Changes to Terms</h2>
-          <p>We reserve the right, at our sole discretion, to modify or replace these Terms at any time. What
-            constitutes a material change will be determined at our sole discretion.</p>
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-white mb-4">4. Disclaimers and Limitation of Liability</h2>
+            <p class="mb-4 text-slate-300"><strong>4.1 No Professional Advice:</strong> WaveSignals provides analysis on
+              career dynamics, psychology, and technology. This content is for informational purposes only. It does not
+              constitute financial, legal, or career advice. You assume full responsibility for any decisions made based
+              on our signals.</p>
+            <p class="mb-4 text-slate-300"><strong>4.2 "As Is" Basis:</strong> The Services are provided on an "AS IS"
+              and "AS AVAILABLE" basis. WaveSignals Media Group expressly disclaims all warranties of any kind, whether
+              express or implied.</p>
+            <p class="text-slate-300"><strong>4.3 Liability Cap:</strong> To the fullest extent permitted by law, in no
+              event shall WaveSignals Media Group, its directors, employees, or agents be liable for any indirect,
+              punitive, incidental, special, or consequential damages. Our total liability to you for any claim shall
+              not exceed the amount you paid us, if any, in the past 12 months.</p>
+          </section>
 
-          <h2>6. Contact Us</h2>
-          <p>If you have any questions about these Terms, please contact us at <a
-              href="mailto:support@waveseed.app">support@waveseed.app</a>.</p>
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-white mb-4">5. Governing Law and Jurisdiction</h2>
+            <p class="text-slate-300">These Terms shall be governed by and construed in accordance with the laws of the
+              State of Delaware, United States, without regard to its conflict of law provisions. Any dispute arising
+              from these Terms shall be resolved exclusively in the state or federal courts located in Delaware.</p>
+          </section>
+
+          <section>
+            <h2 class="text-2xl font-bold text-white mb-4">6. Contact Us</h2>
+            <p class="text-slate-300">For legal inquiries, please contact our Legal Compliance Department.</p>
+          </section>
         </div>
       </div>
+    </div>
+    </div>
   </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container">
+      <!-- AD SLOT: FOOTER -->
+      <div id="ad-footer"></div>
+
+      <p style="margin-top:1rem;">
+        © 2025 WaveSignals. <a href="/terms.html">Terms</a> &bull; <a href="/privacy.html">Privacy</a>
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    // Mobile Menu
+    window.toggleMenu = () => document.getElementById('nav-list').classList.toggle('active');
+  </script>
+
+  <!-- AD MANAGER -->
+  <script src="/scripts/ads.js" defer></script>
 </body>
 
 </html>

@@ -2,260 +2,147 @@
 <html lang="en">
 
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Dynamic Post SEO -->
-  <title id="seo-title">Loading... — WaveSignals</title>
-  <meta name="description" id="seo-description" content="Loading content..." />
-  <meta name="robots" content="index,follow" />
-  <link rel="canonical" id="canonical-url" href="" />
-
-  <!-- Open Graph / Twitter -->
-  <meta property="og:type" content="article" />
-  <meta property="og:site_name" content="WaveSignals" />
-  <meta property="og:title" content="WaveSignals" />
-  <meta property="og:description" content="" />
-  <meta property="og:image" content="/public/og-default.png" />
-  <meta name="twitter:card" content="summary_large_image" />
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="page-title">WaveSignals</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="icon" href="/favicon.ico">
   <link rel="stylesheet" href="/styles/main.css">
 
-  <!-- ANALYTICS -->
-  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXX"></script>
+  <!-- Google Analytics 4 Tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RGL9J7FMMN"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
+    function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
-    gtag('config', 'G-XXXXXX');
-  </script> -->
+    gtag('config', 'G-RGL9J7FMMN');
+  </script>
 </head>
 
 <body>
 
   <header class="site-header">
-    <div class="container header-inner">
-      <div class="brand-container">
-        <a href="/app/index.html" class="brand">
-          <img src="/public/logo-header.svg?v=1" alt="WaveSignals" class="site-logo" />
-        </a>
-      </div>
+    <div class="header-container">
+      <a href="/app/index.html" class="site-logo">
+        <img src="/public/logo-header.svg" alt="WaveSignals">
+      </a>
       <nav class="site-nav">
-        <ul class="nav-list">
-          <li><a href="/app/index.html" class="nav-link">Home</a></li>
-          <li><a href="/about.html" class="nav-link">About</a></li>
-        </ul>
+        <a href="/app/blog.html">Signals</a>
+        <a href="/about.html">About</a>
+        <a href="/contact.html">Contact</a>
       </nav>
     </div>
   </header>
 
-  <main class="site-main">
-    <div class="container">
-
-      <!-- Back Link -->
-      <a href="/app/index.html"
-        style="display:inline-block; margin: 2rem 0; color:var(--text-muted); font-size:0.9rem;">
-        ← Back to signals
-      </a>
-
-      <!-- Article Container -->
-      <article id="post">
-        <header class="article-header">
-          <h1 id="post-title">Loading Signal...</h1>
-          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
-            <p class="post-meta" style="margin:0;">
-              <time id="post-date"></time> • <span id="post-author">WaveSignals Team</span>
-            </p>
-
-            <!-- Social Share -->
-            <div class="share-buttons" style="display:flex; gap:0.5rem;">
-              <button onclick="shareLink('x')" class="btn-secondary" style="padding:4px 10px; font-size:0.8rem;">𝕏
-                Share</button>
-              <button onclick="shareLink('in')" class="btn-secondary" style="padding:4px 10px; font-size:0.8rem;">In
-                Share</button>
-              <button onclick="shareLink('copy')" class="btn-secondary" style="padding:4px 10px; font-size:0.8rem;">🔗
-                Copy</button>
-            </div>
-          </div>
-        </header>
-
-        <script>
-          function shareLink(platform) {
-            const url = encodeURIComponent(window.location.href);
-            const text = encodeURIComponent(document.title);
-            if (platform === 'x') window.open(`https://x.com/intent/tweet?text=${text}&url=${url}`, '_blank');
-            if (platform === 'in') window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
-            if (platform === 'copy') {
-              navigator.clipboard.writeText(window.location.href);
-              alert('Link copied to clipboard!');
-            }
-          }
-        </script>
-
-        <div id="post-content">
-          <!-- Content injected here -->
-        </div>
-
-        <!-- Resources Box (if any) -->
-        <div id="post-resources" class="post-resources hidden"
-          style="margin-top:3rem; padding:1.5rem; background:var(--bg-card); border-radius:12px; border:1px solid var(--border);">
-          <h3 style="margin-bottom:1rem; color:#fff;">References & Data:</h3>
-          <ul id="resource-list" style="list-style: disc; padding-left: 1.5rem; color: var(--text-muted);"></ul>
-        </div>
-
-        <!-- Premium Newsletter Box -->
-        <section class="email-signup">
-          <h3 style="color:#fff; margin-bottom:0.5rem;">Get Smarter About The Future</h3>
-          <p style="color:var(--text-muted); margin-bottom:1.5rem;">Join 1,200+ readers receiving our concise weekly
-            signals.</p>
-
-          <form id="email-form" name="newsletter" method="POST" data-netlify="true" action="/success.html">
-            <input type="hidden" name="form-name" value="newsletter" />
-            <input type="email" id="email-input" name="email" placeholder="you@work.com" required />
-            <button type="submit">Subscribe Free</button>
-          </form>
-          <p id="email-message" style="display:none; margin-top:1rem; font-size:0.9rem;"></p>
-        </section>
-
-        <!-- COMMENTS (Giscus) -->
-        <section id="comments" style="margin-top: 3rem; border-top: 1px solid var(--border); padding-top: 2rem;">
-          <h3 style="color:#fff; margin-bottom:1.5rem;">Discussion</h3>
-          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">
-            <i>Comments are powered by GitHub. Make sure to configure the Giscus script below.</i>
-          </p>
-
-          <!-- PASTE YOUR GISCUS SCRIPT HERE -->
-          <script src="https://giscus.app/client.js" data-repo="mahenderoffl/disc" data-repo-id="R_kgDOQuatnA"
-            data-category="Announcements" data-category-id="DIC_kwDOQuatnM4C0NX-" data-mapping="pathname"
-            data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="bottom"
-            data-theme="transparent_dark" data-lang="en" crossorigin="anonymous" async>
-            </script>
-        </section>
-
-      </article>
-
+  <article class="container">
+    <div id="article-container">
+      <p class="text-muted">Loading...</p>
     </div>
-  </main>
+  </article>
 
-  <footer class="site-footer">
+  <section class="newsletter">
     <div class="container">
-      <p>© 2025 WaveSignals. • <a href="/privacy.html">Privacy</a></p>
+      <h3>Subscribe</h3>
+      <p class="text-muted">One signal per day. No noise.</p>
+
+      <form class="newsletter-form" id="email-form" name="newsletter" method="POST" data-netlify="true"
+        netlify-honeypot="bot-field">
+
+        <input type="hidden" name="form-name" value="newsletter">
+        <p style="display: none;">
+          <label>Don't fill: <input name="bot-field"></label>
+        </p>
+
+        <input type="email" name="email" placeholder="you@example.com" required>
+        <button type="submit">Join</button>
+      </form>
+      <p class="text-sm text-muted status-message"></p>
     </div>
-  </footer>
+  </section>
 
-  <!-- JSON-LD SCHEMA (Dynamic) -->
-  <script type="application/ld+json" id="json-ld-data">
-    {
-      "@context": "https://schema.org",
-      "@type": "BlogPosting",
-      "headline": "Loading...",
-      "image": [],
-      "datePublished": "",
-      "author": {
-        "@type": "Organization",
-        "name": "WaveSignals"
-      }
-    }
-  </script>
-
-  <!-- DATA LOADER (Headless Mode) -->
   <script>
-    // CONFIG: Connected to Hugging Face Brain 🧠
-    const API_URL = "https://mahendercreates-wavesignals-backend.hf.space/api";
-
+    const API_URL = 'https://mahendercreates-wavesignals-backend.hf.space/api';
     const params = new URLSearchParams(window.location.search);
-    const slug = params.get("slug");
-
-    if (!slug) window.location.replace("/app/index.html");
+    const slug = params.get('slug');
 
     async function loadPost() {
-      try {
-        // Fetch from API instead of local JSON
-        const res = await fetch(`${API_URL}/posts/${slug}`);
+      if (!slug) {
+        document.getElementById('article-container').innerHTML = '<p class="text-muted">Post not found.</p>';
+        return;
+      }
 
-        if (!res.ok) {
-          document.getElementById("post-title").textContent = "Signal Not Found";
-          document.getElementById("post-content").innerHTML = "<p>The brain could not locate this memory.</p>";
-          return;
-        }
+      try {
+        const res = await fetch(`${API_URL}/posts/${slug}`);
+        if (!res.ok) throw new Error('Not found');
 
         const post = await res.json();
 
-        // SEO & Meta
-        document.title = `${post.title} — WaveSignals`;
-        document.getElementById("seo-description").content = post.excerpt || post.title;
-        document.getElementById("canonical-url").href = window.location.href;
-
-        document.getElementById("post-title").textContent = post.title;
-        document.getElementById("post-author").textContent = post.author || "WaveSignals";
-        document.getElementById("post-date").textContent = new Date(post.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-        document.getElementById("post-content").innerHTML = post.content;
-
-        // Render Featured Image
-        if (post.image) {
-          const img = document.createElement('img');
-          img.src = post.image;
-          img.alt = post.title;
-          img.className = 'post-featured-image';
-          document.querySelector('.article-header').after(img);
-        }
-
-        // JSON-LD Schema Update
-        const schema = {
-          "@context": "https://schema.org",
-          "@type": "BlogPosting",
-          "headline": post.title,
-          "image": post.image ? [post.image] : ["https://wavesignals.waveseed.app/public/og-default.png"],
-          "datePublished": post.date,
-          "dateModified": post.date,
-          "author": { "@type": "Organization", "name": post.author || "WaveSignals" },
-          "description": post.excerpt || ""
-        };
-        document.getElementById('json-ld-data').textContent = JSON.stringify(schema);
-
-        // Resources
-        if (post.resources && post.resources.length) {
-          const list = document.getElementById("resource-list");
-          post.resources.forEach(r => {
-            const li = document.createElement("li");
-            li.innerHTML = `<a href="${r.url}" target="_blank" style="color:var(--accent);">${r.label || r.url}</a>`;
-            list.appendChild(li);
-          });
-          document.getElementById("post-resources").classList.remove("hidden");
-        }
-
+        document.getElementById('page-title').textContent = `${post.title} – WaveSignals`;
+        document.getElementById('article-container').innerHTML = `
+          <header class="article-header">
+            <div class="article-meta">${new Date(post.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} · ${post.tags || 'Essay'}</div>
+            <h1>${post.title}</h1>
+          </header>
+          <div class="article-content">${post.content}</div>
+        `;
       } catch (e) {
-        console.error(e);
-        document.getElementById("post-content").innerHTML = "<p>Error connecting to the Signal Brain (Backend).</p>";
+        document.getElementById('article-container').innerHTML = '<p class="text-muted">Post not found.</p>';
       }
     }
 
-    loadPost().then(() => injectAds());
-
-    async function injectAds() {
-      try {
-        const res = await fetch('/data/ads.json', { cache: 'no-store' });
-        if (!res.ok) return;
-        const data = await res.json();
-        const slots = (data && data.slots) || {};
-
-        // Post Bottom Slot
-        const html = slots['post-bottom'];
-        if (html && html.trim()) {
-          const div = document.createElement('div');
-          div.className = 'ad-slot ad-slot-post-bottom';
-          div.style.margin = '3rem 0';
-          try { div.innerHTML = html; } catch (e) { div.textContent = html; }
-
-          const content = document.getElementById('post-content');
-          if (content) content.after(div);
-        }
-      } catch (e) { }
-    }
+    loadPost();
   </script>
+  <script src="/scripts/subscribe.js"></script>
 
+  <footer class="site-footer"
+    style="background: #f9f9f9; border-top: 1px solid #e6e6e6; padding: 48px 0 24px; margin-top: 64px;">
+    <div class="container" style="max-width: 1200px;">
+      <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px; margin-bottom: 24px;">
+
+        <div>
+          <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">WaveSignals</h4>
+          <p style="font-size: 13px; color: #666; line-height: 1.5;">AI-powered insights delivered daily</p>
+          <p style="font-size: 12px; color: #999; margin-top: 8px;">
+            Powered by <a href="https://waveseed.app" target="_blank" rel="noopener"
+              style="color: #1A8917;">WaveSeed</a>
+          </p>
+        </div>
+
+        <div>
+          <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Navigate</h4>
+          <div style="display: flex; flex-direction: column; gap: 6px; font-size: 13px;">
+            <a href="/app/index.html" style="color: #666;">Home</a>
+            <a href="/app/blog.html" style="color: #666;">All Signals</a>
+            <a href="/about.html" style="color: #666;">About</a>
+            <a href="/contact.html" style="color: #666;">Contact</a>
+          </div>
+        </div>
+
+        <div>
+          <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">WaveSeed Network</h4>
+          <div style="display: flex; flex-direction: column; gap: 6px; font-size: 13px;">
+            <a href="https://waveseed.app" target="_blank" rel="noopener" style="color: #666;">WaveSeed Home</a>
+            <a href="https://waveseed.app/products" target="_blank" rel="noopener" style="color: #666;">AI Products</a>
+            <a href="https://waveseed.app/blog" target="_blank" rel="noopener" style="color: #666;">Blog</a>
+          </div>
+        </div>
+
+        <div>
+          <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Legal</h4>
+          <div style="display: flex; flex-direction: column; gap: 6px; font-size: 13px;">
+            <a href="/terms.html" style="color: #666;">Terms</a>
+            <a href="/privacy.html" style="color: #666;">Privacy</a>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="padding-top: 16px; border-top: 1px solid #e6e6e6; text-align: center; font-size: 13px; color: #999;">
+        © 2025 WaveSignals · Part of <a href="https://waveseed.app" target="_blank" rel="noopener"
+          style="color: #1A8917;">WaveSeed</a>
+      </div>
+    </div>
+  </footer>
 </body>
 
 </html>

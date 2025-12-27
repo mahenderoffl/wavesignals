@@ -2,18 +2,27 @@ import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from dotenv import load_dotenv
+import time
 
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-def get_db_connection():
-    try:
-        conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-        return conn
-    except Exception as e:
-        print(f"Database connection failed: {e}")
-        return None
+def get_db_connection(retry_count=3):
+    """Get database connection with retry logic"""
+    for attempt in range(retry_count):
+        try:
+            conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+            if attempt > 0:
+                print(f"✅ Database connected on attempt {attempt + 1}")
+            return conn
+        except Exception as e:
+            print(f"❌ Database connection attempt {attempt + 1}/{retry_count} failed: {e}")
+            if attempt < retry_count - 1:
+                time.sleep(2)  # Wait 2 seconds before retry
+            else:
+                print(f"🔴 All {retry_count} connection attempts failed")
+                return None
 
 def init_db():
     conn = get_db_connection()
@@ -37,9 +46,19 @@ def init_db():
                 date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
+
+        # Create Settings Table (Singleton)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS settings (
+                id SERIAL PRIMARY KEY,
+                config JSONB DEFAULT '{}'::jsonb
+            );
+        """)
         
-        # Check if empty, if so, seed dummy data?
-        # For now just create table.
+        # Ensure one row exists
+        cur.execute("SELECT COUNT(*) as count FROM settings")
+        if cur.fetchone()['count'] == 0:
+            cur.execute("INSERT INTO settings (id, config) VALUES (1, '{}')")
         
         conn.commit()
         cur.close()
