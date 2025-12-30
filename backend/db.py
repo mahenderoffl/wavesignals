@@ -39,11 +39,15 @@ def init_db():
                 title TEXT NOT NULL,
                 excerpt TEXT,
                 content TEXT NOT NULL,
-                tags TEXT,          -- Comma separated or JSON
-                image TEXT,         -- Featured Image URL
-                author TEXT DEFAULT 'WaveSignals Team',
-                published BOOLEAN DEFAULT TRUE,
-                date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                published BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                author TEXT DEFAULT 'WaveSignals',
+                tags TEXT,
+                meta_description TEXT,
+                keywords TEXT,
+                hashtags TEXT,
+                search_queries TEXT,
+                image TEXT
             );
         """)
 
@@ -55,6 +59,16 @@ def init_db():
             );
         """)
         
+        # Create Subscribers Table - CRITICAL FIX
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS subscribers (
+                id SERIAL PRIMARY KEY,
+                email TEXT UNIQUE NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                status TEXT DEFAULT 'active'
+            );
+        """)
+        
         # Ensure one row exists
         cur.execute("SELECT COUNT(*) as count FROM settings")
         if cur.fetchone()['count'] == 0:
@@ -63,9 +77,12 @@ def init_db():
         conn.commit()
         cur.close()
         conn.close()
-        print("Database initialized successfully.")
+        print("✅ Database initialized successfully")
+        print("   - posts table created")
+        print("   - settings table created") 
+        print("   - subscribers table created")
     except Exception as e:
-        print(f"Error initializing DB: {e}")
+        print(f"❌ Error initializing DB: {e}")
 
 if __name__ == "__main__":
     init_db()

@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from db import get_db_connection
+from db import get_db_connection, init_db  # Added init_db import
 from bot import publish_post
 from apscheduler.schedulers.background import BackgroundScheduler
 import os
@@ -9,7 +9,11 @@ from functools import wraps
 
 app = Flask(__name__)
 # Enable CORS for all domains (or restrict to your specific Netlify domain for extra security)
-CORS(app) 
+CORS(app)
+
+# Initialize database tables on startup
+print("🔧 Initializing database tables...")
+init_db() 
 
 # --- SECURITY ---
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "wavesignals@2025") # Default fallback, User must change this!
@@ -286,19 +290,105 @@ def update_settings():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# === AI DIAGNOSTIC ===
+@app.route('/api/test-ai-simple', methods=['POST'])
+@require_auth  
+def test_ai_simple():
+    """Test both AI providers with simple prompts"""
+    import requests
+    
+    API_KEY = os.getenv("GEMINI_API_KEY")
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    
+    results = {"gemini": {"configured": bool(API_KEY), "test": None}, "openai": {"configured": bool(OPENAI_API_KEY), "test": None}}
+    
+    if API_KEY:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={API_KEY}"
+            payload = {"contents": [{"parts": [{"text": "Say hello"}]}]}
+            resp = requests.post(url, json=payload, timeout=30)
+            results["gemini"]["test"] = {"status": resp.status_code, "success": resp.status_code == 200, "response": resp.json() if resp.status_code == 200 else resp.text[:300]}
+        except Exception as e:
+            results["gemini"]["test"] = {"error": str(e), "success": False}
+    
+    if OPENAI_API_KEY:
+        try:
+            url = "https://api.openai.com/v1/chat/completions"
+            headers = {"Authorization": f"Bearer {OPENAI_API_KEY}"}
+            payload = {"model": "gpt-3.5-turbo", "messages": [{"role": "user", "content": "Say hello"}], "max_tokens": 10}
+            resp = requests.post(url, json=payload, headers=headers, timeout=30)
+            results["openai"]["test"] = {"status": resp.status_code, "success": resp.status_code == 200, "response": resp.json() if resp.status_code == 200 else resp.text[:300]}
+        except Exception as e:
+            results["openai"]["test"] = {"error": str(e), "success": False}
+    
+    return jsonify(results)
+
 # === BOT ENDPOINTS ===
+@app.route('/api/rate-limit-status', methods=['GET'])
+def rate_limit_status():
+    """Get current rate limit status"""
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({"error": "Database connection failed"}), 500
+    
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT created_at FROM posts ORDER BY created_at DESC LIMIT 1")
+        last_post = cur.fetchone()
+        cur.close()
+        conn.close()
+        
+        if last_post:
+            from datetime import datetime, timezone
+            last_post_time = last_post['created_at']
+            
+            if last_post_time.tzinfo is None:
+                last_post_time = last_post_time.replace(tzinfo=timezone.utc)
+            
+            now = datetime.now(timezone.utc)
+            hours_since = (now - last_post_time).total_seconds() / 3600
+            hours_remaining = max(0, 23 - hours_since)
+            can_post = hours_since >= 23
+            
+            return jsonify({
+                "success": True,
+                "hours_since_last": hours_since,
+                "hours_remaining": hours_remaining,
+                "can_post": can_post,
+                "last_post_time": last_post_time.isoformat()
+            })
+        else:
+            return jsonify({
+                "success": True,
+                "hours_since_last": None,
+                "hours_remaining": 0,
+                "can_post": True,
+                "last_post_time": None
+            })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/generate-post', methods=['POST'])
+@require_auth
 def generate_post_api():
-    """Manual trigger for AI post generation"""
+    """Manual trigger for AI post generation with emergency override support"""
     try:
         from bot import publish_post
         import traceback
         
-        print("🚀 Manual post generation triggered...")
-        result = publish_post()
+        # Check for emergency override header
+        emergency_override = request.headers.get('X-Emergency-Override') == 'true'
+        
+        if emergency_override:
+            print("🚨 EMERGENCY OVERRIDE: Manual post generation with rate limit bypass")
+        else:
+            print("🚀 Manual post generation triggered...")
+        
+        result = publish_post(emergency_override=emergency_override)
         
         if isinstance(result, dict) and result.get("success"):
             return jsonify({
+                'success': True,
                 'status': 'success', 
                 'message': 'Post generated and published successfully',
                 'post_id': result.get("id"),
@@ -306,11 +396,14 @@ def generate_post_api():
             }), 200
         elif isinstance(result, dict) and not result.get("success"):
             return jsonify({
+                'success': False,
                 'status': 'error',
+                'error': result.get('error'),
                 'message': f"Generation failed: {result.get('error')}"
-            }), 500
+            }), 400
         else:
             return jsonify({
+                'success': False,
                 'status': 'error', 
                 'message': 'publish_post returned unexpected format - check logs'
             }), 500
@@ -319,6 +412,7 @@ def generate_post_api():
         error_trace = traceback.format_exc()
         print(f"❌ Post generation error: {error_trace}")
         return jsonify({
+            'success': False,
             'status': 'error', 
             'message': str(e),
             'traceback': error_trace

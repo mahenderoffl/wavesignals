@@ -4,9 +4,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin – WaveSignals</title>
+  <title>Admin Panel – WaveSignals</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RGL9J7FMMN"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-RGL9J7FMMN');
+  </script>
   <!-- Quill Rich Text Editor -->
   <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
   <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
@@ -379,6 +388,7 @@
         <a href="#" data-view="analytics">Analytics</a>
         <a href="#" data-view="content">Content</a>
         <a href="#" data-view="subscribers">Subscribers</a>
+        <a href="#" data-view="automation">Automation</a>
         <a href="#" data-view="settings">Settings</a>
         <a href="#" data-view="backlinks">Backlinks</a>
         <button class="btn btn-secondary" onclick="logout()">Sign Out</button>
@@ -588,9 +598,12 @@
 
     <!-- SUBSCRIBERS VIEW -->
     <div id="view-subscribers" class="admin-container hidden">
-      <div class="page-header">
-        <h1 class="page-title">Subscribers</h1>
-        <p class="page-subtitle">Email list</p>
+      <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <h1 class="page-title">Subscribers</h1>
+          <p class="page-subtitle">Email list (<span id="subscriber-count-text">0</span> total)</p>
+        </div>
+        <button class="btn btn-primary" onclick="exportSubscribersCSV()">📥 Export CSV</button>
       </div>
 
       <table class="content-table">
@@ -606,6 +619,99 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- AUTOMATION VIEW -->
+    <div id="view-automation" class="admin-container hidden">
+      <div class="page-header">
+        <h1 class="page-title">Post Automation</h1>
+        <p class="page-subtitle">Manual post generation & scheduler monitoring</p>
+      </div>
+
+      <!-- Rate Limit Status Card -->
+      <div
+        style="background: #fff; border: 1px solid var(--gray-200); border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">⏱️ Rate Limit Status</h3>
+
+        <div id="rate-limit-status" style="display: flex; gap: 24px; align-items: center; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 200px;">
+            <div style="font-size: 13px; color: var(--gray-600); margin-bottom: 8px;">TIME SINCE LAST POST</div>
+            <div id="hours-since-post" style="font-size: 32px; font-weight: 600;">Loading...</div>
+          </div>
+          <div style="flex: 1; min-width: 200px;">
+            <div style="font-size: 13px; color: var(--gray-600); margin-bottom: 8px;">NEXT POST AVAILABLE IN</div>
+            <div id="hours-until-next" style="font-size: 32px; font-weight: 600;">Loading...</div>
+          </div>
+          <div style="flex: 1; min-width: 200px;">
+            <div style="font-size: 13px; color: var(--gray-600); margin-bottom: 8px;">STATUS</div>
+            <div id="rate-limit-badge" style="font-size: 18px; font-weight: 600;">
+              <span class="badge badge-published">✅ Ready</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manual Post Generation Card -->
+      <div
+        style="background: #fff; border: 1px solid var(--gray-200); border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">🚀 Manual Post Generation</h3>
+
+        <p style="color: var(--gray-600); margin-bottom: 16px;">
+          Generate a new blog post immediately. Rate limiting will be enforced unless emergency mode is enabled.
+        </p>
+
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+          <button class="btn btn-primary" onclick="generatePostNow(false)" id="generate-btn" style="min-width: 160px;">
+            Generate Post Now
+          </button>
+
+          <button class="btn" onclick="generatePostNow(true)" id="emergency-btn"
+            style="background: #ff6b6b; color: white; min-width: 200px;">
+            🚨 Emergency Override
+          </button>
+
+          <div id="generate-status" style="margin-left: 12px; font-size: 14px; color: var(--gray-600);"></div>
+        </div>
+
+        <div style="margin-top: 16px; padding: 12px; background: var(--gray-50); border-radius: 4px;">
+          <p style="font-size: 13px; color: var(--gray-600); margin: 0;">
+            ℹ️ <strong>Emergency Override</strong> bypasses the 23-hour rate limit. Use only if backend is down or you
+            need an urgent post.
+          </p>
+        </div>
+      </div>
+
+      <!-- Scheduler Info Card -->
+      <div style="background: #fff; border: 1px solid var(--gray-200); border-radius: 8px; padding: 24px;">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">📅 Automated Scheduler</h3>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+          <div>
+            <div style="font-size: 13px; color: var(--gray-600); margin-bottom: 8px;">SCHEDULE</div>
+            <div style="font-size: 18px; font-weight: 600;">6:00 AM UTC</div>
+            <div style="font-size: 13px; color: var(--gray-600);">11:30 AM IST</div>
+          </div>
+
+          <div>
+            <div style="font-size: 13px; color: var(--gray-600); margin-bottom: 8px;">FREQUENCY</div>
+            <div style="font-size: 18px; font-weight: 600;">1 post/day</div>
+            <div style="font-size: 13px; color: var(--gray-600);">AdSense compliant</div>
+          </div>
+
+          <div>
+            <div style="font-size: 13px; color: var(--gray-600); margin-bottom: 8px;">NEXT SCHEDULED POST</div>
+            <div id="next-scheduled-post" style="font-size: 18px; font-weight: 600;">Loading...</div>
+            <div id="next-scheduled-relative" style="font-size: 13px; color: var(--gray-600);">—</div>
+          </div>
+
+          <div>
+            <div style="font-size: 13px; color: var(--gray-600); margin-bottom: 8px;">BACKEND STATUS</div>
+            <div id="backend-status" style="font-size: 18px; font-weight: 600;">
+              <span class="badge badge-published">● Online</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- SETTINGS VIEW -->
@@ -934,7 +1040,7 @@
         <div class="form-group">
           <label class="form-label">Footer About Text</label>
           <input type="text" id="footer-about-text" class="form-input"
-            placeholder="AI-powered insights delivered daily">
+            placeholder="Published thoughtfully. Refined perspectives.">
           <p style="font-size: 13px; color: var(--gray-600); margin-top: 4px;">Short description shown in footer</p>
         </div>
 
@@ -1254,6 +1360,7 @@
   </div>
 
   <script>
+    // Configuration
     const API_URL = 'https://mahendercreates-wavesignals-backend.hf.space/api';
     const ADMIN_KEY = 'wavesignals@2025';
     let posts = [];
@@ -1499,7 +1606,8 @@
     }
 
     function showAddBacklinkModal() {
-      document.getElementById('backlink-modal').classList.remove('hidden');
+      const modal = document.getElementById('backlink-modal');
+      modal.style.display = 'flex'; // Use flex to center content
       // Clear form
       document.getElementById('backlink-source-url').value = '';
       document.getElementById('backlink-source-name').value = '';
@@ -1623,9 +1731,15 @@
     async function loadSubscribers() {
       try {
         const res = await fetch(`${API_URL}/subscribers`);
-        subscribers = await res.json();
+        const data = await res.json();
+        subscribers = data.subscribers || data || [];
+        console.log('Loaded subscribers:', subscribers.length);
+        // Update subscriber count display
+        const countElem = document.getElementById('subscriber-count-text');
+        if (countElem) countElem.textContent = subscribers.length;
       } catch (e) {
-        console.error(e);
+        console.error('Error loading subscribers:', e);
+        subscribers = [];
       }
     }
 
@@ -1652,11 +1766,46 @@
           <td>${new Date(post.date).toLocaleDateString()}</td>
           <td><span class="badge ${post.published ? 'badge-published' : 'badge-draft'}">${post.published ? 'Published' : 'Draft'}</span></td>
           <td>
+            <a href="/app/post.html?slug=${post.slug}" target="_blank" class="btn btn-primary" style="padding: 6px 12px; font-size: 13px; text-decoration: none; display: inline-block; margin-right: 4px;">View</a>
             <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px;" onclick="editPost(${post.id})">Edit</button>
             <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px; color: #DC2626;" onclick="deletePost(${post.id})">Delete</button>
           </td>
         </tr>
       `).join('');
+    }
+
+    // Export Subscribers to CSV
+    function exportSubscribersCSV() {
+      if (subscribers.length === 0) {
+        alert('No subscribers to export');
+        return;
+      }
+
+      // Create CSV content
+      const headers = ['Email', 'Subscribed Date', 'Status'];
+      const rows = subscribers.map(sub => [
+        sub.email,
+        new Date(sub.created_at || sub.date).toLocaleString(),
+        sub.status || 'active'
+      ]);
+
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
+
+      // Create download link
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+
+      link.setAttribute('href', url);
+      link.setAttribute('download', `wavesignals-subscribers-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
     function renderSubscribers() {
@@ -1844,7 +1993,7 @@
     async function loadBacklinks() {
       const settings = currentSettings;
 
-      document.getElementById('footer-about-text').value = settings.footerAboutText || 'AI-powered insights delivered daily';
+      document.getElementById('footer-about-text').value = settings.footerAboutText || 'Published thoughtfully. Refined perspectives.';
       document.getElementById('footer-company-name').value = settings.footerCompanyName || 'WaveSeed';
       document.getElementById('footer-company-url').value = settings.footerCompanyUrl || 'https://waveseed.app';
 
@@ -2078,13 +2227,19 @@
     let postsChart, subscribersChart, categoryChart, monthlyChart;
 
     function renderAnalytics() {
+      // Ensure data is loaded
+      if (!posts || !subscribers) {
+        console.log('Data not loaded yet, skipping analytics render');
+        return;
+      }
+
       const now = new Date();
       const thisMonth = now.getMonth();
       const thisYear = now.getFullYear();
 
       // Filter this month's posts
       const postsThisMonth = posts.filter(p => {
-        const d = new Date(p.date);
+        const d = new Date(p.date || p.created_at);
         return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
       });
 
@@ -2103,7 +2258,7 @@
       // Publishing rate (posts per week average over last 30 days)
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const recent = posts.filter(p => new Date(p.date) >= thirtyDaysAgo);
+      const recent = posts.filter(p => new Date(p.date || p.created_at) >= thirtyDaysAgo);
       const rate = ((recent.length / 30) * 7).toFixed(1);
       document.getElementById('publishing-rate').textContent = rate;
 
@@ -2381,6 +2536,122 @@
         alert('Delete failed');
       }
     };
+
+    // === AUTOMATION FUNCTIONS ===
+    async function loadAutomationStatus() {
+      const API_BASE = 'https://mahendercreates-wavesignals-backend.hf.space';
+
+      try {
+        // Check backend health
+        const healthRes = await fetch(`${API_BASE}/health`);
+        const backendStatus = document.getElementById('backend-status');
+        if (healthRes.ok) {
+          backendStatus.innerHTML = '<span class="badge badge-published">● Online</span>';
+        } else {
+          backendStatus.innerHTML = '<span class="badge" style="background: #ffebee; color: #c62828;">● Offline</span>';
+        }
+
+        // Get rate limit status
+        const rateLimitRes = await fetch(`${API_BASE}/api/rate-limit-status`);
+
+        if (rateLimitRes.ok) {
+          const data = await rateLimitRes.json();
+
+          // Update display
+          document.getElementById('hours-since-post').textContent =
+            data.hours_since_last ? `${data.hours_since_last.toFixed(1)}h` : 'N/A';
+
+          document.getElementById('hours-until-next').textContent =
+            data.hours_remaining > 0 ? `${data.hours_remaining.toFixed(1)}h` : 'Now';
+
+          const badge = document.getElementById('rate-limit-badge');
+          if (data.can_post) {
+            badge.innerHTML = '<span class="badge badge-published">✅ Ready</span>';
+          } else {
+            badge.innerHTML = `<span class="badge" style="background: #fff3e0; color: #e65100;">⏳ Rate Limited</span>`;
+          }
+
+          // Calculate next scheduled post (6 AM UTC tomorrow)
+          const now = new Date();
+          const nextPost = new Date();
+          nextPost.setUTCHours(6, 0, 0, 0);
+          if (nextPost <= now) {
+            nextPost.setDate(nextPost.getDate() + 1);
+          }
+
+          document.getElementById('next-scheduled-post').textContent =
+            nextPost.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' });
+
+          const hoursUntil = (nextPost - now) / (1000 * 60 * 60);
+          document.getElementById('next-scheduled-relative').textContent =
+            `in ${hoursUntil.toFixed(1)} hours`;
+        }
+      } catch (err) {
+        console.error('Error loading automation status:', err);
+      }
+    }
+
+    async function generatePostNow(emergencyOverride = false) {
+      const API_BASE = 'https://mahendercreates-wavesignals-backend.hf.space';
+      const generateBtn = document.getElementById('generate-btn');
+      const emergencyBtn = document.getElementById('emergency-btn');
+      const statusDiv = document.getElementById('generate-status');
+
+      // Disable buttons
+      generateBtn.disabled = true;
+      emergencyBtn.disabled = true;
+      statusDiv.textContent = '⏳ Generating post...';
+      statusDiv.style.color = 'var(--gray-600)';
+
+      try {
+        const headers = {
+          'X-Admin-Key': sessionStorage.getItem('ws_admin'),
+          'Content-Type': 'application/json'
+        };
+
+        if (emergencyOverride) {
+          headers['X-Emergency-Override'] = 'true';
+        }
+
+        const res = await fetch(`${API_BASE}/api/generate-post`, {
+          method: 'POST',
+          headers: headers
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          statusDiv.textContent = `✅ Post created: "${data.title}"`;
+          statusDiv.style.color = 'var(--green)';
+
+          // Reload stats
+          setTimeout(() => {
+            loadAutomationStatus();
+            init(); // Reload all data
+          }, 1000);
+        } else {
+          statusDiv.textContent = `❌ Error: ${data.error || data.message}`;
+          statusDiv.style.color = '#c62828';
+        }
+      } catch (err) {
+        statusDiv.textContent = `❌ Request failed: ${err.message}`;
+        statusDiv.style.color = '#c62828';
+      } finally {
+        // Re-enable buttons after 3 seconds
+        setTimeout(() => {
+          generateBtn.disabled = false;
+          emergencyBtn.disabled = false;
+        }, 3000);
+      }
+    }
+
+    // Auto-refresh automation status every 30 seconds when on automation view
+    setInterval(() => {
+      const automationView = document.getElementById('view-automation');
+      if (automationView && !automationView.classList.contains('hidden')) {
+        loadAutomationStatus();
+      }
+    }, 30000);
 
     // Auto-login if key exists
     if (sessionStorage.getItem('ws_admin')) {

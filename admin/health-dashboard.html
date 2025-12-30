@@ -1,0 +1,287 @@
+<!-- Health Dashboard & Subscribers Section -->
+<div id="health-dashboard" class="section">
+    <div class="section-header">
+        <h1 class="section-title">System Health & Monitoring</h1>
+        <button class="btn btn-primary" onclick="testBlogGeneration()">🧪 Test Blog Generation</button>
+    </div>
+
+    <!-- Health Status Cards -->
+    <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+        <div class="health-card" id="api-status">
+            <div class="health-icon">🌐</div>
+            <div class="health-label">API Status</div>
+            <div class="health-value" id="api-value">Checking...</div>
+        </div>
+        <div class="health-card" id="db-status">
+            <div class="health-icon">🗄️</div>
+            <div class="health-label">Database</div>
+            <div class="health-value" id="db-value">Checking...</div>
+        </div>
+        <div class="health-card" id="groq-status">
+            <div class="health-icon">🤖</div>
+            <div class="health-label">Groq AI</div>
+            <div class="health-value" id="groq-value">Checking...</div>
+        </div>
+        <div class="health-card" id="posts-status">
+            <div class="health-icon">📝</div>
+            <div class="health-label">Total Posts</div>
+            <div class="health-value" id="posts-value">0</div>
+        </div>
+    </div>
+
+    <!-- System Logs -->
+    <div class="logs-container">
+        <h2 style="font-size: 18px; margin-bottom: 15px;">Recent Activity</h2>
+        <div id="system-logs"
+            style="background: #f9f9f9; padding: 15px; border-radius: 8px; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 13px;">
+        </div>
+    </div>
+
+    <!-- Subscribers Section -->
+    <div style="margin-top: 40px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="font-size: 20px;">📧 Subscribers (<span id="subscriber-count">0</span>)</h2>
+            <button class="btn btn-primary" onclick="exportSubscribers()">📥 Export CSV</button>
+        </div>
+
+        <div id="subscribers-table-container"></div>
+    </div>
+</div>
+
+<style>
+    .health-card {
+        background: white;
+        border: 1px solid #e6e6e6;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .health-icon {
+        font-size: 32px;
+        margin-bottom: 10px;
+    }
+
+    .health-label {
+        font-size: 13px;
+        color: #666;
+        margin-bottom: 8px;
+    }
+
+    .health-value {
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .health-value.success {
+        color: #1A8917;
+    }
+
+    .health-value.error {
+        color: #d32f2f;
+    }
+
+    .logs-container {
+        margin-top: 30px;
+    }
+
+    .log-entry {
+        padding: 6px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .log-success {
+        color: #1A8917;
+    }
+
+    .log-error {
+        color: #d32f2f;
+    }
+
+    .log-info {
+        color: #666;
+    }
+
+    .subscribers-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .subscribers-table th {
+        background: #f9f9f9;
+        padding: 12px;
+        text-align: left;
+        font-size: 13px;
+        font-weight: 600;
+        border-bottom: 2px solid #e6e6e6;
+    }
+
+    .subscribers-table td {
+        padding: 12px;
+        border-bottom: 1px solid #f2f2f2;
+        font-size: 14px;
+    }
+
+    .subscribers-table tr:hover {
+        background: #f9f9f9;
+    }
+</style>
+
+<script>
+    const ADMIN_KEY = localStorage.getItem('adminKey');
+    const API_URL = 'https://mahendercreates-wavesignals-backend.hf.space';
+
+    // Check system health
+    async function checkSystemHealth() {
+        addLog('🔍 Checking system health...', 'info');
+
+        try {
+            // Check API
+            const healthRes = await fetch(`${API_URL}/health`);
+            const health = await healthRes.json();
+
+            document.getElementById('api-value').textContent = 'Online';
+            document.getElementById('api-value').classList.add('success');
+            document.getElementById('db-value').textContent = 'Connected';
+            document.getElementById('db-value').classList.add('success');
+
+            // Check Groq
+            const groqStatus = health.apis?.groq_configured !== false ? 'Active' : 'Not Configured';
+            document.getElementById('groq-value').textContent = groqStatus;
+            document.getElementById('groq-value').classList.add(groqStatus === 'Active' ? 'success' : 'error');
+
+            addLog('✅ System health check complete', 'success');
+        } catch (error) {
+            document.getElementById('api-value').textContent = 'Offline';
+            document.getElementById('api-value').classList.add('error');
+            addLog('❌ Health check failed: ' + error.message, 'error');
+        }
+
+        // Load posts count
+        try {
+            const postsRes = await fetch(`${API_URL}/api/posts`);
+            const posts = await postsRes.json();
+            document.getElementById('posts-value').textContent = posts.posts.length;
+        } catch (e) { }
+    }
+
+    // Test blog generation
+    async function testBlogGeneration() {
+        addLog('🧪 Testing blog generation...', 'info');
+
+        try {
+            const res = await fetch(`${API_URL}/api/generate-post`, {
+                method: 'POST',
+                headers: {
+                    'X-Admin-Key': ADMIN_KEY
+                }
+            });
+
+            const result = await resJSON();
+
+            if (result.success) {
+                addLog(`✅ Blog generated: "${result.title}"`, 'success');
+                alert(`✅ Blog generated successfully!\n\nTitle: ${result.title}\nID: ${result.id}`);
+                loadPosts();
+            } else {
+                addLog(`❌ Generation failed: ${result.error || result.message}`, 'error');
+                alert(`❌ Generation failed:\n\n${result.error || result.message}`);
+            }
+        } catch (error) {
+            addLog('❌ Test failed: ' + error.message, 'error');
+            alert('❌ Test failed: ' + error.message);
+        }
+    }
+
+    // Load subscribers
+    async function loadSubscribers() {
+        try {
+            const res = await fetch(`${API_URL}/api/subscribers`);
+            const data = await res.json();
+
+            const subscribers = data.subscribers || [];
+            document.getElementById('subscriber-count').textContent = subscribers.length;
+
+            if (subscribers.length === 0) {
+                document.getElementById('subscribers-table-container').innerHTML = '<p style="color: #999; text-align: center; padding: 40px;">No subscribers yet</p>';
+                return;
+            }
+
+            let table = '<table class="subscribers-table"><thead><tr><th>Email</th><th>Subscribed</th><th>Status</th></tr></thead><tbody>';
+
+            subscribers.forEach(sub => {
+                const date = new Date(sub.created_at).toLocaleDateString();
+                table += `<tr>
+        <td>${sub.email}</td>
+        <td>${date}</td>
+        <td><span style="color: #1A8917;">●</span> ${sub.status || 'active'}</td>
+      </tr>`;
+            });
+
+            table += '</tbody></table>';
+            document.getElementById('subscribers-table-container').innerHTML = table;
+
+            addLog(`📧 Loaded ${subscribers.length} subscribers`, 'success');
+        } catch (error) {
+            addLog('❌ Failed to load subscribers: ' + error.message, 'error');
+        }
+    }
+
+    // Export subscribers to CSV
+    async function exportSubscribers() {
+        try {
+            const res = await fetch(`${API_URL}/api/subscribers`);
+            const data = await res.json();
+            const subscribers = data.subscribers || [];
+
+            if (subscribers.length === 0) {
+                alert('No subscribers to export');
+                return;
+            }
+
+            let csv = 'Email,Subscribed Date,Status\\n';
+            subscribers.forEach(sub => {
+                csv += `${sub.email},${sub.created_at},${sub.status || 'active'}\\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `wavesignals-subscribers-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+
+            addLog(`📥 Exported ${subscribers.length} subscribers to CSV`, 'success');
+        } catch (error) {
+            alert('Export failed: ' + error.message);
+        }
+    }
+
+    // Add log entry
+    function addLog(message, type = 'info') {
+        const logs = document.getElementById('system-logs');
+        const time = new Date().toLocaleTimeString();
+        const entry = document.createElement('div');
+        entry.className = `log-entry log-${type}`;
+        entry.textContent = `[${time}] ${message}`;
+        logs.insertBefore(entry, logs.firstChild);
+
+        // Keep only last 50 logs
+        while (logs.children.length > 50) {
+            logs.removeChild(logs.lastChild);
+        }
+    }
+
+    // Initialize on load
+    if (document.getElementById('health-dashboard')) {
+        checkSystemHealth();
+        loadSubscribers();
+
+        // Refresh health every 30 seconds
+        setInterval(checkSystemHealth, 30000);
+    }
+</script>

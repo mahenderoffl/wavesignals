@@ -19,24 +19,21 @@ def job():
         print(f"❌ Scheduled post failed: {e}")
 
 # Schedule posts for optimal engagement times
-# Morning post: 6:00 AM UTC (11:30 AM IST)
+# Post once daily at 6:00 AM UTC (11:30 AM IST) - Morning reading time
 schedule.every().day.at("06:00").do(job)
 
-# Evening post: 18:00 UTC (11:30 PM IST)
-schedule.every().day.at("18:00").do(job)
+# ❌ REMOVED: Evening post to reduce to 1/day for AdSense compliance
+# schedule.every().day.at("18:00").do(job)
 
 # Alternative: Schedule in IST (if deploying in IST timezone)
 # Morning: 6:00 AM IST
 # schedule.every().day.at("00:30").do(job)  # 6:00 AM IST = 00:30 UTC
 
-# Evening: 6:00 PM IST  
-# schedule.every().day.at("12:30").do(job)  # 6:00 PM IST = 12:30 UTC
-
 print("📅 Scheduler initialized:")
-print("   - Morning post: 6:00 AM UTC (11:30 AM IST)")
-print("   - Evening post: 6:00 PM UTC (11:30 PM IST)")
-print("   - Frequency: 2 posts per day")
-print("\n⏰ Waiting for scheduled times...")
+print("   - Daily post: 6:00 AM UTC (11:30 AM IST)")
+print("   - Frequency: 1 post per day")
+print("   - Rate limit: 23 hours enforced by database")
+print("\n⏰ Waiting for scheduled time...")
 
 # Keep the script running
 while True:

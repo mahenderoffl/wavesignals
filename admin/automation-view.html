@@ -1,0 +1,93 @@
+<!-- AUTOMATION VIEW -->
+<div id="view-automation" class="admin-container hidden">
+    <div class="page-header">
+        <h1 class="page-title">Post Automation</h1>
+        <p class="page-subtitle">Manual post generation & scheduler monitoring</p>
+    </div>
+
+    <!-- Rate Limit Status Card -->
+    <div
+        style="background: #fff; border: 1px solid var(--gray-200); border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">⏱️ Rate Limit Status</h3>
+
+        <div id="rate-limit-status" style="display: flex; gap: 24px; align-items: center; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+                <div style="font-size: 13px; color: var(--gray-600); margin-bottom: 8px;">TIME SINCE LAST POST</div>
+                <div id="hours-since-post" style="font-size: 32px; font-weight: 600;">Loading...</div>
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+                <div style="font-size: 13px; color: var(--gray-600); margin-bottom: 8px;">NEXT POST AVAILABLE IN</div>
+                <div id="hours-until-next" style="font-size: 32px; font-weight: 600;">Loading...</div>
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+                <div style="font-size: 13px; color: var(--gray-600); margin-bottom: 8px;">STATUS</div>
+                <div id="rate-limit-badge" style="font-size: 18px; font-weight: 600;">
+                    <span class="badge badge-published">✅ Ready</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Post Generation Card -->
+    <div
+        style="background: #fff; border: 1px solid var(--gray-200); border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">🚀 Manual Post Generation</h3>
+
+        <p style="color: var(--gray-600); margin-bottom: 16px;">
+            Generate a new blog post immediately. Rate limiting will be enforced unless emergency mode is enabled.
+        </p>
+
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="generatePostNow(false)" id="generate-btn"
+                style="min-width: 160px;">
+                Generate Post Now
+            </button>
+
+            <button class="btn" onclick="generatePostNow(true)" id="emergency-btn"
+                style="background: #ff6b6b; color: white; min-width: 200px;">
+                🚨 Emergency Override
+            </button>
+
+            <div id="generate-status" style="margin-left: 12px; font-size: 14px; color: var(--gray-600);"></div>
+        </div>
+
+        <div style="margin-top: 16px; padding: 12px; background: var(--gray-50); border-radius: 4px;">
+            <p style="font-size: 13px; color: var(--gray-600); margin: 0;">
+                ℹ️ <strong>Emergency Override</strong> bypasses the 23-hour rate limit. Use only if backend is down or
+                you need an urgent post.
+            </p>
+        </div>
+    </div>
+
+    <!-- Scheduler Info Card -->
+    <div style="background: #fff; border: 1px solid var(--gray-200); border-radius: 8px; padding: 24px;">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">📅 Automated Scheduler</h3>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+            <div>
+                <div style="font-size: 13px; color: var(--gray-600); margin-bottom: 8px;">SCHEDULE</div>
+                <div style="font-size: 18px; font-weight: 600;">6:00 AM UTC</div>
+                <div style="font-size: 13px; color: var(--gray-600);">11:30 AM IST</div>
+            </div>
+
+            <div>
+                <div style="font-size: 13px; color: var(--gray-600); margin-bottom: 8px;">FREQUENCY</div>
+                <div style="font-size: 18px; font-weight: 600;">1 post/day</div>
+                <div style="font-size: 13px; color: var(--gray-600);">AdSense compliant</div>
+            </div>
+
+            <div>
+                <div style="font-size: 13px; color: var(--gray-600); margin-bottom: 8px;">NEXT SCHEDULED POST</div>
+                <div id="next-scheduled-post" style="font-size: 18px; font-weight: 600;">Loading...</div>
+                <div id="next-scheduled-relative" style="font-size: 13px; color: var(--gray-600);">—</div>
+            </div>
+
+            <div>
+                <div style="font-size: 13px; color: var(--gray-600); margin-bottom: 8px;">BACKEND STATUS</div>
+                <div id="backend-status" style="font-size: 18px; font-weight: 600;">
+                    <span class="badge badge-published">● Online</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

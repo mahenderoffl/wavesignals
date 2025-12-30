@@ -25,6 +25,6 @@ ENV HOME=/home/user \
 # Expose port 7860 (Hugging Face default)
 EXPOSE 7860
 
-# CRITICAL: Run Flask API (required for admin panel, /health endpoint, all API calls)
-# The API includes APScheduler for automated posts
-CMD ["gunicorn", "-b", "0.0.0.0:7860", "--timeout", "120", "--workers", "2", "app:app"]
+# Run Gradio testing dashboard (shows UI with test buttons and console)
+# This provides test buttons, error logs, and system status
+CMD ["python", "test_dashboard.py"]
