@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Push Notifications - WaveSignals</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        button {
+            background: #1A8917;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #156913;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        pre {
+            background: #f8f8f8;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 13px;
+        }
+        .step {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #1A8917;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🔔 Push Notifications Test - WaveSignals</h1>
+        <p>Use this page to test the complete notification flow</p>
+    </div>
+
+    <div class="card">
+        <h2>Step 1: Request Permission</h2>
+        <button onclick="requestPermission()">Request Notification Permission</button>
+        <div id="permission-status"></div>
+    </div>
+
+    <div class="card">
+        <h2>Step 2: Subscribe to Notifications</h2>
+        <button onclick="subscribe()" id="subscribe-btn" disabled>Subscribe to Push Notifications</button>
+        <div id="subscribe-status"></div>
+    </div>
+
+    <div class="card">
+        <h2>Step 3: Check Subscriber List (Admin)</h2>
+        <input type="password" id="admin-key" placeholder="Enter admin key" style="padding: 10px; margin-right: 10px; border: 1px solid #ddd; border-radius: 4px;">
+        <button onclick="checkSubscribers()">Check Subscribers</button>
+        <div id="subscribers-status"></div>
+    </div>
+
+    <div class="card">
+        <h2>Step 4: Send Test Notification</h2>
+        <button onclick="sendTestNotification()">Send Test Notification</button>
+        <div id="test-status"></div>
+    </div>
+
+    <div class="card">
+        <h2>Debug Information</h2>
+        <button onclick="checkEndpoints()">Check API Endpoints</button>
+        <pre id="debug-info">Click button to check endpoints...</pre>
+    </div>
+
+    <script type="module">
+        // Firebase configuration
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getMessaging, getToken } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2SGry4MCvIz_IyyML-HFEtKZW8BPsqn4",
+            authDomain: "wavesignals7.firebaseapp.com",
+            projectId: "wavesignals7",
+            storageBucket: "wavesignals7.firebasestorage.app",
+            messagingSenderId: "344790294906",
+            appId: "1:344790294906:web:88a75c885107Bcdada36c3"
+        };
+
+        const VAPID_KEY = "BDNrm1kZ8Zg3h4f3kGMHx_4eYa7z9N2qZ4X6F8f5n8wF7tZ8H4X3Y9F2d6w5P9V8J7L5K3G9H6f4";
+        const API_URL = 'https://wave-signals.vercel.app/api';
+
+        const app = initializeApp(firebaseConfig);
+        const messaging = getMessaging(app);
+
+        let currentToken = null;
+
+        window.requestPermission = async function() {
+            const statusDiv = document.getElementById('permission-status');
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    statusDiv.innerHTML = '<div class="status success">✅ Permission granted!</div>';
+                    document.getElementById('subscribe-btn').disabled = false;
+                } else {
+                    statusDiv.innerHTML = '<div class="status error">❌ Permission denied</div>';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+            }
+        };
+
+        window.subscribe = async function() {
+            const statusDiv = document.getElementById('subscribe-status');
+            const btn = document.getElementById('subscribe-btn');
+            btn.disabled = true;
+            btn.textContent = 'Subscribing...';
+
+            try {
+                // Register service worker
+                const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                console.log('Service worker registered:', registration);
+
+                // Get FCM token
+                const token = await getToken(messaging, {
+                    vapidKey: VAPID_KEY,
+                    serviceWorkerRegistration: registration
+                });
+
+                console.log('FCM Token:', token);
+                currentToken = token;
+
+                // Send to backend
+                const response = await fetch(`${API_URL}/fcm-subscribe`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token: token,
+                        userAgent: navigator.userAgent
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    statusDiv.innerHTML = `
+                        <div class="status success">
+                            ✅ Subscribed successfully!<br>
+                            <strong>Token:</strong> ${token.substring(0, 30)}...
+                        </div>
+                    `;
+                } else {
+                    statusDiv.innerHTML = `<div class="status error">❌ Backend error: ${data.error || 'Unknown'}</div>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+                console.error('Subscription error:', error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Subscribe to Push Notifications';
+            }
+        };
+
+        window.checkSubscribers = async function() {
+            const statusDiv = document.getElementById('subscribers-status');
+            const adminKey = document.getElementById('admin-key').value;
+
+            if (!adminKey) {
+                statusDiv.innerHTML = '<div class="status error">❌ Please enter admin key</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/fcm-subscribers`, {
+                    headers: {
+                        'X-Admin-Key': adminKey
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    statusDiv.innerHTML = `
+                        <div class="status success">
+                            ✅ Found ${data.total} subscribers<br>
+                            <pre>${JSON.stringify(data.subscribers, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    statusDiv.innerHTML = `<div class="status error">❌ Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+            }
+        };
+
+        window.sendTestNotification = async function() {
+            const statusDiv = document.getElementById('test-status');
+            const adminKey = document.getElementById('admin-key').value;
+
+            if (!adminKey) {
+                statusDiv.innerHTML = '<div class="status error">❌ Please enter admin key</div>';
+                return;
+            }
+
+            if (!currentToken) {
+                statusDiv.innerHTML = '<div class="status error">❌ Please subscribe first</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/send-notification`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Key': adminKey
+                    },
+                    body: JSON.stringify({
+                        title: '🧪 Test Notification',
+                        body: 'This is a test notification from WaveSignals!',
+                        url: 'https://wavesignals.waveseed.app',
+                        tokens: [currentToken]
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    statusDiv.innerHTML = `
+                        <div class="status success">
+                            ✅ Notification sent!<br>
+                            Sent to: ${data.sent} devices<br>
+                            Failed: ${data.failed || 0}
+                        </div>
+                    `;
+                } else {
+                    statusDiv.innerHTML = `<div class="status error">❌ Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+            }
+        };
+
+        window.checkEndpoints = async function() {
+            const debugDiv = document.getElementById('debug-info');
+            debugDiv.textContent = 'Checking endpoints...';
+
+            const endpoints = [
+                '/api/init-db',
+                '/api/fcm-subscribe',
+                '/api/fcm-subscribers',
+                '/api/send-notification'
+            ];
+
+            let results = '🔍 Endpoint Status:\n\n';
+
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(`${API_URL}${endpoint}`, {
+                        method: endpoint.includes('subscribe') || endpoint.includes('send') ? 'POST' : 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Admin-Key': 'test'
+                        }
+                    });
+                    results += `${endpoint}: ${response.status} ${response.statusText}\n`;
+                } catch (error) {
+                    results += `${endpoint}: ERROR - ${error.message}\n`;
+                }
+            }
+
+            debugDiv.textContent = results;
+        };
+    </script>
+</body>
+</html>
