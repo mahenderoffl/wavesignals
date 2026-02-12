@@ -2883,13 +2883,22 @@
         return;
       }
 
-      listContainer.innerHTML = subscribers.map((sub, index) => `
-        <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer; color: #222; font-size: 13px;">
-          <input type="checkbox" class="subscriber-checkbox" value="${index}" 
-            style="width: 16px; height: 16px; cursor: pointer;">
-          <span>${sub.device_type || 'unknown'} - ${sub.user_agent ? sub.user_agent.substring(0, 50) + '...' : 'Unknown device'}</span>
-        </label>
-      `).join('');
+      // Store subscribers globally for sending
+      window.fcmSubscribers = subscribers;
+
+      listContainer.innerHTML = subscribers.map((sub, index) => {
+        const deviceInfo = sub.device_type || 'unknown';
+        const userAgentPreview = sub.user_agent ? sub.user_agent.substring(0, 60) + '...' : 'Unknown device';
+        
+        return `
+          <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer; color: #222; font-size: 13px;">
+            <input type="checkbox" class="subscriber-checkbox" value="${index}" data-token="${sub.token}"
+              style="width: 16px; height: 16px; cursor: pointer;">
+            <span style="text-transform: capitalize;">${deviceInfo}</span>
+            <span style="color: #999; font-size: 11px;">- ${userAgentPreview}</span>
+          </label>
+        `;
+      }).join('');
 
       updateSelectedCount();
     }
@@ -2967,6 +2976,14 @@
         return;
       }
 
+      // Get selected tokens
+      const selectedTokens = Array.from(selectedCheckboxes).map(cb => cb.dataset.token).filter(t => t);
+      
+      if (selectedTokens.length === 0) {
+        alert('⚠️ Error: Could not find subscriber tokens. Please reload the page.');
+        return;
+      }
+
       if (!confirm(`Send notification to ${selectedCheckboxes.length} subscriber(s)?`)) {
         return;
       }
@@ -2980,7 +2997,6 @@
       statusDiv.style.color = 'white';
 
       try {
-        // For now, send to all selected (backend will handle the actual sending)
         const response = await fetch(`${API_URL}/send-notification`, {
           method: 'POST',
           headers: {
@@ -2991,20 +3007,20 @@
             title: title,
             body: body,
             url: url || 'https://wavesignals.waveseed.app',
-            send_to_all: true  // For now, send to all active subscribers
+            tokens: selectedTokens  // Send specific tokens instead of send_to_all
           })
         });
 
         const data = await response.json();
 
         if (data.success) {
-          statusDiv.textContent = `✅ Sent to ${data.sent || selectedCheckboxes.length} subscribers!`;
+          statusDiv.textContent = `✅ Sent successfully! Delivered: ${data.sent}, Failed: ${data.failed || 0}`;
           statusDiv.style.color = '#1A8917';
           
           // Clear form
           setTimeout(() => {
             clearNotificationForm();
-          }, 2000);
+          }, 3000);
         } else {
           statusDiv.textContent = `❌ Error: ${data.error || 'Failed to send'}`;
           statusDiv.style.color = '#cc0000';

@@ -68,21 +68,23 @@ def send_test_push_notification():
         if not tokens:
             return {'success': True, 'sent': 0, 'failed': 0, 'total_subscribers': 0, 'message': 'No subscribers found'}
         
-        # Create test notification message
-        message = messaging.MulticastMessage(
-            notification=messaging.Notification(
-                title='🧪 Test Notification',
-                body='This is a test notification from WaveSignals admin panel!'
-            ),
-            data={
-                'url': 'https://wavesignals.waveseed.app',
-                'test': 'true'
-            },
-            tokens=tokens
-        )
+        # Create test notification messages for each token
+        messages = []
+        for token in tokens:
+            messages.append(messaging.Message(
+                notification=messaging.Notification(
+                    title='🧪 Test Notification',
+                    body='This is a test notification from WaveSignals admin panel!'
+                ),
+                data={
+                    'url': 'https://wavesignals.waveseed.app',
+                    'test': 'true'
+                },
+                token=token
+            ))
         
-        # Send notification
-        response = messaging.send_multicast(message)
+        # Send notifications
+        response = messaging.send_all(messages)
         
         # Mark failed tokens as inactive
         if response.failure_count > 0:
@@ -200,7 +202,8 @@ class handler(BaseHTTPRequestHandler):
                 subscribers = []
                 for row in rows:
                     subscribers.append({
-                        'token': row[0][:20] + '...',  # Truncate for security
+                        'token': row[0],  # Full token for sending notifications
+                        'token_preview': row[0][:20] + '...',  # Preview for display
                         'user_agent': row[1],
                         'device_type': row[2],
                         'created_at': row[3].isoformat() if row[3] else None,

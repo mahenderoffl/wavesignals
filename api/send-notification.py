@@ -119,24 +119,27 @@ class handler(BaseHTTPRequestHandler):
                 batch_tokens = tokens[i:i + batch_size]
                 
                 try:
-                    message = messaging.MulticastMessage(
-                        tokens=batch_tokens,
-                        notification=notification_payload,
-                        data=data_payload,
-                        webpush=messaging.WebpushConfig(
-                            notification=messaging.WebpushNotification(
-                                title=title,
-                                body=body,
-                                icon='/favicon.ico',
-                                badge='/favicon.ico'
-                            ),
-                            fcm_options=messaging.WebpushFCMOptions(
-                                link=url if url else '/'
+                    # Create individual messages for each token
+                    messages = []
+                    for token in batch_tokens:
+                        messages.append(messaging.Message(
+                            token=token,
+                            notification=notification_payload,
+                            data=data_payload,
+                            webpush=messaging.WebpushConfig(
+                                notification=messaging.WebpushNotification(
+                                    title=title,
+                                    body=body,
+                                    icon='/favicon.svg',
+                                    badge='/favicon.svg'
+                                ),
+                                fcm_options=messaging.WebpushFCMOptions(
+                                    link=url if url else '/'
+                                )
                             )
-                        )
-                    )
+                        ))
                     
-                    response = messaging.send_multicast(message)
+                    response = messaging.send_all(messages)
                     success_count += response.success_count
                     failed_count += response.failure_count
 
