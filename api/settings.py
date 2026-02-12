@@ -23,7 +23,7 @@ def get_db_connection():
                 conn = psycopg2.connect(db_url)
                 return conn, True
             except Exception as e:
-                print(f "Failed to connect to DB: {e}")
+                print(f"Failed to connect to DB: {e}")
                 continue
     
     return None, False

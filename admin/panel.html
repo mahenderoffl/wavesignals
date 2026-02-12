@@ -2851,13 +2851,183 @@
           if (dashStat) dashStat.textContent = countData.count || 0;
         }
 
-        // TODO: Load individual subscribers when backend endpoint is ready
-        // For now, show count only
+        // Load individual subscribers for custom notification form
+        const subsRes = await fetch(`${API_URL}/fcm?action=subscribers`, {
+          headers: {
+            'X-Admin-Key': sessionStorage.getItem('ws_admin')
+          }
+        });
+        
+        if (subsRes.ok) {
+          const subsData = await subsRes.json();
+          
+          if (subsData.success && subsData.subscribers) {
+            renderSubscriberSelectionList(subsData.subscribers);
+            renderSubscriberTable(subsData.subscribers);
+          }
+        }
 
       } catch (err) {
         console.error('Error loading push notification subscribers:', err);
         pushSubscriberCount = 0;
       }
+    }
+
+    // Render subscriber selection list for custom notifications
+    function renderSubscriberSelectionList(subscribers) {
+      const listContainer = document.getElementById('subscriber-selection-list');
+      if (!listContainer) return;
+
+      if (!subscribers || subscribers.length === 0) {
+        listContainer.innerHTML = '<div style="text-align: center; color: #666; font-size: 13px; padding: 12px;">No push notification subscribers yet.</div>';
+        return;
+      }
+
+      listContainer.innerHTML = subscribers.map((sub, index) => `
+        <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer; color: #222; font-size: 13px;">
+          <input type="checkbox" class="subscriber-checkbox" value="${index}" 
+            style="width: 16px; height: 16px; cursor: pointer;">
+          <span>${sub.device_type || 'unknown'} - ${sub.user_agent ? sub.user_agent.substring(0, 50) + '...' : 'Unknown device'}</span>
+        </label>
+      `).join('');
+
+      updateSelectedCount();
+    }
+
+    // Render subscriber table
+    function renderSubscriberTable(subscribers) {
+      const tbody = document.getElementById('fcm-subscribers-table');
+      if (!tbody) return;
+
+      if (!subscribers || subscribers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 32px; color: var(--gray-500);">No push notification subscribers yet.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = subscribers.slice(0, 10).map(sub => `
+        <tr>
+          <td style="font-size: 13px;">
+            <span style="text-transform: capitalize;">${sub.device_type || 'Unknown'}</span>
+            <div style="font-size: 11px; color: #999; margin-top: 2px;">${sub.user_agent ? sub.user_agent.substring(0, 60) + '...' : ''}</div>
+          </td>
+          <td style="font-size: 13px; color: var(--gray-600);">${sub.created_at ? new Date(sub.created_at).toLocaleDateString() : 'N/A'}</td>
+          <td style="font-size: 13px; color: var(--gray-600);">${sub.last_used ? new Date(sub.last_used).toLocaleDateString() : 'N/A'}</td>
+          <td><span class="badge ${sub.active ? 'badge-published' : 'badge-draft'}">${sub.active ? 'Active' : 'Inactive'}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    // Toggle all subscribers
+    function toggleAllSubscribers(checkbox) {
+      const checkboxes = document.querySelectorAll('.subscriber-checkbox');
+      checkboxes.forEach(cb => cb.checked = checkbox.checked);
+      updateSelectedCount();
+    }
+
+    // Update selected count
+    function updateSelectedCount() {
+      const checkboxes = document.querySelectorAll('.subscriber-checkbox:checked');
+      const countSpan = document.getElementById('selected-count');
+      if (countSpan) {
+        countSpan.textContent = `(${checkboxes.length} selected)`;
+      }
+    }
+
+    // Add event listener to update count when individual checkboxes change
+    document.addEventListener('change', (e) => {
+      if (e.target.classList.contains('subscriber-checkbox')) {
+        updateSelectedCount();
+        
+        // Update "Select All" checkbox state
+        const allCheckboxes = document.querySelectorAll('.subscriber-checkbox');
+        const checkedBoxes = document.querySelectorAll('.subscriber-checkbox:checked');
+        const selectAllCheckbox = document.getElementById('select-all-subscribers');
+        
+        if (selectAllCheckbox) {
+          selectAllCheckbox.checked = allCheckboxes.length === checkedBoxes.length && allCheckboxes.length > 0;
+        }
+      }
+    });
+
+    // Send custom notification to selected subscribers
+    async function sendCustomNotificationToSelected() {
+      const title = document.getElementById('custom-notification-title').value.trim();
+      const body = document.getElementById('custom-notification-body').value.trim();
+      const url = document.getElementById('custom-notification-url').value.trim();
+      
+      if (!title || !body) {
+        alert('⚠️ Please enter both title and message');
+        return;
+      }
+
+      const selectedCheckboxes = document.querySelectorAll('.subscriber-checkbox:checked');
+      
+      if (selectedCheckboxes.length === 0) {
+        alert('⚠️ Please select at least one subscriber');
+        return;
+      }
+
+      if (!confirm(`Send notification to ${selectedCheckboxes.length} subscriber(s)?`)) {
+        return;
+      }
+
+      const button = document.getElementById('send-custom-notification-btn');
+      const statusDiv = document.getElementById('notification-status');
+      
+      button.disabled = true;
+      button.innerHTML = '⏳ Sending...';
+      statusDiv.textContent = 'Sending notifications...';
+      statusDiv.style.color = 'white';
+
+      try {
+        // For now, send to all selected (backend will handle the actual sending)
+        const response = await fetch(`${API_URL}/send-notification`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admin-Key': sessionStorage.getItem('ws_admin')
+          },
+          body: JSON.stringify({
+            title: title,
+            body: body,
+            url: url || 'https://wavesignals.waveseed.app',
+            send_to_all: true  // For now, send to all active subscribers
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          statusDiv.textContent = `✅ Sent to ${data.sent || selectedCheckboxes.length} subscribers!`;
+          statusDiv.style.color = '#1A8917';
+          
+          // Clear form
+          setTimeout(() => {
+            clearNotificationForm();
+          }, 2000);
+        } else {
+          statusDiv.textContent = `❌ Error: ${data.error || 'Failed to send'}`;
+          statusDiv.style.color = '#cc0000';
+        }
+
+      } catch (err) {
+        statusDiv.textContent = `❌ Error: ${err.message}`;
+        statusDiv.style.color = '#cc0000';
+      } finally {
+        button.disabled = false;
+        button.innerHTML = '📤 Send Notification';
+      }
+    }
+
+    // Clear notification form
+    function clearNotificationForm() {
+      document.getElementById('custom-notification-title').value = '';
+      document.getElementById('custom-notification-body').value = '';
+      document.getElementById('custom-notification-url').value = '';
+      document.querySelectorAll('.subscriber-checkbox').forEach(cb => cb.checked = false);
+      document.getElementById('select-all-subscribers').checked = false;
+      document.getElementById('notification-status').textContent = '';
+      updateSelectedCount();
     }
 
     async function sendTestNotification() {
