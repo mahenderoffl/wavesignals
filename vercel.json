@@ -72,6 +72,18 @@
       "dest": "/api/fcm-subscribers.py"
     },
     {
+      "src": "/api/fcm/count",
+      "dest": "/api/fcm-count.py"
+    },
+    {
+      "src": "/api/fcm/test",
+      "dest": "/api/fcm-test.py"
+    },
+    {
+      "src": "/api/settings",
+      "dest": "/api/settings.py"
+    },
+    {
       "src": "/api/send-notification",
       "dest": "/api/send-notification.py"
     },

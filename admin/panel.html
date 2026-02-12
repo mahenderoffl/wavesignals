@@ -409,16 +409,16 @@
           <div class="stat-value" id="stat-posts">0</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Subscribers</div>
-          <div class="stat-value" id="stat-subs">0</div>
+          <div class="stat-label">Email Subscribers</div>
+          <div class="stat-value" id="stat-email-subs">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Push Subscribers</div>
+          <div class="stat-value" id="stat-push-subs">0</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Published</div>
           <div class="stat-value" id="stat-published">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Drafts</div>
-          <div class="stat-value" id="stat-drafts">0</div>
         </div>
       </div>
     </div>
@@ -731,7 +731,7 @@
         <div class="stat-card"
           style="padding: 20px; background: #E7F5E6; border-radius: 8px; border-left: 4px solid #1A8917;">
           <div style="font-size: 28px; font-weight: 700; color: #1A6814;" id="total-fcm-subscribers">0</div>
-          <div style="font-size: 13px; color: #1A6814; margin-top: 4px;">Total Subscribers</div>
+          <div style="font-size: 13px; color: #1A6814; margin-top: 4px;">Push Notification Subscribers</div>
         </div>
         <div class="stat-card"
           style="padding: 20px; background: #E6F3FF; border-radius: 8px; border-left: 4px solid #0066CC;">
@@ -1913,21 +1913,23 @@
         const res = await fetch(`${API_URL}/subscribers`);
         const data = await res.json();
         subscribers = data.subscribers || data || [];
-        console.log('Loaded subscribers:', subscribers.length);
+        console.log('Loaded email subscribers:', subscribers.length);
         // Update subscriber count display
         const countElem = document.getElementById('subscriber-count-text');
         if (countElem) countElem.textContent = subscribers.length;
       } catch (e) {
-        console.error('Error loading subscribers:', e);
+        console.error('Error loading email subscribers:', e);
         subscribers = [];
       }
     }
 
+    let pushSubscriberCount = 0;
+
     function renderDashboard() {
       document.getElementById('stat-posts').textContent = posts.length;
-      document.getElementById('stat-subs').textContent = subscribers.length;
+      document.getElementById('stat-email-subs').textContent = subscribers.length;
+      document.getElementById('stat-push-subs').textContent = pushSubscriberCount;
       document.getElementById('stat-published').textContent = posts.filter(p => p.published).length;
-      document.getElementById('stat-drafts').textContent = posts.filter(p => !p.published).length;
     }
 
     function renderPosts() {
@@ -2835,35 +2837,36 @@
 
     // === NOTIFICATION MANAGER FUNCTIONS ===
     async function loadNotificationSubscribers() {
-      const API_BASE = '';
-
       try {
         // Get subscriber count
-        const countRes = await fetch(`${API_BASE}/api/fcm/count`);
+        const countRes = await fetch(`${API_URL}/fcm/count`);
         const countData = await countRes.json();
 
         if (countData.success) {
+          pushSubscriberCount = countData.count || 0;
           document.getElementById('total-fcm-subscribers').textContent = countData.count || 0;
           document.getElementById('active-fcm-subscribers').textContent = countData.count || 0;
+          // Update dashboard stat
+          const dashStat = document.getElementById('stat-push-subs');
+          if (dashStat) dashStat.textContent = countData.count || 0;
         }
 
         // TODO: Load individual subscribers when backend endpoint is ready
         // For now, show count only
 
       } catch (err) {
-        console.error('Error loading notification subscribers:', err);
+        console.error('Error loading push notification subscribers:', err);
+        pushSubscriberCount = 0;
       }
     }
 
     async function sendTestNotification() {
-      const API_BASE = '';
-
-      if (!confirm('Send a test notification to all subscribers?')) {
+      if (!confirm('Send a test notification to all push notification subscribers?')) {
         return;
       }
 
       try {
-        const res = await fetch(`${API_BASE}/api/fcm/test`, {
+        const res = await fetch(`${API_URL}/fcm/test`, {
           method: 'POST',
           headers: {
             'X-Admin-Key': sessionStorage.getItem('ws_admin')
@@ -2873,7 +2876,7 @@
         const data = await res.json();
 
         if (data.success) {
-          alert(`✅ Test notification sent!\n\nDelivered: ${data.sent}\nFailed: ${data.failed || 0}\nTotal subscribers: ${data.total_subscribers || 0}`);
+          alert(`✅ Test notification sent!\n\nDelivered: ${data.sent}\nFailed: ${data.failed || 0}\nTotal push subscribers: ${data.total_subscribers || 0}`);
           loadNotificationSubscribers();
         } else {
           alert(`❌ Error: ${data.error || 'Failed to send notification'}`);
