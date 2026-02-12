@@ -4,13 +4,13 @@ importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-comp
 
 // Initialize Firebase
 firebase.initializeApp({
-    apiKey: "AIzaSyC2SGry4MCvIz_IyyML-HFEtKZW8BPsqn4",
+    apiKey: "AIzaSyCZSGryxMCV1z_IxyWl_HfEtKZWR8PsqnA",
     authDomain: "wavesignals7.firebaseapp.com",
     projectId: "wavesignals7",
     storageBucket: "wavesignals7.firebasestorage.app",
     messagingSenderId: "344790294906",
-    appId: "1:344790294906:web:88a75c885107Bcdada36c3",
-    measurementId: "G-VD3NS50tc9"
+    appId: "1:344790294906:web:88e75c8851b78cdada36c3",
+    measurementId: "G-V63NG501C1"
 });
 
 const messaging = firebase.messaging();

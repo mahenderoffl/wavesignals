@@ -8,16 +8,16 @@
 
     // Firebase configuration
     const firebaseConfig = {
-        apiKey: "AIzaSyC2SGry4MCvIz_IyyML-HFEtKZW8BPsqn4",
+        apiKey: "AIzaSyCZSGryxMCV1z_IxyWl_HfEtKZWR8PsqnA",
         authDomain: "wavesignals7.firebaseapp.com",
         projectId: "wavesignals7",
         storageBucket: "wavesignals7.firebasestorage.app",
         messagingSenderId: "344790294906",
-        appId: "1:344790294906:web:88a75c885107Bcdada36c3",
-        measurementId: "G-VD3NS50tc9"
+        appId: "1:344790294906:web:88e75c8851b78cdada36c3",
+        measurementId: "G-V63NG501C1"
     };
 
-    const VAPID_KEY = "BDNrm1kZ8Zg3h4f3kGMHx_4eYa7z9N2qZ4X6F8f5n8wF7tZ8H4X3Y9F2d6w5P9V8J7L5K3G9H6f4";
+    const VAPID_KEY = "BPqPXddSZtqw4tf4-yoqud8sSqL66R7hk8wbsO9P1jsF-AOFnGRWT74aC2EO8R4mno12bPSJBORJ7nuqiF1hkrE";
     const API_URL = 'https://wave-signals.vercel.app/api';
 
     let firebaseApp = null;
