@@ -61,23 +61,23 @@
     },
     {
       "src": "/api/fcm/subscribe",
-      "dest": "/api/fcm-subscribe.py"
+      "dest": "/api/fcm.py?action=subscribe"
     },
     {
       "src": "/api/fcm-subscribe",
-      "dest": "/api/fcm-subscribe.py"
+      "dest": "/api/fcm.py?action=subscribe"
     },
     {
       "src": "/api/fcm-subscribers",
-      "dest": "/api/fcm-subscribers.py"
+      "dest": "/api/fcm.py?action=subscribers"
     },
     {
       "src": "/api/fcm/count",
-      "dest": "/api/fcm-count.py"
+      "dest": "/api/fcm.py?action=count"
     },
     {
       "src": "/api/fcm/test",
-      "dest": "/api/fcm-test.py"
+      "dest": "/api/fcm.py?action=test"
     },
     {
       "src": "/api/settings",
