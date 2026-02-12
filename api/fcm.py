@@ -84,7 +84,7 @@ def send_test_push_notification():
             ))
         
         # Send notifications
-        response = messaging.send_all(messages)
+        response = messaging.send_each(messages)
         
         # Mark failed tokens as inactive
         if response.failure_count > 0:

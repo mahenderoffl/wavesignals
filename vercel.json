@@ -60,6 +60,10 @@
       "dest": "/api/subscribers.py"
     },
     {
+      "src": "/api/fcm",
+      "dest": "/api/fcm.py"
+    },
+    {
       "src": "/api/fcm/subscribe",
       "dest": "/api/fcm.py?action=subscribe"
     },

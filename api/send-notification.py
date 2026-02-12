@@ -139,10 +139,7 @@ class handler(BaseHTTPRequestHandler):
                             )
                         ))
                     
-                    response = messaging.send_all(messages)
-                    success_count += response.success_count
-                    failed_count += response.failure_count
-
+                    response = messaging.send_each(messages)
                     # Log any failures
                     if response.failure_count > 0:
                         for idx, resp in enumerate(response.responses):
