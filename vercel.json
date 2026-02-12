@@ -64,6 +64,18 @@
       "dest": "/api/fcm-subscribe.py"
     },
     {
+      "src": "/api/fcm-subscribe",
+      "dest": "/api/fcm-subscribe.py"
+    },
+    {
+      "src": "/api/fcm-subscribers",
+      "dest": "/api/fcm-subscribers.py"
+    },
+    {
+      "src": "/api/send-notification",
+      "dest": "/api/send-notification.py"
+    },
+    {
       "src": "/api/cron",
       "dest": "/api/cron.py"
     },
