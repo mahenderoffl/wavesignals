@@ -85,13 +85,35 @@
     }
 
     // Subscribe to push notifications
-    async function subscribeToPushNotifications() {
+    async function subscribeToPushNotifications(buttonElement) {
         try {
+            // Show loading state
+            if (buttonElement) {
+                buttonElement.disabled = true;
+                buttonElement.innerHTML = '⏳ Enabling...';
+            }
+
+            // Check if already subscribed
+            if (isSubscribed() && Notification.permission === 'granted') {
+                if (buttonElement) {
+                    buttonElement.innerHTML = '✅ Already Enabled';
+                    setTimeout(() => {
+                        if (buttonElement.parentElement) {
+                            buttonElement.parentElement.parentElement.remove();
+                        }
+                    }, 2000);
+                }
+                return { success: true, message: 'Already subscribed' };
+            }
+
             await initializeFirebase();
 
             if (!('Notification' in window)) {
-                alert('❌ Your browser doesn\'t support notifications');
-                return false;
+                if (buttonElement) {
+                    buttonElement.disabled = false;
+                    buttonElement.innerHTML = 'Enable';
+                }
+                return { success: false, message: 'Your browser doesn\'t support notifications' };
             }
 
             console.log('Requesting notification permission...');
@@ -126,25 +148,53 @@
                         })
                     });
 
-                    if (response.ok) {
+                    const data = await response.json().catch(() => ({}));
+
+                    if (response.ok && data.success) {
                         console.log('✅ Subscribed to push notifications');
                         localStorage.setItem('ws_notifications_subscribed', 'true');
-                        return true;
+                        if (buttonElement) {
+                            buttonElement.innerHTML = '✅ Enabled!';
+                        }
+                        return { success: true, message: 'Notifications enabled successfully!' };
                     } else {
-                        console.error('❌ Backend subscription failed');
-                        return false;
+                        console.error('❌ Backend subscription failed:', data);
+                        if (buttonElement) {
+                            buttonElement.disabled = false;
+                            buttonElement.innerHTML = 'Enable';
+                        }
+                        return { success: false, message: data.error || 'Failed to subscribe on server' };
                     }
                 } else {
                     console.error('❌ No FCM token received');
-                    return false;
+                    if (buttonElement) {
+                        buttonElement.disabled = false;
+                        buttonElement.innerHTML = 'Enable';
+                    }
+                    return { success: false, message: 'Failed to get notification token' };
                 }
-            } else {
+            } else if (permission === 'denied') {
                 console.log('❌ Permission denied');
-                return false;
+                if (buttonElement) {
+                    buttonElement.disabled = false;
+                    buttonElement.innerHTML = 'Enable';
+                }
+                return { success: false, message: 'You blocked notifications. Please enable them in browser settings.' };
+            } else {
+                console.log('❌ Permission not granted');
+                if (buttonElement) {
+                    buttonElement.disabled = false;
+                    buttonElement.innerHTML = 'Enable';
+                }
+                return { success: false, message: 'Permission not granted' };
             }
         } catch (error) {
             console.error('❌ Subscription error:', error);
-            return false;
+            if (buttonElement) {
+                buttonElement.disabled = false;
+                buttonElement.innerHTML = 'Enable';
+            }
+            return { success: false, message: error.message || 'An error occurred' };
         }
     }
 
@@ -155,9 +205,30 @@
 
     // Show notification prompt
     function showNotificationPrompt() {
-        if (isSubscribed()) return;
-        if (!('Notification' in window)) return;
-        if (Notification.permission === 'denied') return;
+        // Don't show if already subscribed
+        if (isSubscribed() && Notification.permission === 'granted') {
+            console.log('✅ Already subscribed to notifications');
+            return;
+        }
+        
+        // Don't show if browser doesn't support notifications
+        if (!('Notification' in window)) {
+            console.log('❌ Browser doesn\'t support notifications');
+            return;
+        }
+        
+        // Don't show if permission was denied
+        if (Notification.permission === 'denied') {
+            console.log('❌ Notification permission denied');
+            return;
+        }
+
+        // Don't show if dismissed recently (within 24 hours)
+        const dismissedTime = localStorage.getItem('ws_notification_prompt_dismissed');
+        if (dismissedTime && (Date.now() - parseInt(dismissedTime)) < 24 * 60 * 60 * 1000) {
+            console.log('⏸️ Notification prompt dismissed recently');
+            return;
+        }
 
         // Show prompt after 5 seconds
         setTimeout(() => {
@@ -228,11 +299,53 @@
             `;
             document.head.appendChild(style);
 
-            document.getElementById('ws-enable-notifications').onclick = async () => {
-                const success = await subscribeToPushNotifications();
-                if (success) {
-                    prompt.innerHTML = '<div style="text-align: center; padding: 8px;">✅ Notifications enabled!</div>';
-                    setTimeout(() => prompt.remove(), 2000);
+            document.getElementById('ws-enable-notifications').onclick = async (e) => {
+                const button = e.target;
+                const result = await subscribeToPushNotifications(button);
+                
+                if (result.success) {
+                    // Show success message
+                    prompt.innerHTML = `
+                        <div style="text-align: center; padding: 16px;">
+                            <div style="font-size: 32px; margin-bottom: 8px;">✅</div>
+                            <div style="font-weight: 600; margin-bottom: 4px;">All Set!</div>
+                            <div style="font-size: 14px; opacity: 0.9;">${result.message}</div>
+                        </div>
+                    `;
+                    setTimeout(() => prompt.remove(), 2500);
+                } else {
+                    // Show error message
+                    prompt.innerHTML = `
+                        <div style="padding: 16px;">
+                            <div style="display: flex; align-items: start; gap: 12px;">
+                                <div style="font-size: 24px;">❌</div>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; margin-bottom: 4px;">Oops!</div>
+                                    <div style="font-size: 14px; margin-bottom: 12px; opacity: 0.9;">
+                                        ${result.message}
+                                    </div>
+                                    <button onclick="this.parentElement.parentElement.parentElement.parentElement.remove()" style="
+                                 async () => {
+        const result = await subscribeToPushNotifications(null);
+        if (result.success) {
+            alert('✅ ' + result.message);
+        } else {
+            alert('❌ ' + result.message);
+        }
+        return result.success;
+    }
+                                        color: #667eea;
+                                        border: none;
+                                        padding: 8px 16px;
+                                        border-radius: 6px;
+                                        font-weight: 600;
+                                        cursor: pointer;
+                                        font-size: 14px;
+                                    ">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                 }
             };
 
