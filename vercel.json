@@ -1,18 +1,105 @@
 {
   "version": 2,
   "builds": [
-    { "src": "app/*.html", "use": "@vercel/static" },
-    { "src": "admin/*.html", "use": "@vercel/static" },
-    { "src": "*.html", "use": "@vercel/static" },
-    { "src": "styles/*.css", "use": "@vercel/static" },
-    { "src": "scripts/*.js", "use": "@vercel/static" },
-    { "src": "data/*.json", "use": "@vercel/static" }
+    {
+      "src": "api/**/*.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "app/*.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "admin/*.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "styles/*.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "scripts/*.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "data/*.json",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "firebase-messaging-sw.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "favicon.svg",
+      "use": "@vercel/static"
+    }
   ],
   "routes": [
-    { "src": "/", "dest": "/app/index.html" },
-    { "src": "/post", "dest": "/app/post.html" },
-    { "src": "/blog", "dest": "/app/blog.html" },
-    { "src": "/admin", "dest": "/admin/panel.html" },
-    { "src": "/(.*)", "dest": "/$1" }
+    {
+      "src": "/api/posts",
+      "dest": "/api/posts.py"
+    },
+    {
+      "src": "/api/post",
+      "dest": "/api/post.py"
+    },
+    {
+      "src": "/api/health",
+      "dest": "/api/health.py"
+    },
+    {
+      "src": "/api/subscribers",
+      "dest": "/api/subscribers.py"
+    },
+    {
+      "src": "/api/fcm/subscribe",
+      "dest": "/api/fcm-subscribe.py"
+    },
+    {
+      "src": "/api/cron",
+      "dest": "/api/cron.py"
+    },
+    {
+      "src": "/api/generate-post",
+      "dest": "/api/cron.py"
+    },
+    {
+      "src": "/api/init-db",
+      "dest": "/api/init-db.py"
+    },
+    {
+      "src": "/",
+      "dest": "/app/index.html"
+    },
+    {
+      "src": "/post",
+      "dest": "/app/post.html"
+    },
+    {
+      "src": "/blog",
+      "dest": "/app/blog.html"
+    },
+    {
+      "src": "/admin",
+      "dest": "/admin/panel.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron",
+      "schedule": "0 6 * * *"
+    }
   ]
 }

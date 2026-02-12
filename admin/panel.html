@@ -389,6 +389,7 @@
         <a href="#" data-view="content">Content</a>
         <a href="#" data-view="subscribers">Subscribers</a>
         <a href="#" data-view="automation">Automation</a>
+        <a href="#" data-view="notifications">Notifications</a>
         <a href="#" data-view="settings">Settings</a>
         <a href="#" data-view="backlinks">Backlinks</a>
         <button class="btn btn-secondary" onclick="logout()">Sign Out</button>
@@ -710,6 +711,184 @@
               <span class="badge badge-published">● Online</span>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS MANAGER VIEW -->
+    <div id="view-notifications" class="admin-container hidden">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+        <div>
+          <h2 style="font-size: 24px; font-weight: 700; margin: 0 0 8px 0;">Notification Manager</h2>
+          <p style="color: var(--gray-600); margin: 0;">Manage push notification subscribers and send updates</p>
+        </div>
+        <button class="btn btn-primary" onclick="sendTestNotification()">📬 Send Test Push</button>
+      </div>
+
+      <!-- Stats Overview -->
+      <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;">
+        <div class="stat-card"
+          style="padding: 20px; background: #E7F5E6; border-radius: 8px; border-left: 4px solid #1A8917;">
+          <div style="font-size: 28px; font-weight: 700; color: #1A6814;" id="total-fcm-subscribers">0</div>
+          <div style="font-size: 13px; color: #1A6814; margin-top: 4px;">Total Subscribers</div>
+        </div>
+        <div class="stat-card"
+          style="padding: 20px; background: #E6F3FF; border-radius: 8px; border-left: 4px solid #0066CC;">
+          <div style="font-size: 28px; font-weight: 700; color: #0066CC;" id="active-fcm-subscribers">0</div>
+          <div style="font-size: 13px; color: #0066CC; margin-top: 4px;">Active Devices</div>
+        </div>
+        <div class="stat-card"
+          style="padding: 20px; background: #FFE6E6; border-radius: 8px; border-left: 4px solid #CC0000;">
+          <div style="font-size: 28px; font-weight: 700; color: #CC0000;" id="failed-notifications">0</div>
+          <div style="font-size: 13px; color: #CC0000; margin-top: 4px;">Failed Deliveries</div>
+        </div>
+      </div>
+
+      <!--Quick Stats & Actions -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+        <div style="padding: 20px; background: #fff; border: 1px solid var(--gray-200); border-radius: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+            <span style="font-size: 20px;">📊</span>
+            <h4 style="font-size: 14px; font-weight: 600; margin: 0;">Quick Stats</h4>
+          </div>
+          <div style="font-size: 13px; color: var(--gray-600); line-height: 1.6;">
+            <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+              <span>Last notification sent:</span>
+              <strong id="last-notification-time">Never</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+              <span>Avg. delivery rate:</span>
+              <strong id="notification-delivery-rate">—</strong>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding: 20px; background: #f0fff4; border: 1px solid #9ae6b4; border-radius: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+            <span style="font-size: 20px;">💡</span>
+            <h4 style="font-size: 14px; font-weight: 600; margin: 0;">Next Steps</h4>
+          </div>
+          <ul style="font-size: 13px; color: var(--gray-700); margin: 0; padding-left: 18px; line-height: 1.8;">
+            <li>Add subscribe button to your blog</li>
+            <li>Test notifications on multiple devices</li>
+            <li>Monitor delivery success rate</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Custom Notification Sender -->
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 24px; margin-bottom: 32px; color: white;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+          <span style="font-size: 28px;">📨</span>
+          <div>
+            <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 4px 0;">Send Custom Notification</h3>
+            <p style="font-size: 13px; opacity: 0.9; margin: 0;">Broadcast messages to specific subscribers</p>
+          </div>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 8px; padding: 20px;">
+          <div style="display: grid; gap: 16px;">
+            <!-- Message Title -->
+            <div>
+              <label style="display: block; font-size: 13px; font-weight: 500; margin-bottom: 8px;">Notification Title</label>
+              <input type="text" id="custom-notification-title" placeholder="e.g., New Feature Released!" 
+                style="width: 100%; padding: 10px 14px; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; background: rgba(255,255,255,0.9); color: #222; font-size: 14px;" maxlength="100">
+            </div>
+
+            <!-- Message Body -->
+            <div>
+              <label style="display: block; font-size: 13px; font-weight: 500; margin-bottom: 8px;">Message Content</label>
+              <textarea id="custom-notification-body" placeholder="Your custom message here..." rows="3"
+                style="width: 100%; padding: 10px 14px; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; background: rgba(255,255,255,0.9); color: #222; font-size: 14px; resize: vertical;" maxlength="500"></textarea>
+            </div>
+
+            <!-- Optional URL -->
+            <div>
+              <label style="display: block; font-size: 13px; font-weight: 500; margin-bottom: 8px;">Target URL (Optional)</label>
+              <input type="url" id="custom-notification-url" placeholder="https://wave-signals.vercel.app/blog/post-slug" 
+                style="width: 100%; padding: 10px 14px; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; background: rgba(255,255,255,0.9); color: #222; font-size: 14px;">
+            </div>
+
+            <!-- Recipient Selection -->
+            <div>
+              <label style="display: block; font-size: 13px; font-weight: 500; margin-bottom: 8px;">Send To</label>
+              <div style="background: rgba(255,255,255,0.95); border-radius: 6px; padding: 12px; max-height: 200px; overflow-y: auto;">
+                <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; cursor: pointer; color: #222; font-weight: 600;">
+                  <input type="checkbox" id="select-all-subscribers" onchange="toggleAllSubscribers(this)" 
+                    style="width: 16px; height: 16px; cursor: pointer;">
+                  <span style="font-size: 13px;">Select All Subscribers</span>
+                  <span id="selected-count" style="font-size: 12px; color: #666; margin-left: auto;">(0 selected)</span>
+                </label>
+                <div id="subscriber-selection-list" style="border-top: 1px solid #e5e7eb; padding-top: 10px;">
+                  <div style="text-align: center; color: #666; font-size: 13px; padding: 12px;">Loading subscribers...</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Send Button -->
+            <div style="display: flex; gap: 12px; margin-top: 8px;">
+              <button id="send-custom-notification-btn" onclick="sendCustomNotificationToSelected()" 
+                style="flex: 1; padding: 12px 24px; background: #1A8917; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                📤 Send Notification
+              </button>
+              <button onclick="clearNotificationForm()" 
+                style="padding: 12px 24px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer;">
+                Clear
+              </button>
+            </div>
+            <div id="notification-status" style="font-size: 12px; text-align: center; min-height: 20px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subscribers Table -->
+      <div style="background: #fff; border: 1px solid var(--gray-200); border-radius: 8px; padding: 20px;">
+        <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 16px 0;">Recent Subscribers</h3>
+
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--gray-200);">
+              <th style="text-align: left; padding: 12px; font-size: 13px; font-weight: 600; color: var(--gray-600);">
+                Device</th>
+              <th style="text-align: left; padding: 12px; font-size: 13px; font-weight: 600; color: var(--gray-600);">
+                Subscribed</th>
+              <th style="text-align: left; padding: 12px; font-size: 13px; font-weight: 600; color: var(--gray-600);">
+                Last Active</th>
+              <th style="text-align: left; padding: 12px; font-size: 13px; font-weight: 600; color: var(--gray-600);">
+                Status</th>
+            </tr>
+          </thead>
+          <tbody id="fcm-subscribers-table">
+            <tr>
+              <td colspan="4" style="text-align: center; padding: 32px; color: var(--gray-500);">
+                No push notification subscribers yet. Add the subscribe button to your blog to start collecting
+                subscribers.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Notification Resources -->
+      <div style="margin-top: 32px; padding: 16px; background: #f9fafb; border-radius: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+          <span style="font-size: 18px;">📚</span>
+          <h4 style="font-size: 14px; font-weight: 600; margin: 0;">Notification Resources</h4>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+          <a href="#" onclick="copySubscribeCode(); return false;"
+            style="font-size: 13px; color: #1A8917; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+            <span>🔗</span> Copy Subscribe Button Code
+          </a>
+          <a href="https://firebase.google.com/docs/cloud-messaging/js/client" target="_blank"
+            style="font-size: 13px; color: #1A8917; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+            <span>📖</span> Firebase Documentation
+          </a>
+          <a href="#" onclick="downloadFCMTokens(); return false;"
+            style="font-size: 13px; color: #1A8917; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+            <span>💾</span> Export Subscriber List
+          </a>
         </div>
       </div>
     </div>
@@ -1361,7 +1540,7 @@
 
   <script>
     // Configuration
-    const API_URL = 'https://mahendercreates-wavesignals-backend.hf.space/api';
+    const API_URL = 'https://wave-signals.vercel.app/api';
     const ADMIN_KEY = 'wavesignals@2025';
     let posts = [];
     let subscribers = [];
@@ -1711,6 +1890,7 @@
       await loadSettings();
       await loadBacklinks();
       await loadAdSettings();
+      await loadNotificationSubscribers(); // Load FCM subscribers
       renderDashboard();
       renderPosts();
       renderSubscribers();
@@ -2539,7 +2719,7 @@
 
     // === AUTOMATION FUNCTIONS ===
     async function loadAutomationStatus() {
-      const API_BASE = 'https://mahendercreates-wavesignals-backend.hf.space';
+      const API_BASE = '';
 
       try {
         // Check backend health
@@ -2592,7 +2772,7 @@
     }
 
     async function generatePostNow(emergencyOverride = false) {
-      const API_BASE = 'https://mahendercreates-wavesignals-backend.hf.space';
+      const API_BASE = 'https://wave-signals.vercel.app';
       const generateBtn = document.getElementById('generate-btn');
       const emergencyBtn = document.getElementById('emergency-btn');
       const statusDiv = document.getElementById('generate-status');
@@ -2653,6 +2833,106 @@
       }
     }, 30000);
 
+    // === NOTIFICATION MANAGER FUNCTIONS ===
+    async function loadNotificationSubscribers() {
+      const API_BASE = '';
+
+      try {
+        // Get subscriber count
+        const countRes = await fetch(`${API_BASE}/api/fcm/count`);
+        const countData = await countRes.json();
+
+        if (countData.success) {
+          document.getElementById('total-fcm-subscribers').textContent = countData.count || 0;
+          document.getElementById('active-fcm-subscribers').textContent = countData.count || 0;
+        }
+
+        // TODO: Load individual subscribers when backend endpoint is ready
+        // For now, show count only
+
+      } catch (err) {
+        console.error('Error loading notification subscribers:', err);
+      }
+    }
+
+    async function sendTestNotification() {
+      const API_BASE = '';
+
+      if (!confirm('Send a test notification to all subscribers?')) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/api/fcm/test`, {
+          method: 'POST',
+          headers: {
+            'X-Admin-Key': sessionStorage.getItem('ws_admin')
+          }
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          alert(`✅ Test notification sent!\n\nDelivered: ${data.sent}\nFailed: ${data.failed || 0}\nTotal subscribers: ${data.total_subscribers || 0}`);
+          loadNotificationSubscribers();
+        } else {
+          alert(`❌ Error: ${data.error || 'Failed to send notification'}`);
+        }
+      } catch (err) {
+        alert(`❌ Request failed: ${err.message}`);
+      }
+    }
+
+    function copySubscribeCode() {
+      const code = `<!-- Push Notification Subscribe Button -->
+<button id="notifyBtn" onclick="subscribeToPushNotifications()" 
+        style="position:fixed;bottom:20px;right:20px;background:linear-gradient(135deg,#1A8917 0%,#156D13 100%);
+               color:white;border:none;padding:14px 24px;border-radius:30px;cursor:pointer;font-weight:600;
+               font-size:15px;box-shadow:0 4px 15px rgba(26,137,23,0.4);z-index:9999">
+  🔔 Get Notified
+</button>
+
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+  import { getMessaging, getToken } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
+
+  const app = initializeApp({
+    apiKey: "AIzaSyC2SGry4MCvIz_IyyML-HFEtKZW8BPsqn4",
+    authDomain: "wavesignals7.firebaseapp.com",
+    projectId: "wavesignals7",
+    messagingSenderId: "344790294906",
+    appId: "1:344790294906:web:88a75c885107Bcdada36c3"
+  });
+
+  window.subscribeToPushNotifications = async () => {
+    const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    const token = await getToken(getMessaging(app), { 
+      vapidKey: "BPqPXddSZtqw4tf4-yoqud8sSqL66R7hk8wbsO9P1jsF-AOFnGRWT74aC2EO8R4mno12bPSJBORJ7nuqiF1hkrE",
+      serviceWorkerRegistration: reg
+    });
+    
+    await fetch('https://wave-signals.vercel.app/api/fcm/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, userAgent: navigator.userAgent })
+    });
+    
+    alert('✅ Subscribed to notifications!');
+  };
+<\/script>`;
+
+      navigator.clipboard.writeText(code).then(() => {
+        alert('✅ Subscribe button code copied to clipboard!');
+      }).catch(() => {
+        alert('❌ Failed to copy. Please copy manually from the code below:\n\n' + code);
+      });
+    }
+
+    function downloadFCMTokens() {
+      alert('📥 Export feature coming soon! This will export all FCM tokens as CSV.');
+    }
+
+
     // Auto-login if key exists
     if (sessionStorage.getItem('ws_admin')) {
       document.getElementById('login-screen').classList.add('hidden');
@@ -2660,6 +2940,10 @@
       init();
     }
   </script>
+
+  <!-- Backlink Manager Script -->
+  <script src="backlink-manager.js"></script>
+
 </body>
 
 </html>

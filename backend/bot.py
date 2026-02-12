@@ -8,8 +8,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Configure Gemini
-API_KEY = os.getenv("GEMINI_API_KEY")
+# ==================================================================
+# GROQ API CONFIGURATION (Production LLM Provider)
+# ==================================================================
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 # 🧠 CORE PILLARS (Value-Driven Insights)
 # Topics chosen based on trending discussions, search volume, and audience value
@@ -51,11 +53,10 @@ PILLARS = {
     ]
 }
 
-# Groq API (FREE alternative - faster than Gemini!)
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-def call_groq(prompt):
-    """Call Groq API - Free and fast alternative to Gemini/OpenAI"""
+
+def call_groq(prompt, max_retries=3):
+    """Call Groq API with retry logic for production reliability"""
     if not GROQ_API_KEY:
         print("⚠️ GROQ_API_KEY not configured")
         return None
@@ -66,7 +67,7 @@ def call_groq(prompt):
         "Content-Type": "application/json"
     }
     payload = {
-        "model": "llama-3.3-70b-versatile",  # Fast and good quality
+        "model": "llama-3.3-70b-versatile",
         "messages": [
             {"role": "system", "content": "You are a thoughtful content writer creating engaging blog posts."},
             {"role": "user", "content": prompt}
@@ -75,129 +76,58 @@ def call_groq(prompt):
         "temperature": 0.8
     }
     
-    try:
-        print(f"🔄 Calling Groq API...")
-        response = requests.post(url, json=payload, headers=headers, timeout=90)
-        
-        if response.status_code != 200:
-            print(f"❌ Groq API Error: HTTP {response.status_code}")
-            print(f"   Response: {response.text[:300]}")
-            return None
-        
-        response_data = response.json()
-        
-        if 'choices' not in response_data or len(response_data['choices']) == 0:
-            print(f"❌ Unexpected Groq response format")
-            return None
-        
-        content = response_data['choices'][0]['message']['content']
-        print(f"✅ Groq responded ({len(content)} chars)")
-        return content
-        
-    except Exception as e:
-        print(f"❌ Groq API Error: {e}")
-        return None
-
-# API_KEY = os.getenv("GEMINI_API_KEY") # No longer needed
-# OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") # No longer needed
-
-# def call_gemini(prompt): # No longer needed
-#     """Helper to call Gemini API via REST"""
-#     if not API_KEY:
-#         print("⚠️ GEMINI_API_KEY not configured")
-#         return None
-
-#     # Use v1beta API with gemini-pro model (v1 with 1.5-flash returns 404)
-#     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={API_KEY}"
-#     payload = {
-#         "contents": [{ "parts": [{"text": prompt}] }]
-#     }
-    
-#     try:
-#         print(f"🔄 Calling Gemini API...")
-#         response = requests.post(url, json=payload, headers={'Content-Type': 'application/json'}, timeout=60)
-        
-#         if response.status_code != 200:
-#             print(f"❌ Gemini API Error: HTTP {response.status_code}")
-#             print(f"   Response: {response.text[:200]}")
-#             return None
+    for attempt in range(max_retries):
+        try:
+            print(f"🔄 Calling Groq API (attempt {attempt + 1}/{max_retries})...")
+            response = requests.post(url, json=payload, headers=headers, timeout=90)
             
-#         response_data = response.json()
-        
-#         if 'candidates' not in response_data:
-#             print(f"❌ Unexpected API response format: {response_data}")
-#             return None
+            # Handle rate limiting
+            if response.status_code == 429:
+                wait_time = (attempt + 1) * 10  # 10s, 20s, 30s
+                print(f"⏳ Rate limited, waiting {wait_time}s before retry...")
+                time.sleep(wait_time)
+                continue
             
-#         content = response_data['candidates'][0]['content']['parts'][0]['text']
-#         print(f"✅ Gemini responded ({len(content)} chars)")
-#         return content
-        
-#     except requests.exceptions.Timeout:
-#         print(f"❌ Gemini API Timeout (>60s)")
-#         return None
-#     except Exception as e:
-#         print(f"❌ Gemini API Error: {e}")
-#         return None
+            if response.status_code != 200:
+                print(f"❌ Groq API Error: HTTP {response.status_code}")
+                print(f"   Response: {response.text[:300]}")
+                if attempt < max_retries - 1:
+                    time.sleep(5 * (attempt + 1))  # 5s, 10s, 15s backoff
+                    continue
+                return None
+            
+            response_data = response.json()
+            
+            if 'choices' not in response_data or len(response_data['choices']) == 0:
+                print(f"❌ Unexpected Groq response format")
+                if attempt < max_retries - 1:
+                    time.sleep(5)
+                    continue
+                return None
+            
+            content = response_data['choices'][0]['message']['content']
+            print(f"✅ Groq responded ({len(content)} chars)")
+            return content
+            
+        except requests.exceptions.Timeout:
+            print(f"⏱️ Groq API timeout (attempt {attempt + 1})")
+            if attempt < max_retries - 1:
+                time.sleep(10)
+                continue
+            print(f"❌ All retries exhausted due to timeouts")
+            return None
+            
+        except Exception as e:
+            print(f"❌ Groq API Error: {e}")
+            if attempt < max_retries - 1:
+                time.sleep(5)
+                continue
+            return None
+    
+    print(f"❌ Failed after {max_retries} attempts")
+    return None
 
-# def call_openai(prompt): # No longer needed
-#     """Call OpenAI API (GPT-3.5-Turbo)"""
-#     if not OPENAI_API_KEY:
-#         print("⚠️ OPENAI_API_KEY not configured")
-#         return None
-    
-#     url = "https://api.openai.com/v1/chat/completions"
-#     headers = {
-#         "Content-Type": "application/json",
-#         "Authorization": f"Bearer {OPENAI_API_KEY}"
-#     }
-#     payload = {
-#         "model": "gpt-3.5-turbo",
-#         "messages": [
-#             {"role": "system", "content": "You are a thoughtful content writer creating engaging blog posts."},
-#             {"role": "user", "content": prompt}
-#         ],
-#         "max_tokens": 4000,
-#         "temperature": 0.8
-#     }
-    
-#     try:
-#         print(f"🔄 Calling OpenAI API...")
-#         response = requests.post(url, json=payload, headers=headers, timeout=90)
-        
-#         if response.status_code != 200:
-#             print(f"❌ OpenAI API Error: HTTP {response.status_code}")
-#             print(f"   Response: {response.text[:200]}")
-#             return None
-        
-#         response_data = response.json()
-        
-#         if 'choices' not in response_data or len(response_data['choices']) == 0:
-#             print(f"❌ Unexpected OpenAI response format")
-#             return None
-        
-#         content = response_data['choices'][0]['message']['content']
-#         print(f"✅ OpenAI responded ({len(content)} chars)")
-#         return content
-        
-#     except Exception as e:
-#         print(f"❌ OpenAI API Error: {e}")
-#         return None
 
-# def call_ai_with_fallback(prompt): # No longer needed
-#     """Try Gemini first, fall back to OpenAI if it fails"""
-#     # Try Gemini
-#     result = call_gemini(prompt)
-#     if result:
-#         return result
-    
-#     # Fallback to OpenAI
-#     print("⚠️ Gemini failed, trying OpenAI fallback...")
-#     result = call_openai(prompt)
-#     if result:
-#         return result
-    
-#     print("❌ All AI providers failed!")
-#     return None
 
 def research_trending_topics():
     """Research what people are actually searching for on social platforms"""
@@ -524,59 +454,45 @@ def generate_content(topic, category):
         data.get("excerpt", "")
     )
 
-def publish_post(emergency_override=False):
-    # RATE LIMITING: Check if last post was within 23 hours (unless emergency override)
-    if not emergency_override:
-        conn = get_db_connection()
-        if not conn:
-            print("❌ Database connection failed")
-            return {"success": False, "error": "Database connection failed"}
-
-        try:
-            cur = conn.cursor()
+def publish_post():
+    """Generate and publish a blog post
+    
+    NO RATE LIMITING - Scheduler timing is the rate limit (runs once daily at 6 AM UTC).
+    This function focuses solely on content generation and publishing.
+    """
+    conn = get_db_connection()
+    if not conn:
+        print("❌ Database connection failed")
+        return {"success": False, "error": "Database connection failed"}
+    
+    # Duplicate prevention: Check if post already created today
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT created_at FROM posts 
+            ORDER BY created_at DESC 
+            LIMIT 1
+        """)
+        last_post = cur.fetchone()
+        
+        if last_post:
+            from datetime import datetime, timezone
+            last_time = last_post['created_at']
+            if last_time.tzinfo is None:
+                last_time = last_time.replace(tzinfo=timezone.utc)
             
-            # Check last post timestamp
-            cur.execute("""
-                SELECT created_at FROM posts 
-                ORDER BY created_at DESC 
-                LIMIT 1
-            """)
-            last_post = cur.fetchone()
+            hours_since = (datetime.now(timezone.utc) - last_time).total_seconds() / 3600
             
-            if last_post:
-                from datetime import datetime, timezone
-                last_post_time = last_post['created_at']
-                
-                # Handle both timezone-aware and naive datetimes
-                if last_post_time.tzinfo is None:
-                    last_post_time = last_post_time.replace(tzinfo=timezone.utc)
-                
-                now = datetime.now(timezone.utc)
-                hours_since = (now - last_post_time).total_seconds() / 3600
-                
-                if hours_since < 23:
-                    remaining = 23 - hours_since
-                    print(f"⏳ Rate limit: Last post was {hours_since:.1f}h ago. Wait {remaining:.1f}h more.")
-                    cur.close()
-                    conn.close()
-                    return {
-                        "success": False, 
-                        "error": f"Rate limit: Must wait {remaining:.1f} hours before next post",
-                        "hours_remaining": remaining
-                    }
-            
-            print("✅ Rate limit passed, proceeding with generation...")
-            cur.close()
-            
-        except Exception as e:
-            print(f"⚠️ Rate limit check error: {e}")
-            # Continue anyway if rate limit check fails
-    else:
-        print("🚨 EMERGENCY OVERRIDE: Bypassing rate limit check")
-        conn = get_db_connection()
-        if not conn:
-            print("❌ Database connection failed")
-            return {"success": False, "error": "Database connection failed"}
+            # If post created less than 6 hours ago, skip (allows backup at 12 PM)
+            if hours_since < 6:
+                print(f"ℹ️ Post already created {hours_since:.1f}h ago, skipping duplicate")
+                cur.close()
+                conn.close()
+                return {"success": True, "skipped": True, "reason": "Post already exists today"}
+        
+        cur.close()
+    except Exception as e:
+        print(f"⚠️ Duplicate check error: {e}, proceeding anyway...")
     
     # LEVEL 4: Randomized Behavior
     # Select a random Category, then a random Topic from that category
@@ -637,6 +553,21 @@ def publish_post(emergency_override=False):
         print(f"      Keywords: {', '.join(keywords[:3])}...")
         print(f"      Hashtags: {' '.join(hashtags)}")
         print(f"      Target Queries: {search_queries[0] if search_queries else 'N/A'}")
+        
+        # Send push notifications to subscribers
+        try:
+            from fcm import send_notification_to_all
+            post_url = f"https://wavesignals.waveseed.app/app/post.html?slug={slug}"
+            notification_result = send_notification_to_all(
+                title=title,
+                body=excerpt or f"New insights on {topic}",
+                post_url=post_url
+            )
+            if notification_result.get('success'):
+                print(f"   📬 Push notifications sent: {notification_result.get('sent', 0)} delivered")
+        except Exception as e:
+            print(f"   ⚠️ Push notification failed (non-critical): {e}")
+            # Don't fail the post if notification fails
         
         return {"success": True, "id": post_id, "title": title}
         

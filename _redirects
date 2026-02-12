@@ -1,1 +1,8 @@
+# Redirect Netlify subdomain to custom domain
+https://wavesignals.netlify.app/* https://wavesignals.waveseed.app/:splat 301!
+
+# Redirect root to main app
+/index.html  /app/index.html  301
+
+# Rewrite root to app (this makes / serve /app/index.html content)
 /	/app/index.html	200

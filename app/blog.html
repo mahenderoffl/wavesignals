@@ -5,6 +5,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Signals – WaveSignals</title>
+    <meta name="description"
+        content="Browse all signals and insights. Thoughtfully curated content on career, money, technology, and more.">
+
+    <!-- Canonical Tag -->
+    <link rel="canonical" href="https://wavesignals.waveseed.app/app/blog.html">
+
+    <!-- Open Graph Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Signals – WaveSignals">
+    <meta property="og:description"
+        content="Browse all signals and insights. Thoughtfully curated content on career, money, technology, and more.">
+    <meta property="og:url" content="https://wavesignals.waveseed.app/app/blog.html">
+    <meta property="og:site_name" content="WaveSignals">
+
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Signals – WaveSignals">
+    <meta name="twitter:description"
+        content="Browse all signals and insights. Thoughtfully curated content on career, money, technology, and more.">
+
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/styles/main.css">
 
@@ -15,6 +35,27 @@
         function gtag() { dataLayer.push(arguments); }
         gtag('js', new Date());
         gtag('config', 'G-RGL9J7FMMN');
+    </script>
+
+    <!-- Organization Schema for Brand Entity -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "@id": "https://wavesignals.waveseed.app/#organization",
+      "name": "WaveSignals",
+      "alternateName": ["Wave Signals", "wavesignals"],
+      "url": "https://wavesignals.waveseed.app",
+      "logo": {
+        "@type": "ImageObject",
+        "@id": "https://wavesignals.waveseed.app/#logo",
+        "url": "https://wavesignals.waveseed.app/public/logo-header.svg",
+        "contentUrl": "https://wavesignals.waveseed.app/public/logo-header.svg",
+        "caption": "WaveSignals"
+      },
+      "description": "WaveSignals delivers one thoughtfully curated insight per day on career growth, money management, and technology trends.",
+      "slogan": "One Signal Per Day, Zero Noise"
+    }
     </script>
 </head>
 
@@ -72,7 +113,7 @@
     </main>
 
     <script>
-        const API_URL = 'https://mahendercreates-wavesignals-backend.hf.space/api';
+        const API_URL = 'https://wave-signals.vercel.app/api';
         let allPosts = [];
         let currentFilter = 'all';
         let currentSearch = '';

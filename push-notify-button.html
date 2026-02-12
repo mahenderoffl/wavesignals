@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Push Notification Subscribe - WaveSignals</title>
+    <style>
+        .notify-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #1A8917 0%, #156D13 100%);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 15px;
+            box-shadow: 0 4px 15px rgba(26, 137, 23, 0.4);
+            transition: all 0.3s ease;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .notify-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26, 137, 23, 0.5);
+        }
+
+        .notify-button:active {
+            transform: translateY(0);
+        }
+
+        .notify-button.subscribed {
+            background: linear-gradient(135deg, #666 0%, #444 100%);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Push Notification Subscribe Button -->
+    <button id="notifyBtn" class="notify-button" onclick="handleNotificationClick()">
+        <span id="notifyIcon">🔔</span>
+        <span id="notifyText">Get Notified</span>
+    </button>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCZSGryxMCV1z_IxyWl_HfEtKZWR8PsqnA",
+            authDomain: "wavesignals7.firebaseapp.com",
+            projectId: "wavesignals7",
+            storageBucket: "wavesignals7.firebasestorage.app",
+            messagingSenderId: "344790294906",
+            appId: "1:344790294906:web:88e75c8851b78cdada36c3",
+            measurementId: "G-V63NG501C1"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const messaging = getMessaging(app);
+
+        // VAPID key
+        const vapidKey = "BPqPXddSZtqw4tf4-yoqud8sSqL66R7hk8wbsO9P1jsF-AOFnGRWT74aC2EO8R4mno12bPSJBORJ7nuqiF1hkrE";
+
+        // Check if already subscribed
+        const isSubscribed = localStorage.getItem('fcm_subscribed') === 'true';
+        if (isSubscribed) {
+            updateButtonState(true);
+        }
+
+        // Subscribe function
+        window.subscribeToPushNotifications = async () => {
+            try {
+                console.log('Requesting notification permission...');
+                const permission = await Notification.requestPermission();
+
+                if (permission === 'granted') {
+                    console.log('Permission granted, getting FCM token...');
+
+                    // Register service worker
+                    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                    console.log('Service worker registered');
+
+                    // Get FCM token
+                    const token = await getToken(messaging, {
+                        vapidKey: vapidKey,
+                        serviceWorkerRegistration: registration
+                    });
+
+                    console.log('FCM Token:', token);
+
+                    // Save token to backend
+                    const response = await fetch('/api/fcm/subscribe', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            token: token,
+                            userAgent: navigator.userAgent
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        localStorage.setItem('fcm_subscribed', 'true');
+                        localStorage.setItem('fcm_token', token);
+                        updateButtonState(true);
+                        alert('✅ You will now receive notifications for new posts!');
+                    } else {
+                        throw new Error(result.error || 'Subscription failed');
+                    }
+                } else {
+                    alert('❌ Please allow notifications to stay updated with new posts');
+                }
+            } catch (err) {
+                console.error('Notification subscription failed:', err);
+                alert('❌ Failed to subscribe to notifications. Please try again.');
+            }
+        };
+
+        // Handle foreground messages
+        onMessage(messaging, (payload) => {
+            console.log('Foreground message received:', payload);
+
+            const notificationTitle = payload.notification.title || 'New Post on WaveSignals';
+            const notificationOptions = {
+                body: payload.notification.body || 'Check out our latest post!',
+                icon: '/favicon.svg',
+                data: { url: payload.data?.url }
+            };
+
+            new Notification(notificationTitle, notificationOptions);
+        });
+
+        // Update button state
+        function updateButtonState(subscribed) {
+            const btn = document.getElementById('notifyBtn');
+            const icon = document.getElementById('notifyIcon');
+            const text = document.getElementById('notifyText');
+
+            if (subscribed) {
+                btn.classList.add('subscribed');
+                icon.textContent = '✅';
+                text.textContent = 'Subscribed';
+                btn.onclick = null;
+                btn.style.cursor = 'default';
+            }
+        }
+
+        // Make function globally available
+        window.handleNotificationClick = window.subscribeToPushNotifications;
+    </script>
+
+</body>
+
+</html>

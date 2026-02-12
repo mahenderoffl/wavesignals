@@ -133,7 +133,7 @@
 
 <script>
     const ADMIN_KEY = localStorage.getItem('adminKey');
-    const API_URL = 'https://mahendercreates-wavesignals-backend.hf.space';
+    const API_URL = 'https://wave-signals.vercel.app';
 
     // Check system health
     async function checkSystemHealth() {
@@ -141,7 +141,7 @@
 
         try {
             // Check API
-            const healthRes = await fetch(`${API_URL}/health`);
+            const healthRes = await fetch(`${API_URL}/api/health`);
             const health = await healthRes.json();
 
             document.getElementById('api-value').textContent = 'Online';

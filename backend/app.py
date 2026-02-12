@@ -5,15 +5,78 @@ from bot import publish_post
 from apscheduler.schedulers.background import BackgroundScheduler
 import os
 import atexit
+import requests
+from datetime import datetime
 from functools import wraps
 
 app = Flask(__name__)
-# Enable CORS for all domains (or restrict to your specific Netlify domain for extra security)
-CORS(app)
+# CORS restricted to known frontend domains for security
+CORS(app, origins=[
+    "https://wavesignals.waveseed.app",
+    "https://wavesignals.netlify.app",
+    "https://project3test.netlify.app",
+    "http://localhost:3000"  # For local development
+])
 
 # Initialize database tables on startup
 print("🔧 Initializing database tables...")
-init_db() 
+try:
+    init_db()
+    print("✅ Database initialization complete")
+except Exception as e:
+    print(f"❌ CRITICAL: Database initialization failed: {e}")
+    print("⚠️ App may not function correctly! Check DATABASE_URL environment variable.")
+    # Don't exit - let health check report the issue
+
+# ==================================================================
+# BUTTONDOWN NEWSLETTER INTEGRATION
+# ==================================================================
+BUTTONDOWN_API_KEY = os.getenv("BUTTONDOWN_API_KEY")
+
+def subscribe_to_buttondown(email):
+    """
+    Subscribe email to Buttondown newsletter.
+    Called AFTER successful PostgreSQL insert (non-blocking).
+    Failures are logged but don't affect the main signup flow.
+    """
+    if not BUTTONDOWN_API_KEY:
+        print("⚠️ BUTTONDOWN_API_KEY not configured - skipping Buttondown sync")
+        return {"success": False, "error": "API key not configured"}
+    
+    url = "https://api.buttondown.email/v1/subscribers"
+    headers = {
+        "Authorization": f"Token {BUTTONDOWN_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "email": email,
+        "tags": ["wavesignals"],
+        "notes": f"Subscribed from WaveSignals website on {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}"
+    }
+    
+    try:
+        print(f"📧 Syncing to Buttondown: {email}")
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
+        
+        if response.status_code == 201:
+            print(f"✅ Buttondown sync successful: {email}")
+            return {"success": True, "response": response.json()}
+        elif response.status_code == 409:
+            # Already subscribed in Buttondown (not an error)
+            print(f"ℹ️ Already subscribed in Buttondown: {email}")
+            return {"success": True, "already_subscribed": True}
+        else:
+            print(f"❌ Buttondown API error: HTTP {response.status_code}")
+            print(f"   Response: {response.text[:200]}")
+            return {"success": False, "error": f"HTTP {response.status_code}"}
+    
+    except requests.exceptions.Timeout:
+        print(f"⚠️ Buttondown API timeout for: {email}")
+        return {"success": False, "error": "Timeout"}
+    except Exception as e:
+        print(f"❌ Buttondown error for {email}: {e}")
+        return {"success": False, "error": str(e)}
+ 
 
 # --- SECURITY ---
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "wavesignals@2025") # Default fallback, User must change this!
@@ -27,17 +90,143 @@ def require_auth(f):
         return f(*args, **kwargs)
     return decorated
 
-# --- AUTOMATION (INTERNAL CRON) ---
-# Runs the bot every 24 hours to generate a new post
+# --- AUTOMATION (DAILY CRON) ---
+# Runs the bot every day at 6:00 AM UTC (11:30 AM IST)
 def daily_auto_post():
-   print("⏰ Internal Cron Triggered: Publishing new post...")
-   publish_post()
+    """Automated daily post generation - MUST NOT crash scheduler"""
+    from datetime import datetime, timezone as tz
+    trigger_time = datetime.now(tz.utc).isoformat()
+    print(f"="*60)
+    print(f"⏰ SCHEDULER TRIGGERED at {trigger_time}")
+    print(f"="*60)
+    try:
+        result = publish_post()  # No parameters - rate limiting removed
+        if result and result.get('success'):
+            print(f"✅ Scheduled post published: {result.get('title')}")
+        elif result and result.get('skipped'):
+            print(f"ℹ️ Post skipped: {result.get('reason')}")
+        else:
+            error = result.get('error', 'Unknown error') if result else 'No result returned'
+            print(f"❌ Scheduled post failed: {error}")
+    except Exception as e:
+        import traceback
+        print(f"🚨 CRITICAL SCHEDULER ERROR: {e}")
+        print(traceback.format_exc())
+        # Scheduler continues - tomorrow will try again
 
-# Start Scheduler
+# Start Scheduler with cron trigger
+from apscheduler.triggers.cron import CronTrigger
+import pytz
+
 scheduler = BackgroundScheduler()
-scheduler.add_job(func=daily_auto_post, trigger="interval", hours=12) 
+
+# Primary: Daily at 6 AM UTC
+scheduler.add_job(
+    func=daily_auto_post, 
+    trigger=CronTrigger(hour=6, minute=0, timezone=pytz.UTC),  # Explicit UTC
+    id='daily_post',
+    name='Daily Auto Post',
+    replace_existing=True
+)
+
+# Backup: Daily at 12 PM UTC (safety net)
+scheduler.add_job(
+    func=daily_auto_post,
+    trigger=CronTrigger(hour=12, minute=0, timezone=pytz.UTC),
+    id='backup_post',
+    name='Backup Post Check',
+    replace_existing=True
+)
+
 scheduler.start()
+print("✅ Scheduler started: Daily posts at 6:00 AM UTC (11:30 AM IST)")
+print("✅ Backup scheduler: 12:00 PM UTC (5:30 PM IST)")
 atexit.register(lambda: scheduler.shutdown())
+
+# Startup recovery: Check if we missed today's post due to restart
+def check_and_recover_missed_post():
+    """Ultra-aggressive recovery - generates if ANY condition met"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return
+        
+        cur = conn.cursor()
+        
+        # Check if we have any post from today
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
+        today_str = now.strftime('%Y-%m-%d')
+        
+        cur.execute("""
+            SELECT created_at FROM posts 
+            WHERE DATE(created_at) = %s
+        """, (today_str,))
+        today_post = cur.fetchone()
+        
+        # Get last post time
+        cur.execute("SELECT created_at FROM posts ORDER BY created_at DESC LIMIT 1")
+        last_post = cur.fetchone()
+        
+        should_generate = False
+        reason = ""
+        
+        # Condition 1: No post today
+        if not today_post:
+            should_generate = True
+            reason = "No post published today"
+        
+        # Condition 2: >23h since last post (even if posted yesterday late)
+        if last_post and not should_generate:
+            last_time = last_post['created_at']
+            if last_time.tzinfo is None:
+                last_time = last_time.replace(tzinfo=timezone.utc)
+            
+            hours_since = (now - last_time).total_seconds() / 3600
+            
+            if hours_since > 23:
+                should_generate = True
+                reason = f"Last post was {hours_since:.1f}h ago (>23h threshold)"
+        
+        # Condition 3: Past 6 AM and no post today
+        today_scheduled = now.replace(hour=6, minute=0, second=0, microsecond=0)
+        if now >= today_scheduled and not today_post:
+            should_generate = True
+            reason = f"Past scheduled time (6 AM) and no post today"
+        
+        if should_generate:
+            print(f"⚠️ AGGRESSIVE RECOVERY: {reason}")
+            print(f"   Generating post NOW...")
+            daily_auto_post()
+        else:
+            print(f"✅ Recovery check: Post already exists for today")
+        
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"⚠️ Recovery check error: {e}")
+        # If recovery fails, try to generate anyway (ultra-safe)
+        try:
+            daily_auto_post()
+        except:
+            pass
+
+check_and_recover_missed_post()
+
+# External cron can call this to force a recovery check
+@app.route('/api/trigger-check', methods=['POST', 'GET'])
+def trigger_recovery_check():
+    """Endpoint for external cron to trigger recovery check - keeps space alive AND checks for missed posts"""
+    from datetime import datetime, timezone as tz
+    print(f"🔄 External trigger-check called at {datetime.now(tz.utc).isoformat()}")
+    try:
+        check_and_recover_missed_post()
+        return jsonify({"success": True, "message": "Recovery check executed", "timestamp": datetime.now(tz.utc).isoformat()}), 200
+    except Exception as e:
+        import traceback
+        print(f"❌ Trigger-check error: {e}")
+        print(traceback.format_exc())
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/')
 def home():
@@ -95,8 +284,7 @@ def health_check():
             next_job = "N/A"
         
         # Check API key
-        api_key_configured = bool(os.getenv('GEMINI_API_KEY'))
-        gemini_key = os.getenv('GEMINI_API_KEY', '')
+        groq_key_configured = bool(os.getenv('GROQ_API_KEY'))
         
         response = {
             "status": "alive",
@@ -114,8 +302,7 @@ def health_check():
                 "interval": "Every 12 hours"
             },
             "apis": {
-                "gemini_configured": api_key_configured,
-                "gemini_key_preview": gemini_key[:15] + "..." if gemini_key else "NOT SET"
+                "groq_configured": groq_key_configured
             },
             "version": "2.2"
         }
@@ -146,7 +333,13 @@ def get_posts():
     try:
         cur = conn.cursor()
         # Fetch published posts, newest first
-        cur.execute("SELECT * FROM posts WHERE published = TRUE ORDER BY date DESC")
+        # Include created_at as 'date' for frontend compatibility
+        cur.execute("""
+            SELECT *, created_at as date 
+            FROM posts 
+            WHERE published = TRUE 
+            ORDER BY created_at DESC
+        """)
         posts = cur.fetchall()
         cur.close()
         conn.close()
@@ -290,38 +483,6 @@ def update_settings():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# === AI DIAGNOSTIC ===
-@app.route('/api/test-ai-simple', methods=['POST'])
-@require_auth  
-def test_ai_simple():
-    """Test both AI providers with simple prompts"""
-    import requests
-    
-    API_KEY = os.getenv("GEMINI_API_KEY")
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-    
-    results = {"gemini": {"configured": bool(API_KEY), "test": None}, "openai": {"configured": bool(OPENAI_API_KEY), "test": None}}
-    
-    if API_KEY:
-        try:
-            url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={API_KEY}"
-            payload = {"contents": [{"parts": [{"text": "Say hello"}]}]}
-            resp = requests.post(url, json=payload, timeout=30)
-            results["gemini"]["test"] = {"status": resp.status_code, "success": resp.status_code == 200, "response": resp.json() if resp.status_code == 200 else resp.text[:300]}
-        except Exception as e:
-            results["gemini"]["test"] = {"error": str(e), "success": False}
-    
-    if OPENAI_API_KEY:
-        try:
-            url = "https://api.openai.com/v1/chat/completions"
-            headers = {"Authorization": f"Bearer {OPENAI_API_KEY}"}
-            payload = {"model": "gpt-3.5-turbo", "messages": [{"role": "user", "content": "Say hello"}], "max_tokens": 10}
-            resp = requests.post(url, json=payload, headers=headers, timeout=30)
-            results["openai"]["test"] = {"status": resp.status_code, "success": resp.status_code == 200, "response": resp.json() if resp.status_code == 200 else resp.text[:300]}
-        except Exception as e:
-            results["openai"]["test"] = {"error": str(e), "success": False}
-    
-    return jsonify(results)
 
 # === BOT ENDPOINTS ===
 @app.route('/api/rate-limit-status', methods=['GET'])
@@ -377,14 +538,10 @@ def generate_post_api():
         import traceback
         
         # Check for emergency override header
-        emergency_override = request.headers.get('X-Emergency-Override') == 'true'
+        # No emergency override needed - rate limiting removed from publish_post()
+        print("🚀 Manual post generation triggered...")
         
-        if emergency_override:
-            print("🚨 EMERGENCY OVERRIDE: Manual post generation with rate limit bypass")
-        else:
-            print("🚀 Manual post generation triggered...")
-        
-        result = publish_post(emergency_override=emergency_override)
+        result = publish_post()  # No parameters needed
         
         if isinstance(result, dict) and result.get("success"):
             return jsonify({
@@ -420,9 +577,9 @@ def generate_post_api():
 
 @app.route('/api/bot-status', methods=['GET'])
 def bot_status():
-    """Check if GEMINI_API_KEY is configured"""
+    """Check if GROQ_API_KEY is configured"""
     import os
-    has_key = bool(os.getenv('GEMINI_API_KEY'))
+    has_key = bool(os.getenv('GROQ_API_KEY'))
     return jsonify({
         'api_key_configured': has_key,
         'status': 'ready' if has_key else 'missing_api_key'
@@ -482,6 +639,18 @@ def add_subscriber():
         
         print(f"✅ New subscriber: {email} (ID: {subscriber_id})")
         
+        # ===== BUTTONDOWN SYNC (NON-BLOCKING) =====
+        # Sync to Buttondown newsletter (best-effort, doesn't affect signup success)
+        try:
+            buttondown_result = subscribe_to_buttondown(email)
+            if not buttondown_result.get('success'):
+                print(f"⚠️ Buttondown sync failed (non-critical): {buttondown_result.get('error')}")
+                # Don't fail the request - PostgreSQL succeeded, which is what matters
+        except Exception as e:
+            print(f"❌ Buttondown exception (non-critical): {e}")
+            # Continue - user subscription is valid in PostgreSQL
+        # ===== END BUTTONDOWN SYNC =====
+        
         return jsonify({
             'success': True,
             'message': 'Successfully subscribed!',
@@ -492,6 +661,148 @@ def add_subscriber():
         print(f"❌ Subscription error: {e}")
         return jsonify({'error': str(e)}), 500
 
+# === PUSH NOTIFICATIONS (FCM) ===
+@app.route('/api/fcm/subscribe', methods=['POST'])
+def fcm_subscribe():
+    """Subscribe to push notifications"""
+    import traceback
+    print(f"📱 FCM subscribe request received")
+    
+    try:
+        data = request.json
+        if not data:
+            print("❌ FCM subscribe: No JSON data in request")
+            return jsonify({"error": "No data provided"}), 400
+            
+        token = data.get('token')
+        user_agent = data.get('userAgent', '')
+        
+        if not token:
+            print("❌ FCM subscribe: Token missing from request")
+            return jsonify({"error": "Token required"}), 400
+        
+        print(f"📱 FCM token received: {token[:30]}...")
+        
+        conn = get_db_connection()
+        if not conn:
+            print("❌ FCM subscribe: Database connection failed")
+            return jsonify({"error": "Database connection failed"}), 500
+        
+        cur = conn.cursor()
+        # Insert or update token
+        cur.execute("""
+            INSERT INTO fcm_subscribers (token, user_agent, device_type, last_used) 
+            VALUES (%s, %s, %s, NOW())
+            ON CONFLICT (token) 
+            DO UPDATE SET last_used = NOW(), user_agent = EXCLUDED.user_agent, device_type = EXCLUDED.device_type, active = TRUE
+        """, (token, user_agent, user_agent))
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        print(f"✅ FCM token subscribed successfully: {token[:20]}...")
+        return jsonify({"success": True, "message": "Subscribed to notifications"})
+        
+    except Exception as e:
+        print(f"❌ FCM subscription error: {e}")
+        print(traceback.format_exc())
+        return jsonify({"error": str(e), "details": traceback.format_exc()}), 500
+
+@app.route('/api/notifications/send', methods=['POST'])
+@require_auth
+def send_custom_notification():
+    """Send custom push notification to all subscribers"""
+    try:
+        from fcm import send_custom_notification
+        
+        data = request.json
+        title = data.get('title', '').strip()
+        body = data.get('body', '').strip()
+        url = data.get('url', '').strip()
+        
+        if not title or not body:
+            return jsonify({"error": "Title and body are required"}), 400
+        
+        print(f"📩 Admin sending custom notification: {title}")
+        result = send_custom_notification(title, body, url if url else None)
+        
+        if result.get('success'):
+            return jsonify({
+                "success": True,
+                "sent": result.get('sent', 0),
+                "failed": result.get('failed', 0),
+                "message": f"Notification sent to {result.get('sent', 0)} subscribers"
+            }), 200
+        else:
+            return jsonify({"error": result.get('error', 'Unknown error')}), 500
+            
+    except Exception as e:
+        print(f"❌ Custom notification error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/notifications/subscribers', methods=['GET'])
+@require_auth
+def get_notification_subscribers():
+    """Get list of notification subscribers"""
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({"error": "DB error"}), 500
+    
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT id, token, created_at, last_used, user_agent, device_type 
+            FROM fcm_subscribers 
+            WHERE active = TRUE
+            ORDER BY created_at DESC
+        """)
+        subscribers = cur.fetchall()
+        cur.close()
+        conn.close()
+        return jsonify({"subscribers": subscribers})
+    except Exception as e:
+        print(f"❌ Error fetching subscribers: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/fcm/test', methods=['POST'])
+@require_auth
+def fcm_test():
+    """Send test notification to all subscribers (admin only)"""
+    try:
+        from fcm import send_test_notification
+        result = send_test_notification()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/fcm/count', methods=['GET'])
+def fcm_count():
+    """Get count of FCM subscribers"""
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({"error": "DB error"}), 500
+    
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT COUNT(*) as count FROM fcm_subscribers WHERE active = TRUE")
+        count = cur.fetchone()['count']
+        cur.close()
+        conn.close()
+        return jsonify({"success": True, "count": count})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    port = int(os.environ.get('PORT', 7860))  # Default to 7860 for Hugging Face Spaces
+    print("=" * 60)
+    print("🚀 Starting WaveSignals Backend API Server")
+    print("=" * 60)
+    print(f"📡 Port: {port}")
+    print(f"🏥 Health Check: http://0.0.0.0:{port}/health")
+    print(f"📊 API Base: http://0.0.0.0:{port}/api")
+    print(f"⏰ Scheduler: Running (Daily at 6:00 AM UTC)")
+    print(f"🔐 Admin Auth: Enabled (X-Admin-Key header required)")
+    print("=" * 60)
+    app.run(host='0.0.0.0', port=port, debug=False)

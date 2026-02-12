@@ -1,16 +1,16 @@
 const fs = require("fs");
 const path = require("path");
 
-// Use SITE_URL env var in CI or default to the production domain
-const SITE_URL = process.env.SITE_URL || "https://wavesignals.waveseed.app";
+// ALWAYS use custom domain - NEVER use Netlify subdomain for SEO
+const SITE_URL = "https://wavesignals.waveseed.app";
 const POSTS_PATH = path.join(__dirname, "../data/posts.json");
-const OUTPUT_PATH = path.join(__dirname, "../sitemap.xml");
+const OUTPUT_PATH = path.join(__dirname, "../sitemap-posts.xml");
 
 function formatDate(date) {
   return new Date(date).toISOString();
 }
 
-function generateSitemap() {
+function generatePostsSitemap() {
   const raw = fs.readFileSync(POSTS_PATH, "utf-8");
   const data = JSON.parse(raw);
 
@@ -18,21 +18,11 @@ function generateSitemap() {
 
   const urls = [];
 
-  // Homepage
-  const homeLoc = SITE_URL ? `${SITE_URL.replace(/\/$/, '')}/app/index.html` : `/app/index.html`;
-  urls.push(`
-  <url>
-    <loc>${homeLoc}</loc>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-  `);
-
-  // Published posts
+  // Published posts only
   posts
     .filter(p => p.published)
     .forEach(post => {
-      const loc = SITE_URL ? `${SITE_URL.replace(/\/$/, '')}/app/post.html?slug=${post.slug}` : `/app/post.html?slug=${post.slug}`;
+      const loc = `${SITE_URL}/app/post.html?slug=${post.slug}`;
       urls.push(`
   <url>
     <loc>${loc}</loc>
@@ -49,7 +39,7 @@ ${urls.join("")}
 </urlset>`;
 
   fs.writeFileSync(OUTPUT_PATH, sitemap.trim());
-  console.log("✅ sitemap.xml generated successfully");
+  console.log(`✅ sitemap-posts.xml generated successfully with ${urls.length} posts (custom domain only)`);
 }
 
-generateSitemap();
+generatePostsSitemap();

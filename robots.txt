@@ -1,8 +1,17 @@
 User-agent: *
-Allow: /
+Allow: /app/
+Allow: /about.html
+Allow: /contact.html
+Allow: /privacy.html
+Allow: /terms.html
+Allow: /public/
+Allow: /styles/
 
-# Disallow admin pages
+# Disallow admin and internal directories
 Disallow: /admin/
+Disallow: /data/
+Disallow: /scripts/
+Disallow: /backend/
 
 # Sitemaps
 Sitemap: https://wavesignals.waveseed.app/sitemap.xml

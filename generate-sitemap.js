@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const API_URL = 'https://mahendercreates-wavesignals-backend.hf.space/api';
+const API_URL = 'https://wave-signals.vercel.app/api';
 const SITE_URL = 'https://wavesignals.waveseed.app';
 
 async function generatePostsSitemap() {

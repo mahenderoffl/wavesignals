@@ -5,6 +5,25 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title id="page-title">WaveSignals</title>
+  <meta name="description" id="page-description" content="WaveSignals - Thoughtful insights and signals">
+
+  <!-- Canonical Tag (will be updated by JS) -->
+  <link rel="canonical" id="page-canonical" href="https://wavesignals.waveseed.app/app/post.html">
+
+  <!-- Open Graph Tags (will be updated by JS) -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" id="og-title" content="WaveSignals">
+  <meta property="og:description" id="og-description" content="WaveSignals - Thoughtful insights and signals">
+  <meta property="og:url" id="og-url" content="https://wavesignals.waveseed.app/app/post.html">
+  <meta property="og:site_name" content="WaveSignals">
+  <meta property="og:image" id="og-image" content="https://wavesignals.waveseed.app/public/logo-header.svg">
+
+  <!-- Twitter Card Tags (will be updated by JS) -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" id="twitter-title" content="WaveSignals">
+  <meta name="twitter:description" id="twitter-description" content="WaveSignals - Thoughtful insights and signals">
+  <meta name="twitter:image" id="twitter-image" content="https://wavesignals.waveseed.app/public/logo-header.svg">
+
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/styles/main.css">
 
@@ -15,6 +34,27 @@
     function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
     gtag('config', 'G-RGL9J7FMMN');
+  </script>
+
+  <!-- Organization Schema for Brand Entity -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": "https://wavesignals.waveseed.app/#organization",
+    "name": "WaveSignals",
+    "alternateName": ["Wave Signals", "wavesignals"],
+    "url": "https://wavesignals.waveseed.app",
+    "logo": {
+      "@type": "ImageObject",
+      "@id": "https://wavesignals.waveseed.app/#logo",
+      "url": "https://wavesignals.waveseed.app/public/logo-header.svg",
+      "contentUrl": "https://wavesignals.waveseed.app/public/logo-header.svg",
+      "caption": "WaveSignals"
+    },
+    "description": "WaveSignals delivers one thoughtfully curated insight per day on career growth, money management, and technology trends.",
+    "slogan": "One Signal Per Day, Zero Noise"
+  }
   </script>
 </head>
 
@@ -60,8 +100,8 @@
 
   <section class="newsletter">
     <div class="container">
-      <h3>Subscribe</h3>
-      <p class="text-muted">One signal per day. No noise.</p>
+      <h3>Subscribe to Our Newsletter</h3>
+      <p class="text-muted">One signal per day, published thoughtfully.</p>
 
       <form class="newsletter-form" id="email-form" name="newsletter" method="POST" data-netlify="true"
         netlify-honeypot="bot-field">
@@ -71,7 +111,7 @@
           <label>Don't fill: <input name="bot-field"></label>
         </p>
 
-        <input type="email" name="email" placeholder="you@example.com" required>
+        <input type="email" name="email" placeholder="you@example.com" autocomplete="email" required>
         <button type="submit">Join</button>
       </form>
       <p class="text-sm text-muted status-message"></p>
@@ -79,7 +119,7 @@
   </section>
 
   <script>
-    const API_URL = 'https://mahendercreates-wavesignals-backend.hf.space/api';
+    const API_URL = 'https://wave-signals.vercel.app/api';
     const params = new URLSearchParams(window.location.search);
     const slug = params.get('slug');
 
@@ -94,8 +134,8 @@
       }
 
       try {
-        console.log(`Fetching: ${API_URL}/posts/${slug}`);
-        const res = await fetch(`${API_URL}/posts/${slug}`);
+        console.log(`Fetching: ${API_URL}/post?slug=${slug}`);
+        const res = await fetch(`${API_URL}/post?slug=${slug}`);
 
         console.log('Response status:', res.status);
 
@@ -108,6 +148,58 @@
 
         // Update page title
         document.title = `${post.title} – WaveSignals`;
+        document.getElementById('page-title').textContent = `${post.title} – WaveSignals`;
+
+        // Update meta description
+        const metaDescription = post.excerpt || (post.content ? post.content.replace(/<[^>]*>/g, '').substring(0, 155) : 'Read this insightful article on WaveSignals');
+        document.getElementById('page-description').setAttribute('content', metaDescription);
+
+        // Update canonical URL
+        const canonicalUrl = `https://wavesignals.waveseed.app/app/post.html?slug=${slug}`;
+        document.getElementById('page-canonical').setAttribute('href', canonicalUrl);
+
+        // Update Open Graph tags
+        document.getElementById('og-title').setAttribute('content', post.title);
+        document.getElementById('og-description').setAttribute('content', metaDescription);
+        document.getElementById('og-url').setAttribute('content', canonicalUrl);
+
+        // Update Twitter Card tags
+        document.getElementById('twitter-title').setAttribute('content', post.title);
+        document.getElementById('twitter-description').setAttribute('content', metaDescription);
+
+        // Add structured data for Article
+        const structuredData = {
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": post.title,
+          "description": metaDescription,
+          "datePublished": post.date,
+          "author": {
+            "@type": "Organization",
+            "@id": "https://wavesignals.waveseed.app/#organization",
+            "name": "WaveSignals"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "@id": "https://wavesignals.waveseed.app/#organization",
+            "name": "WaveSignals",
+            "logo": {
+              "@type": "ImageObject",
+              "@id": "https://wavesignals.waveseed.app/#logo",
+              "url": "https://wavesignals.waveseed.app/public/logo-header.svg"
+            }
+          },
+          "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": canonicalUrl
+          }
+        };
+
+        // Inject structured data into head
+        const script = document.createElement('script');
+        script.type = 'application/ld+json';
+        script.text = JSON.stringify(structuredData);
+        document.head.appendChild(script);
 
         // Render post
         container.innerHTML = `

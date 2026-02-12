@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
     const forms = document.querySelectorAll('#subscribe-form, #email-form');
-    const API_URL = 'https://mahendercreates-wavesignals-backend.hf.space/api';
+    const API_URL = 'https://wave-signals.vercel.app/api';
 
     // Google Apps Script Web App URL for sheet integration
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzLnN7sE4kXKp_VLgnxQvpWbJE3rY1gILWN8gUoCObT3l0LGwdS6ZrVYjWxBG8gfFAP/exec";
@@ -78,3 +78,4 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
+

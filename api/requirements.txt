@@ -1,9 +1,5 @@
-flask
-flask-cors
-apscheduler
+# Requirements for Vercel Python Functions
 psycopg2-binary
 python-dotenv
 requests
-gradio
-gunicorn
 firebase-admin
